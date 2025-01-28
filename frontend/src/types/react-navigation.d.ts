@@ -1,7 +1,20 @@
-import 'react-navigation';
+import { NavigatorScreenParams } from '@react-navigation/native';
 
-declare module '@react-navigation/native' {
-  export interface DefaultNavigatorOptions {
-    id?: string | undefined;
+declare global {
+  namespace ReactNavigation {
+    interface RootParamList {
+      Login: undefined;
+      Main: NavigatorScreenParams<MainTabParamList>;
+    }
   }
 }
+
+export type RootStackParamList = {
+  Login: undefined;
+  Main: undefined;
+};
+
+export type MainTabParamList = {
+  Home: undefined;
+  Profile: undefined;
+};

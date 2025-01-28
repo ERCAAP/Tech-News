@@ -2,13 +2,22 @@ import React from 'react';
 import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/slices/userSlice';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
-export default function LoginScreen({ navigation }) {
+// Parametre tiplerini tanımlama
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+
+type Props = {
+  navigation: LoginScreenNavigationProp;
+};
+
+export default function LoginScreen({ navigation }: Props) {
   const dispatch = useDispatch();
 
   const handleLogin = () => {
     dispatch(login({ name: 'Kullanıcı', email: 'user@example.com' }));
-    navigation.replace('Main');
+    navigation.replace('Main'); // Main rotasına geçiş
   };
 
   return (
