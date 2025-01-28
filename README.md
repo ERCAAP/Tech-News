@@ -1,50 +1,165 @@
-# Welcome to your Expo app 👋
+Proje Yapısı
+Bu proje, bir haber akışı uygulaması geliştirmek için React Native ve Node.js tabanlı bir sistemdir. Proje iki ana bölüme ayrılmıştır: Frontend (mobil uygulama) ve Backend (API ve veri yönetimi). Kullanıcılar haber akışını görebilir, profillerine erişebilir ve giriş yapabilir. Ayrıca, admin kullanıcılar haber ekleyebilir.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Frontend: React Native kullanılarak mobil uygulama geliştirilmiştir. Redux Toolkit ile durum yönetimi yapılmakta ve React Navigation ile ekranlar arasında geçiş sağlanmaktadır. Backend: Node.js ve Express.js kullanılarak RESTful API geliştirilmiştir. Veriler MongoDB üzerinde saklanmakta olup Mongoose kullanılmaktadır. Kullanıcı kimlik doğrulama işlemleri JWT ile gerçekleştirilmektedir.
 
-## Get started
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
 
-2. Start the app
+Tabii! İşte proje yapınızı tek bir yazı olarak düzenlenmiş şekilde sunuyorum:
 
-   ```bash
-    npx expo start
-   ```
+Proje Yapısı
+Bu proje, bir haber akışı uygulaması geliştirmek için React Native ve Node.js tabanlı bir sistemdir. Proje iki ana bölüme ayrılmıştır: Frontend (mobil uygulama) ve Backend (API ve veri yönetimi). Kullanıcılar haber akışını görebilir, profillerine erişebilir ve giriş yapabilir. Ayrıca, admin kullanıcılar haber ekleyebilir.
 
-In the output, you'll find options to open the app in a
+Frontend: React Native kullanılarak mobil uygulama geliştirilmiştir. Redux Toolkit ile durum yönetimi yapılmakta ve React Navigation ile ekranlar arasında geçiş sağlanmaktadır. Backend: Node.js ve Express.js kullanılarak RESTful API geliştirilmiştir. Veriler MongoDB üzerinde saklanmakta olup Mongoose kullanılmaktadır. Kullanıcı kimlik doğrulama işlemleri JWT ile gerçekleştirilmektedir.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Proje Klasör Yapısı
+Frontend (Mobil Uygulama):
+frontend/
+├── app/
+│   └── index.tsx              # Uygulamanın başlangıç noktası
+├── src/
+│   ├── components/            # Yeniden kullanılabilir bileşenler
+│   ├── navigation/
+│   │   └── AppNavigator.tsx   # Navigasyon yapılandırması
+│   ├── redux/
+│   │   ├── slices/            # Redux slice tanımları
+│   │   └── store.ts           # Redux store yapılandırması
+│   ├── screens/
+│   │   ├── HomeScreen.tsx     # Haber akışı ekranı
+│   │   ├── LoginScreen.tsx    # Giriş ekranı
+│   │   └── ProfileScreen.tsx  # Profil ekranı
+│   └── types/                 # Tip tanımları
+├── assets/                    # Medya dosyaları (ikonlar, görseller)
+├── package.json               # Bağımlılıklar ve npm betikleri
+└── tsconfig.json              # TypeScript yapılandırması
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Backend (API):
 
-## Get a fresh project
+backend/
+├── src/
+│   ├── controllers/           # İş mantığı (CRUD işlemleri)
+│   ├── routes/                # API endpoint tanımları
+│   │   ├── authRoutes.ts      # Kimlik doğrulama endpoint'leri
+│   │   ├── userRoutes.ts      # Kullanıcı endpoint'leri
+│   │   └── postRoutes.ts      # Haber endpoint'leri
+│   ├── models/                # MongoDB modelleri (Mongoose ile)
+│   │   ├── User.ts            # Kullanıcı modeli
+│   │   └── Post.ts            # Haber modeli
+│   ├── middlewares/           # Kimlik doğrulama ve hata yakalama
+│   ├── config/                # Çevre değişkenleri ve yapılandırma
+│   └── server.ts              # Express.js uygulamasının başlangıç dosyası
+├── package.json               # Bağımlılıklar ve npm betikleri
+├── .env                       # Çevre değişkenleri
+└── tsconfig.json              # TypeScript yapılandırması
 
-When you're ready, run:
+Özellikler ve Sistemler
+Frontend (Mobil Uygulama):
 
-```bash
-npm run reset-project
-```
+Login Ekranı: Kullanıcı giriş yapabilir.
+Haber Akışı Ekranı: Kullanıcılar haberleri görüntüleyebilir.
+Profil Ekranı: Kullanıcı bilgileri ve haber geçmişi görüntülenebilir.
+Redux Durum Yönetimi: Kullanıcı ve haber akışı bilgilerini yönetir.
+Navigasyon: Stack ve Tab navigasyonu ile çoklu ekran desteği.
+TypeScript: Daha güvenli ve okunabilir kod.
+Backend (API):
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Kullanıcı Yönetimi: Kayıt ve giriş işlemleri (JWT ile kimlik doğrulama).
+Haber Yönetimi: Admin kullanıcılar haber ekleyebilir, düzenleyebilir ve silebilir.
+Veritabanı: MongoDB ile kullanıcı ve haber verileri saklanır.
+RESTful API: CRUD işlemleri için Express.js tabanlı API.
 
-## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Tabii! İşte proje yapınızı tek bir yazı olarak düzenlenmiş şekilde sunuyorum:
 
-## Join the community
+Proje Yapısı
+Bu proje, bir haber akışı uygulaması geliştirmek için React Native ve Node.js tabanlı bir sistemdir. Proje iki ana bölüme ayrılmıştır: Frontend (mobil uygulama) ve Backend (API ve veri yönetimi). Kullanıcılar haber akışını görebilir, profillerine erişebilir ve giriş yapabilir. Ayrıca, admin kullanıcılar haber ekleyebilir.
 
-Join our community of developers creating universal apps.
+Frontend: React Native kullanılarak mobil uygulama geliştirilmiştir. Redux Toolkit ile durum yönetimi yapılmakta ve React Navigation ile ekranlar arasında geçiş sağlanmaktadır. Backend: Node.js ve Express.js kullanılarak RESTful API geliştirilmiştir. Veriler MongoDB üzerinde saklanmakta olup Mongoose kullanılmaktadır. Kullanıcı kimlik doğrulama işlemleri JWT ile gerçekleştirilmektedir.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Proje Klasör Yapısı
+Frontend (Mobil Uygulama):
+
+frontend/
+├── app/
+│   └── index.tsx              # Uygulamanın başlangıç noktası
+├── src/
+│   ├── components/            # Yeniden kullanılabilir bileşenler
+│   ├── navigation/
+│   │   └── AppNavigator.tsx   # Navigasyon yapılandırması
+│   ├── redux/
+│   │   ├── slices/            # Redux slice tanımları
+│   │   └── store.ts           # Redux store yapılandırması
+│   ├── screens/
+│   │   ├── HomeScreen.tsx     # Haber akışı ekranı
+│   │   ├── LoginScreen.tsx    # Giriş ekranı
+│   │   └── ProfileScreen.tsx  # Profil ekranı
+│   └── types/                 # Tip tanımları
+├── assets/                    # Medya dosyaları (ikonlar, görseller)
+├── package.json               # Bağımlılıklar ve npm betikleri
+└── tsconfig.json              # TypeScript yapılandırması
+Backend (API):
+
+bash
+Kopyala
+Düzenle
+backend/
+├── src/
+│   ├── controllers/           # İş mantığı (CRUD işlemleri)
+│   ├── routes/                # API endpoint tanımları
+│   │   ├── authRoutes.ts      # Kimlik doğrulama endpoint'leri
+│   │   ├── userRoutes.ts      # Kullanıcı endpoint'leri
+│   │   └── postRoutes.ts      # Haber endpoint'leri
+│   ├── models/                # MongoDB modelleri (Mongoose ile)
+│   │   ├── User.ts            # Kullanıcı modeli
+│   │   └── Post.ts            # Haber modeli
+│   ├── middlewares/           # Kimlik doğrulama ve hata yakalama
+│   ├── config/                # Çevre değişkenleri ve yapılandırma
+│   └── server.ts              # Express.js uygulamasının başlangıç dosyası
+├── package.json               # Bağımlılıklar ve npm betikleri
+├── .env                       # Çevre değişkenleri
+└── tsconfig.json              # TypeScript yapılandırması
+Özellikler ve Sistemler
+Frontend (Mobil Uygulama):
+
+Login Ekranı: Kullanıcı giriş yapabilir.
+Haber Akışı Ekranı: Kullanıcılar haberleri görüntüleyebilir.
+Profil Ekranı: Kullanıcı bilgileri ve haber geçmişi görüntülenebilir.
+Redux Durum Yönetimi: Kullanıcı ve haber akışı bilgilerini yönetir.
+Navigasyon: Stack ve Tab navigasyonu ile çoklu ekran desteği.
+TypeScript: Daha güvenli ve okunabilir kod.
+Backend (API):
+
+Kullanıcı Yönetimi: Kayıt ve giriş işlemleri (JWT ile kimlik doğrulama).
+Haber Yönetimi: Admin kullanıcılar haber ekleyebilir, düzenleyebilir ve silebilir.
+Veritabanı: MongoDB ile kullanıcı ve haber verileri saklanır.
+RESTful API: CRUD işlemleri için Express.js tabanlı API.
+API Endpointleri
+Endpoint	Metod	Açıklama
+/api/auth/login	POST	Kullanıcı giriş
+/api/auth/register	POST	Kullanıcı kayıt
+/api/posts	GET	Haber akışı verileri
+/api/posts	POST	Yeni haber ekleme (admin)
+/api/posts/:id	PUT	Haber güncelleme (admin)
+/api/posts/:id	DELETE	Haber silme (admin)
+
+
+
+Bağımlılıklar
+Frontend:
+
+react-native
+redux-toolkit
+react-navigation
+@react-navigation/native
+react-redux
+typescript
+Backend:
+
+express
+mongoose
+jsonwebtoken
+bcrypt
+dotenv
+typescript
