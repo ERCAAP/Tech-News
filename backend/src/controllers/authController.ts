@@ -1,24 +1,30 @@
 import { Request, Response } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateRegistration, validateLogin } from '../utils/validators';
 
+// JWT yapılandırması
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_EXPIRES_IN = parseInt(process.env.JWT_EXPIRES_IN || '86400', 10); // 24 saat (saniye cinsinden)
 
 // JWT token oluşturma yardımcı fonksiyonu
 const createToken = (id: string): string => {
-  const options: SignOptions = {
-    expiresIn: JWT_EXPIRES_IN
-  };
-
-  return jwt.sign({ id }, JWT_SECRET, options);
+  return jwt.sign(
+    { id },
+    JWT_SECRET,
+    { 
+      expiresIn: JWT_EXPIRES_IN, // Sayısal değer olarak
+      algorithm: 'HS256'
+    }
+  );
 };
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { email, password, firstName, lastName } = req.body;
+
+  console.log('Creating user with data:', { email, firstName, lastName });
 
   // Email kontrolü
   const existingUser = await User.findOne({ email });
@@ -36,12 +42,14 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     favoriteNews: []
   });
 
+  console.log('User created:', user);
+
   // Token oluştur
   const token = createToken(user._id.toString());
 
   // Şifreyi response'dan çıkar
   const userObject = user.toObject();
-  userObject.password = undefined;
+  delete userObject.password;
 
   res.status(201).json({
     status: 'success',
@@ -70,7 +78,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   // Remove password from response
   const userObject = user.toObject();
-  userObject.password = undefined;
+  delete userObject.password;
 
   res.status(200).json({
     status: 'success',
@@ -83,6 +91,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(req.user.id).select('-password');
   
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
   res.status(200).json({
     status: 'success',
     data: { user }
@@ -93,7 +105,7 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
 export const updatePassword = asyncHandler(async (req: Request, res: Response) => {
   const { currentPassword, newPassword } = req.body;
 
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select('+password');
   if (!user) {
     throw new AppError('User not found', 404);
   }
@@ -106,8 +118,12 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
   user.password = newPassword;
   await user.save();
 
+  // Generate new token
+  const token = createToken(user._id.toString());
+
   res.status(200).json({
     status: 'success',
+    token,
     message: 'Password updated successfully'
   });
 }); 

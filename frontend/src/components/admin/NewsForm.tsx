@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Image } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS } from '@/theme';
+import { COLORS, FONTS } from '@/theme';
 
 export function NewsForm() {
   const dispatch = useAppDispatch();
@@ -18,15 +18,25 @@ export function NewsForm() {
   });
 
   const handleImagePick = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+        return;
+      }
 
-    if (!result.canceled) {
-      setFormData(prev => ({ ...prev, imageUrl: result.assets[0].uri }));
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData(prev => ({ ...prev, imageUrl: result.assets[0].uri }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
@@ -68,42 +78,62 @@ export function NewsForm() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.imageSection}>
+        {formData.imageUrl ? (
+          <View style={styles.imagePreviewContainer}>
+            <Image 
+              source={{ uri: formData.imageUrl }} 
+              style={styles.imagePreview} 
+              resizeMode="cover"
+            />
+            <Button
+              title="Change Image"
+              variant="outline"
+              onPress={handleImagePick}
+              style={styles.imageButton}
+            />
+          </View>
+        ) : (
+          <Button
+            title="Add News Image"
+            variant="outline"
+            onPress={handleImagePick}
+            style={styles.imageButton}
+            icon="image"
+          />
+        )}
+      </View>
+
       <Input
-        label="Title"
+        label="News Title"
         value={formData.title}
         onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-        placeholder="Enter news title"
+        placeholder="Enter an attention-grabbing title"
+        style={styles.titleInput}
       />
 
       <Input
-        label="Content"
+        label="News Category"
+        value={formData.category}
+        onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
+        placeholder="e.g., Technology, Sports, Politics"
+      />
+
+      <Input
+        label="News Content"
         value={formData.content}
         onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
-        placeholder="Enter news content"
+        placeholder="Write your news content here..."
         multiline
-        numberOfLines={4}
+        numberOfLines={8}
         style={styles.contentInput}
       />
 
-      <Input
-        label="Category"
-        value={formData.category}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
-        placeholder="Enter news category"
-      />
-
       <Button
-        title="Pick Image"
-        variant="outline"
-        onPress={handleImagePick}
-        style={styles.button}
-      />
-
-      <Button
-        title={isLoading ? "Creating..." : "Create News"}
+        title={isLoading ? "Publishing..." : "Publish News"}
         onPress={handleSubmit}
         disabled={isLoading}
-        style={styles.button}
+        style={styles.publishButton}
       />
     </View>
   );
@@ -113,13 +143,42 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: COLORS.white,
+    borderRadius: 12,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  imageSection: {
+    marginBottom: 16,
+  },
+  imagePreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
     borderRadius: 8,
+    marginBottom: 8,
+  },
+  imageButton: {
+    marginBottom: 16,
+  },
+  titleInput: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
   },
   contentInput: {
-    height: 120,
+    height: 200,
     textAlignVertical: 'top',
+    paddingTop: 12,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
   },
-  button: {
-    marginTop: 16,
+  publishButton: {
+    marginTop: 24,
+    backgroundColor: COLORS.primary,
   },
 }); 

@@ -10,6 +10,13 @@ import { logger } from './utils/logger';
 import routes from './routes';
 import authRoutes from './routes/authRoutes';
 import newsRoutes from './routes/newsRoutes';
+import connectDB from './config/database';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Veritabanı bağlantısı
+connectDB();
 
 const app = express();
 
