@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api/v1';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 console.log('API_URL:', BASE_URL);
 
@@ -12,26 +12,25 @@ interface ApiResponse<T> {
   token?: string;
 }
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Auth interceptor - tip hatalarını çözmek için basitleştirilmiş versiyon
+// Request interceptor'ı düzelt
 api.interceptors.request.use(
-  (config) => {
-    const token = AsyncStorage.getItem('token')
-      .then(token => {
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      })
-      .catch(() => config);
-
-    return token;
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    } catch (error) {
+      return config;
+    }
   },
   (error) => Promise.reject(error)
 );
@@ -51,45 +50,37 @@ api.interceptors.response.use(
 
 // API endpoints
 export const newsAPI = {
-  getAllNews: async (): Promise<ApiResponse<{ news: NewsItem[] }>> => {
+  getAllNews: async () => {
     const response = await api.get<ApiResponse<{ news: NewsItem[] }>>('/news');
     return response.data;
   },
 
-  getNewsById: async (id: string): Promise<ApiResponse<{ news: NewsItem }>> => {
+  getNewsById: async (id: string) => {
     const response = await api.get<ApiResponse<{ news: NewsItem }>>(`/news/${id}`);
     return response.data;
   },
 
-  createNews: async (newsData: FormData): Promise<ApiResponse<{ news: NewsItem }>> => {
-    const response = await api.post<ApiResponse<{ news: NewsItem }>>('/news', newsData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+  createNews: async (newsData: any) => {
+    const response = await api.post<ApiResponse<{ news: NewsItem }>>('/news', newsData);
     return response.data;
   },
 
-  updateNews: async (id: string, data: FormData): Promise<ApiResponse<{ news: NewsItem }>> => {
-    const response = await api.put<ApiResponse<{ news: NewsItem }>>(`/news/${id}`, data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  updateNews: async (id: string, newsData: any) => {
+    const response = await api.put<ApiResponse<{ news: NewsItem }>>(`/news/${id}`, newsData);
     return response.data;
   },
 
-  deleteNews: async (id: string): Promise<ApiResponse<null>> => {
+  deleteNews: async (id: string) => {
     const response = await api.delete<ApiResponse<null>>(`/news/${id}`);
     return response.data;
   },
 
-  likeNews: async (id: string): Promise<ApiResponse<{ news: NewsItem }>> => {
+  likeNews: async (id: string) => {
     const response = await api.post<ApiResponse<{ news: NewsItem }>>(`/news/${id}/like`);
     return response.data;
   },
 
-  unlikeNews: async (id: string): Promise<ApiResponse<{ news: NewsItem }>> => {
+  unlikeNews: async (id: string) => {
     const response = await api.delete<ApiResponse<{ news: NewsItem }>>(`/news/${id}/like`);
     return response.data;
   }

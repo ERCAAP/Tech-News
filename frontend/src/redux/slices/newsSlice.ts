@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { NewsState, NewsItem } from '@/types';
 import { newsAPI } from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialState: NewsState = {
   news: [],
@@ -19,11 +20,23 @@ export const fetchNews = createAsyncThunk<NewsItem[]>(
 );
 
 // Haber oluştur
-export const createNews = createAsyncThunk<NewsItem, FormData>(
+export const createNews = createAsyncThunk(
   'news/createNews',
-  async (formData) => {
-    const response = await newsAPI.createNews(formData);
-    return response.data.news;
+  async (newsData: any, { rejectWithValue }) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        throw new Error('Please log in to access this resource');
+      }
+
+      const response = await newsAPI.createNews(newsData);
+      return response.data.news;
+    } catch (error: any) {
+      console.error('Create News Error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || error.message || 'Failed to create news'
+      );
+    }
   }
 );
 

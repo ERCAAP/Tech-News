@@ -45,37 +45,22 @@ export default function CreateNewsScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.content) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
     try {
-      setIsLoading(true);
-      const form = new FormData();
-      form.append('title', formData.title);
-      form.append('content', formData.content);
-      form.append('category', formData.category);
-      form.append('videoUrl', formData.videoUrl);
-
-      if (formData.imageUrl) {
-        const imageUri = formData.imageUrl;
-        const filename = imageUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename || '');
-        const type = match ? `image/${match[1]}` : 'image';
-        
-        form.append('image', {
-          uri: imageUri,
-          name: filename,
-          type,
-        } as any);
+      if (!formData.title || !formData.content) {
+        Alert.alert('Error', 'Title and content are required');
+        return;
       }
 
-      await dispatch(createNews(form)).unwrap();
+      setIsLoading(true);
+      const result = await dispatch(createNews(formData)).unwrap();
+      
       Alert.alert('Success', 'News created successfully');
       router.back();
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create news');
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to create news. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }

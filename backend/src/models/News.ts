@@ -8,18 +8,21 @@ export interface INews extends Document {
   category: string;
   tags: string[];
   imageUrl?: string;
+  videoUrl?: string;
   status: 'draft' | 'published' | 'archived';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const newsSchema = new Schema<INews>({
   title: {
     type: String,
-    required: true,
+    required: [true, 'A news must have a title'],
     trim: true
   },
   content: {
     type: String,
-    required: true
+    required: [true, 'A news must have content']
   },
   summary: {
     type: String,
@@ -33,7 +36,8 @@ const newsSchema = new Schema<INews>({
   },
   category: {
     type: String,
-    required: true
+    required: true,
+    default: 'General'
   },
   tags: [{
     type: String,
@@ -42,10 +46,13 @@ const newsSchema = new Schema<INews>({
   imageUrl: {
     type: String
   },
+  videoUrl: {
+    type: String
+  },
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
-    default: 'draft'
+    default: 'published'
   }
 }, {
   timestamps: true

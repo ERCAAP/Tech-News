@@ -3,6 +3,7 @@ import { News } from '../models/News';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { Types } from 'mongoose';
+import { logger } from '../utils/logger';
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
@@ -27,15 +28,39 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 
 // Haber oluştur
 export const createNews = asyncHandler(async (req: Request, res: Response) => {
-  const news = await News.create({
-    ...req.body,
-    author: req.user._id,
-    imageUrl: req.file?.path
-  });
-  res.status(201).json({
-    status: 'success',
-    data: { news }
-  });
+  try {
+    logger.info('Creating news with data:', req.body);
+
+    // Gerekli alanları kontrol et
+    if (!req.body.title || !req.body.content) {
+      throw new AppError('Title and content are required', 400);
+    }
+
+    // Özet (summary) oluştur
+    const summary = req.body.content.substring(0, 200);
+
+    const news = await News.create({
+      title: req.body.title,
+      content: req.body.content,
+      summary: summary,
+      category: req.body.category || 'General',
+      author: req.user._id,
+      imageUrl: req.body.imageUrl,
+      videoUrl: req.body.videoUrl,
+      status: 'published',
+      tags: req.body.tags || []
+    });
+
+    logger.info('News created successfully:', news);
+
+    res.status(201).json({
+      status: 'success',
+      data: { news }
+    });
+  } catch (error: any) {
+    logger.error('Error creating news:', error);
+    throw new AppError(error?.message || 'Error creating news', 500);
+  }
 });
 
 // Haber güncelle

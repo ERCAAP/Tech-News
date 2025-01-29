@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, restrictTo } from '../middleware/authMiddleware';
+import { protect, restrictTo } from '../middleware/auth';
 import {
   getAllNews,
   getNewsById,
@@ -13,17 +13,20 @@ import { upload } from '../utils/upload';
 
 const router = express.Router();
 
-router
-  .route('/')
-  .get(getAllNews)
-  .post(protect, restrictTo('admin'), upload.single('image'), createNews);
+// Public routes
+router.get('/', getAllNews);
+router.get('/:id', getNewsById);
 
-router
-  .route('/:id')
-  .get(getNewsById)
-  .put(protect, restrictTo('admin'), upload.single('image'), updateNews)
-  .delete(protect, restrictTo('admin'), deleteNews);
+// Protected routes
+router.use(protect);
 
-router.route('/:id/like').post(protect, likeNews).delete(protect, unlikeNews);
+// Admin only routes
+router.post('/', restrictTo('admin'), upload.single('image'), createNews);
+router.put('/:id', restrictTo('admin'), upload.single('image'), updateNews);
+router.delete('/:id', restrictTo('admin'), deleteNews);
+
+// User interaction routes
+router.post('/:id/like', likeNews);
+router.delete('/:id/like', unlikeNews);
 
 export default router; 
