@@ -1,8 +1,19 @@
 import axios from 'axios';
-import type { InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
+
+// Global token yönetimi için
+let authToken: string | null = null;
+
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+  if (token) {
+    AsyncStorage.setItem('token', token);
+  } else {
+    AsyncStorage.removeItem('token');
+  }
+};
 
 interface ApiResponse<T> {
   status: string;
@@ -18,21 +29,24 @@ const api = axios.create({
 });
 
 // Token interceptor
-api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  try {
-    const token = await AsyncStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    if (authToken && config.headers) {
+      config.headers.Authorization = `Bearer ${authToken}`;
     }
     return config;
-  } catch (error) {
+  },
+  (error) => {
     return Promise.reject(error);
   }
-});
+);
 
 export const authAPI = {
   login: async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
     const response = await api.post<ApiResponse<{ user: User }>>('/v1/auth/login', { email, password });
+    if (response.data.token) {
+      setAuthToken(response.data.token);
+    }
     return response.data;
   },
   
@@ -43,6 +57,9 @@ export const authAPI = {
     lastName: string;
   }): Promise<ApiResponse<{ user: User }>> => {
     const response = await api.post<ApiResponse<{ user: User }>>('/v1/auth/register', userData);
+    if (response.data.token) {
+      setAuthToken(response.data.token);
+    }
     return response.data;
   },
 
@@ -57,6 +74,10 @@ export const authAPI = {
       newPassword
     });
     return response.data;
+  },
+
+  logout: async () => {
+    setAuthToken(null);
   }
 };
 
