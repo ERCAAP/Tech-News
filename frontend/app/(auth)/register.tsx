@@ -43,6 +43,8 @@ export default function RegisterScreen() {
         id: '1',
         username,
         email,
+        isAdmin: false,
+        favorites: [],
       }));
 
       router.replace('/(tabs)');

@@ -35,6 +35,8 @@ export default function LoginScreen() {
         id: '1',
         username: email.split('@')[0],
         email: email,
+        isAdmin: email === 'admin@technews.com',
+        favorites: [],
       }));
 
       router.replace('/(tabs)');

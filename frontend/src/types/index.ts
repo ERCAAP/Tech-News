@@ -3,6 +3,8 @@ export interface User {
   username: string;
   email: string;
   avatar?: string;
+  isAdmin: boolean;
+  favorites: string[]; // Favori haber ID'leri
 }
 
 export interface NewsItem {
@@ -12,6 +14,9 @@ export interface NewsItem {
   imageUrl?: string;
   author: string;
   publishedAt: string;
+  category: string;
+  likes: number;
+  isFavorited?: boolean;
 }
 
 export interface AuthState {
@@ -22,6 +27,7 @@ export interface AuthState {
 
 export interface NewsState {
   news: NewsItem[];
+  favorites: NewsItem[];
   isLoading: boolean;
   error: string | null;
 } 
