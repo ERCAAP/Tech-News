@@ -1,10 +1,10 @@
 export interface User {
   id: string;
-  username: string;
   email: string;
-  avatar?: string;
-  isAdmin: boolean;
-  favorites: string[]; // Favori haber ID'leri
+  firstName: string;
+  lastName: string;
+  role: 'user' | 'admin';
+  favoriteNews: string[];
 }
 
 export interface NewsItem {
@@ -16,11 +16,12 @@ export interface NewsItem {
   publishedAt: string;
   category: string;
   likes: number;
-  isFavorited?: boolean;
+  isFavorited: boolean;
 }
 
 export interface AuthState {
   user: User | null;
+  token: string | null;
   isLoading: boolean;
   error: string | null;
 }

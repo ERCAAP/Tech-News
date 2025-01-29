@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "email": "E-posta",
+      "password": "Şifre",
+      "submit": "Giriş Yap",
+      "loading": "Giriş yapılıyor...",
+      "register_link": "Hesabınız yok mu? Kayıt olun",
+      "errors": {
+        "invalid_credentials": "Geçersiz e-posta veya şifre"
+      }
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "password": "Şifre",
+      "confirmPassword": "Şifre Tekrar",
+      "submit": "Kayıt Ol",
+      "loading": "Kayıt yapılıyor...",
+      "login_link": "Zaten hesabınız var mı? Giriş yapın"
+    }
+  }
+} 

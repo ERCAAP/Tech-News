@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { View, TextInput, StyleSheet, Pressable, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
-import { setUser } from '@/redux/slices/authSlice';
+import { register } from '@/redux/slices/authSlice';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 
 export default function RegisterScreen() {
@@ -13,41 +14,26 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   const handleRegister = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Validations
-      if (!username || username.length < 3) {
-        throw new Error('Kullanıcı adı en az 3 karakter olmalıdır');
-      }
-
-      if (!email.includes('@')) {
-        throw new Error('Geçerli bir email adresi giriniz');
-      }
-
-      if (password.length < 6) {
-        throw new Error('Şifre en az 6 karakter olmalıdır');
-      }
-
-      if (password !== confirmPassword) {
-        throw new Error('Şifreler eşleşmiyor');
-      }
-
-      // TODO: Implement actual API register logic here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      dispatch(setUser({
-        id: '1',
-        username,
+      const resultAction = await dispatch(register({
         email,
-        isAdmin: false,
-        favorites: [],
+        password,
+        firstName,
+        lastName
       }));
 
-      router.replace('/(tabs)');
+      if (register.fulfilled.match(resultAction)) {
+        router.replace('/(tabs)');
+      } else if (register.rejected.match(resultAction)) {
+        throw new Error(resultAction.error.message);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kayıt olurken bir hata oluştu');
     } finally {
@@ -96,6 +82,22 @@ export default function RegisterScreen() {
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
+        editable={!isLoading}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Adı"
+        value={firstName}
+        onChangeText={setFirstName}
+        editable={!isLoading}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Soyadı"
+        value={lastName}
+        onChangeText={setLastName}
         editable={!isLoading}
       />
 

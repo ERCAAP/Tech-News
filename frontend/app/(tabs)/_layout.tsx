@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppSelector } from '@/redux/hooks';
+import React from 'react';
 
 export default function TabLayout() {
   const { user } = useAppSelector(state => state.auth);
@@ -16,7 +17,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      {user?.isAdmin && (
+      {user?.role === 'admin' && (
         <Tabs.Screen
           name="admin"
           options={{

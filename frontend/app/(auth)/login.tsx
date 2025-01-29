@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, TextInput, StyleSheet, Pressable, Text, Image } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
-import { setUser } from '@/redux/slices/authSlice';
+import { login } from '@/redux/slices/authSlice';
 import { router } from 'expo-router';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -11,35 +12,19 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const { t } = useTranslation('auth');
 
   const handleLogin = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Email validation
-      if (!email.includes('@')) {
-        throw new Error('Geçerli bir email adresi giriniz');
+      const resultAction = await dispatch(login({ email, password }));
+      if (login.fulfilled.match(resultAction)) {
+        router.replace('/(tabs)');
+      } else if (login.rejected.match(resultAction)) {
+        throw new Error(resultAction.error.message);
       }
-
-      // Password validation
-      if (password.length < 6) {
-        throw new Error('Şifre en az 6 karakter olmalıdır');
-      }
-
-      // TODO: Implement actual API login logic here
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      dispatch(setUser({
-        id: '1',
-        username: email.split('@')[0],
-        email: email,
-        isAdmin: email === 'admin@technews.com',
-        favorites: [],
-      }));
-
-      router.replace('/(tabs)');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Giriş yapılırken bir hata oluştu');
     } finally {
@@ -55,16 +40,18 @@ export default function LoginScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>Tech News</Text>
+        <Text style={styles.title}>{t('login.title')}</Text>
       </View>
 
       {error && (
-        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorText}>
+          {t(`login.errors.${error}`, { defaultValue: t('common:errors.general') })}
+        </Text>
       )}
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder={t('login.email')}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -74,7 +61,7 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Şifre"
+        placeholder={t('login.password')}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -87,7 +74,7 @@ export default function LoginScreen() {
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>
-          {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          {isLoading ? t('login.loading') : t('login.submit')}
         </Text>
       </Pressable>
 
@@ -96,7 +83,7 @@ export default function LoginScreen() {
         onPress={() => router.push('/(auth)/register')}
         disabled={isLoading}
       >
-        <Text style={styles.registerText}>Hesabınız yok mu? Kayıt olun</Text>
+        <Text style={styles.registerText}>{t('login.register_link')}</Text>
       </Pressable>
     </View>
   );
