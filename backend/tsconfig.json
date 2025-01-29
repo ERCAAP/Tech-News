@@ -1,29 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es6",
     "module": "commonjs",
-    "lib": ["es2020"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "*": ["node_modules/*"],
-      "@/*": ["src/*"],
-      "@config/*": ["src/config/*"],
-      "@controllers/*": ["src/controllers/*"],
-      "@models/*": ["src/models/*"],
-      "@routes/*": ["src/routes/*"],
-      "@utils/*": ["src/utils/*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node", "express"]
+      "@/*": ["./*"],
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules"]
 } 

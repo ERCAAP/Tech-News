@@ -1,19 +1,9 @@
 import axios from 'axios';
-import { API_URL } from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
 
-// Global token yönetimi için
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
-  if (token) {
-    AsyncStorage.setItem('token', token);
-  } else {
-    AsyncStorage.removeItem('token');
-  }
-};
+// API URL'ini .env'den al
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface ApiResponse<T> {
   status: string;
@@ -31,8 +21,9 @@ const api = axios.create({
 // Token interceptor
 api.interceptors.request.use(
   (config) => {
-    if (authToken && config.headers) {
-      config.headers.Authorization = `Bearer ${authToken}`;
+    const token = AsyncStorage.getItem('token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -41,11 +32,20 @@ api.interceptors.request.use(
   }
 );
 
+// Hata yakalama interceptor'ı ekleyelim
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
     const response = await api.post<ApiResponse<{ user: User }>>('/v1/auth/login', { email, password });
     if (response.data.token) {
-      setAuthToken(response.data.token);
+      AsyncStorage.setItem('token', response.data.token);
     }
     return response.data;
   },
@@ -56,11 +56,16 @@ export const authAPI = {
     firstName: string;
     lastName: string;
   }): Promise<ApiResponse<{ user: User }>> => {
-    const response = await api.post<ApiResponse<{ user: User }>>('/v1/auth/register', userData);
-    if (response.data.token) {
-      setAuthToken(response.data.token);
+    try {
+      const response = await api.post<ApiResponse<{ user: User }>>('/auth/register', userData);
+      if (response.data.token) {
+        AsyncStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Register Error:', error);
+      throw error;
     }
-    return response.data;
   },
 
   getMe: async (): Promise<ApiResponse<{ user: User }>> => {
@@ -77,7 +82,7 @@ export const authAPI = {
   },
 
   logout: async () => {
-    setAuthToken(null);
+    AsyncStorage.removeItem('token');
   }
 };
 

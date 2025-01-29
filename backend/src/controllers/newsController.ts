@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { News } from '../models/News';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
+import { Types } from 'mongoose';
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
@@ -78,7 +79,7 @@ export const toggleFavorite = asyncHandler(async (req: Request, res: Response) =
   const user = await req.user.populate('favoriteNews');
   const newsId = req.params.id;
 
-  const index = user.favoriteNews.findIndex(id => id.toString() === newsId);
+  const index = user.favoriteNews.findIndex((id: Types.ObjectId) => id.toString() === newsId);
   
   if (index === -1) {
     user.favoriteNews.push(newsId);

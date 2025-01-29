@@ -1,24 +1,24 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { rateLimit } from 'express-rate-limit';
-import { connectDB } from './config/database';
+import config from './config/loadEnv';
 import { errorHandler } from './utils/errorHandler';
 import { logger } from './utils/logger';
 import routes from './routes';
 
-// Load environment variables
-import '@config/loadEnv';
-
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Security Middleware
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:19001'],
+  credentials: true
+}));
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
 app.use(morgan('dev'));
+app.use(express.json());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -33,17 +33,24 @@ app.use('/api', routes);
 // Error handling
 app.use(errorHandler);
 
-// Start server
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(port, () => {
-      logger.info(`Server running on port ${port}`);
-    });
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
+// MongoDB bağlantısı
+mongoose.connect(config.mongodbUri!, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+.then(() => {
+  logger.info('MongoDB connected successfully');
+  // Server'ı başlat
+  app.listen(config.port, () => {
+    logger.info(`Server is running on port ${config.port}`);
+  });
+})
+.catch((error) => {
+  logger.error('MongoDB connection error:', error);
+  if (error.code === 'ECONNREFUSED') {
+    logger.error('MongoDB connection refused. Please check if MongoDB is running.');
   }
-};
+  process.exit(1);
+});
 
-startServer(); 
+export default app; 
