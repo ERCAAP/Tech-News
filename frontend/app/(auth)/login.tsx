@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/redux/hooks';
 import { login } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { COLORS } from '@/theme';
 
 export default function LoginScreen() {
@@ -23,10 +23,13 @@ export default function LoginScreen() {
         return;
       }
       
-      console.log('Login attempt with:', formData); // Debug için
+      console.log('Login attempt with:', formData);
       
       const result = await dispatch(login(formData)).unwrap();
-      console.log('Login success:', result); // Debug için
+      console.log('Login success:', result);
+      
+      // Login başarılı olduğunda ana sayfaya yönlendir
+      router.replace('/(tabs)');
       
     } catch (error: any) {
       console.log('Login Error:', error);

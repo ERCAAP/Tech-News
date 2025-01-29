@@ -1,4 +1,5 @@
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Header } from '@/components/common/Header';
 import { NewsFeed } from '@/components/news/NewsFeed';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
@@ -6,14 +7,29 @@ import { useEffect } from 'react';
 import { fetchNews } from '@/redux/slices/newsSlice';
 import { COLORS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
+import { NewsCard } from '@/components/news/NewsCard';
+import { FloatingButton } from '@/components/common/FloatingButton';
+import { useRouter } from 'expo-router';
+import { isUserAdmin } from '@/types';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { user } = useAppSelector(state => state.auth);
   const { news, isLoading } = useAppSelector(state => state.news);
 
   useEffect(() => {
     dispatch(fetchNews());
   }, [dispatch]);
+
+  const handleNewsPress = (id: string) => {
+    router.push(`/news/${id}`);
+  };
+
+  const handleCreatePress = () => {
+    router.push('/create-news');
+  };
 
   if (isLoading) {
     return <Loading />;
@@ -26,7 +42,26 @@ export default function HomeScreen() {
         rightIcon="search"
         onRightPress={() => {/* TODO: Implement search */}}
       />
-      <NewsFeed news={news} />
+      <FlatList
+        data={news}
+        renderItem={({ item }) => (
+          <NewsCard
+            news={item}
+            onPress={() => handleNewsPress(item.id)}
+          />
+        )}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Admin için Haber Ekleme Butonu */}
+      {user && isUserAdmin(user) && (
+        <FloatingButton
+          icon={<MaterialIcons name="add" size={24} color={COLORS.white} />}
+          onPress={handleCreatePress}
+        />
+      )}
     </View>
   );
 }
@@ -35,5 +70,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  list: {
+    padding: 16,
   },
 }); 

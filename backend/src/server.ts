@@ -15,9 +15,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Veritabanı bağlantısı
-connectDB();
-
 const app = express();
 
 // Middleware
@@ -46,24 +43,20 @@ app.use('/api/v1/news', newsRoutes);
 // Error handling
 app.use(errorHandler);
 
-// MongoDB bağlantısı
-mongoose.connect(config.mongodbUri!, {
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-.then(() => {
-  logger.info('MongoDB connected successfully');
-  // Server'ı başlat
-  app.listen(config.port, () => {
-    logger.info(`Server is running on port ${config.port}`);
-  });
-})
-.catch((error) => {
-  logger.error('MongoDB connection error:', error);
-  if (error.code === 'ECONNREFUSED') {
-    logger.error('MongoDB connection refused. Please check if MongoDB is running.');
+// Server'ı başlat
+const startServer = async () => {
+  try {
+    await connectDB(); // Önce database'e bağlan
+    
+    app.listen(config.port, () => {
+      logger.info(`Server is running on port ${config.port}`);
+    });
+  } catch (error) {
+    logger.error('Server startup failed:', error);
+    process.exit(1);
   }
-  process.exit(1);
-});
+};
+
+startServer();
 
 export default app; 
