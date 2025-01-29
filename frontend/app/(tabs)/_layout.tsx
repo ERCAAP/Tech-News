@@ -12,10 +12,6 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.border,
-        },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray,
       }}
@@ -24,49 +20,49 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="home" size={24} color={color} />
           ),
         }}
       />
-      {user && isUserAdmin(user) && (
-        <Tabs.Screen
-          name="admin"
-          options={{
-            title: 'Admin',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="admin-panel-settings" size={size} color={color} />
-            ),
-          }}
-        />
-      )}
-      <Tabs.Screen
-        name="news"
-        options={{
-          title: 'News',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="article" size={size} color={color} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="favorite" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="favorite" size={24} color={color} />
           ),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person" size={24} color={color} />
           ),
         }}
       />
+
+      <Tabs.Screen
+        name="news/[id]"
+        options={{
+          tabBarButton: () => null,
+          title: 'News Detail'
+        }}
+      />
+
+      {user && isUserAdmin(user) && (
+        <Tabs.Screen
+          name="admin"
+          options={{
+            tabBarButton: () => null,
+            title: 'Admin Panel'
+          }}
+        />
+      )}
     </Tabs>
   );
 } 
