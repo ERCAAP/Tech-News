@@ -1,67 +1,66 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { SignOptions } from 'jsonwebtoken';
-import { User } from '../models/User';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { User, IUser } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { validateRegistration, validateLogin } from '../utils/validators';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+
 // JWT token oluşturma yardımcı fonksiyonu
 const createToken = (id: string): string => {
   const options: SignOptions = {
-    expiresIn: Number(process.env.JWT_EXPIRES_IN) || 24 * 60 * 60 // 24 saat (saniye cinsinden)
+    expiresIn: JWT_EXPIRES_IN
   };
-  
-  return jwt.sign(
-    { id },
-    process.env.JWT_SECRET || 'your-secret-key',
-    options
-  );
+
+  return jwt.sign({ id }, JWT_SECRET, options);
 };
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  // Validate input
-  const validatedData = validateRegistration(req.body);
+  const { email, password, firstName, lastName } = req.body;
 
-  // Check if user exists
-  const existingUser = await User.findOne({ email: validatedData.email });
+  // Email kontrolü
+  const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new AppError('Email already registered', 400);
+    throw new AppError('Email already exists', 400);
   }
 
-  // Create user
+  // Yeni kullanıcı oluştur
   const user = await User.create({
-    email: validatedData.email,
-    password: validatedData.password,
-    firstName: validatedData.firstName,
-    lastName: validatedData.lastName
+    email,
+    password,
+    firstName,
+    lastName,
+    role: 'user',
+    favoriteNews: []
   });
 
-  // Generate token
+  // Token oluştur
   const token = createToken(user._id.toString());
 
-  // Remove password from response
-  user.password = undefined;
+  // Şifreyi response'dan çıkar
+  const userObject = user.toObject();
+  userObject.password = undefined;
 
   res.status(201).json({
     status: 'success',
     token,
-    data: { user }
+    data: { user: userObject }
   });
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  // Validate input
-  const validatedData = validateLogin(req.body);
+  const { email, password } = req.body;
 
-  // Find user
-  const user = await User.findOne({ email: validatedData.email });
+  // Find user and select password
+  const user = await User.findOne({ email }).select('+password') as IUser;
   if (!user) {
     throw new AppError('Invalid credentials', 401);
   }
 
   // Check password
-  const isPasswordValid = await user.comparePassword(validatedData.password);
+  const isPasswordValid = await user.comparePassword(password);
   if (!isPasswordValid) {
     throw new AppError('Invalid credentials', 401);
   }
@@ -69,9 +68,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   // Generate token
   const token = createToken(user._id.toString());
 
+  // Remove password from response
+  const userObject = user.toObject();
+  userObject.password = undefined;
+
   res.status(200).json({
     status: 'success',
-    token
+    token,
+    data: { user: userObject }
   });
 });
 

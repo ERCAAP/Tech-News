@@ -27,14 +27,11 @@ export const fetchNews = createAsyncThunk<NewsResponse>(
   }
 );
 
-export const createNews = createAsyncThunk<NewsResponse, FormData>(
+export const createNews = createAsyncThunk(
   'news/createNews',
-  async (newsData) => {
-    const response = await newsAPI.createNews(newsData);
-    return {
-      status: response.status,
-      data: { news: response.data.news }
-    };
+  async (formData: FormData) => {
+    const response = await newsAPI.createNews(formData);
+    return response.data.news;
   }
 );
 
@@ -46,6 +43,14 @@ export const toggleFavorite = createAsyncThunk<NewsResponse, string>(
       status: response.status,
       data: { news: response.data.news }
     };
+  }
+);
+
+export const getAllNews = createAsyncThunk(
+  'news/getAllNews',
+  async () => {
+    const response = await newsAPI.getAllNews();
+    return response.data.news;
   }
 );
 
@@ -76,6 +81,30 @@ const newsSlice = createSlice({
         state.news = action.payload.data.news as NewsItem[];
       })
       .addCase(fetchNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || null;
+      })
+      .addCase(createNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.news.unshift(action.payload);
+      })
+      .addCase(createNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || null;
+      })
+      .addCase(getAllNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getAllNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.news = action.payload;
+      })
+      .addCase(getAllNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || null;
       });

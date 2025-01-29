@@ -117,7 +117,7 @@ export const newsAPI = {
   },
 
   createNews: async (newsData: FormData): Promise<ApiResponse<{ news: NewsItem }>> => {
-    const response = await api.post<ApiResponse<{ news: NewsItem }>>('/v1/news', newsData, {
+    const response = await api.post<ApiResponse<{ news: NewsItem }>>('/news', newsData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }

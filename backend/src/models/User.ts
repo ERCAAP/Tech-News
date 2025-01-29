@@ -1,39 +1,36 @@
-import { Schema, model, Document, CallbackWithoutResultAndOptionalError } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   email: string;
-  password: string | undefined;
+  password?: string;  // password'ü optional yaptık
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
-  favoriteNews: Schema.Types.ObjectId[];
-  isModified(path: string): boolean;
+  favoriteNews: mongoose.Types.ObjectId[];
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
+const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Please provide your first name']
   },
   lastName: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Please provide your last name']
+  },
+  email: {
+    type: String,
+    required: [true, 'Please provide your email'],
+    unique: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: [true, 'Please provide a password'],
+    minlength: 6,
+    select: false  // Varsayılan olarak password'ü getirme
   },
   role: {
     type: String,
@@ -41,31 +38,24 @@ const userSchema = new Schema<IUser>({
     default: 'user'
   },
   favoriteNews: [{
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'News'
   }]
 }, {
   timestamps: true
 });
 
-// Hash password before saving
-userSchema.pre('save', async function(this: IUser, next: CallbackWithoutResultAndOptionalError) {
+// Şifre hash'leme
+userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, salt);
-    }
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
+  this.password = await bcrypt.hash(this.password!, 12);
+  next();
 });
 
-// Compare password method
+// Şifre karşılaştırma metodu
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password!);
 };
 
-export const User = model<IUser>('User', userSchema); 
+export const User = mongoose.model<IUser>('User', userSchema); 

@@ -1,11 +1,26 @@
 export interface User {
-  id: string;
-  email: string;
+  _id: string;
   firstName: string;
   lastName: string;
+  email: string;
   role: 'user' | 'admin';
-  favoriteNews: string[];
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
 }
+
+// User tipi için yardımcı fonksiyonlar
+export const getUserFullName = (user: User): string => {
+  return `${user.firstName} ${user.lastName}`;
+};
+
+export const getUserInitials = (user: User): string => {
+  return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+};
+
+export const isUserAdmin = (user: User): boolean => {
+  return user.role === 'admin';
+};
 
 export interface NewsItem {
   id: string;

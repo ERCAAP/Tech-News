@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Alert } from 'react-native';
-import { User } from '@/types';
+import { View, Text, Image, StyleSheet, Alert, SafeAreaView } from 'react-native';
+import { User, getUserFullName, getUserInitials, isUserAdmin } from '@/types';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { logout } from '@/redux/slices/authSlice';
@@ -40,7 +40,7 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
   if (!user) return null;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         {user.avatar ? (
           <Image 
@@ -49,17 +49,26 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
           />
         ) : (
           <View style={[styles.avatarPlaceholder, { width: wp('30%'), height: wp('30%') }]}>
-            <Text style={styles.avatarText}>{user.username[0].toUpperCase()}</Text>
+            <Text style={styles.avatarText}>{getUserInitials(user)}</Text>
           </View>
         )}
-        <Text style={styles.username}>{user.username}</Text>
+        <Text style={styles.name}>{getUserFullName(user)}</Text>
         <Text style={styles.email}>{user.email}</Text>
       </View>
 
       <View style={styles.infoSection}>
-        {user.isAdmin && (
-          <Text style={styles.adminBadge}>Admin User</Text>
+        {isUserAdmin(user) && (
+          <View style={styles.adminBadgeContainer}>
+            <Text style={styles.adminBadge}>Admin</Text>
+          </View>
         )}
+        
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Member since</Text>
+          <Text style={styles.infoValue}>
+            {new Date(user.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.actions}>
@@ -76,7 +85,7 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
           onPress={handleLogout}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -89,6 +98,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
     backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   avatar: {
     borderRadius: 50,
@@ -106,7 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontFamily: FONTS.bold,
   },
-  username: {
+  name: {
     fontSize: 24,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
@@ -122,13 +133,38 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     marginTop: 16,
   },
+  adminBadgeContainer: {
+    backgroundColor: COLORS.primary + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
   adminBadge: {
     color: COLORS.primary,
     fontFamily: FONTS.medium,
+    fontSize: 14,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  infoLabel: {
     fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+  },
+  infoValue: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
   },
   actions: {
     padding: 16,
+    marginTop: 'auto',
   },
   button: {
     marginVertical: 8,

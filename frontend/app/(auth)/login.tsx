@@ -5,6 +5,7 @@ import { login } from '@/redux/slices/authSlice';
 import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/common/Button';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
