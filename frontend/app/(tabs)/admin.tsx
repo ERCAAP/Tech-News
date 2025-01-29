@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { NewsForm } from '@/components/admin/NewsForm';
+import { Header } from '@/components/common/Header';
+import { CreateNewsForm } from '@/components/admin/CreateNewsForm';
 import { useAppSelector } from '@/redux/hooks';
 import { isUserAdmin } from '@/types';
 import { COLORS } from '@/theme';
@@ -17,8 +18,9 @@ export default function AdminScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <Header title="Admin Panel" />
       <View style={styles.content}>
-        <NewsForm />
+        <CreateNewsForm />
       </View>
     </ScrollView>
   );

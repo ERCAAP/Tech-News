@@ -8,21 +8,26 @@ export const COLORS = {
   warning: '#FF9500',
   info: '#5856D6',
   light: '#F2F2F7',
-  dark: '#1C1C1E',
+  dark: '#000000',
   white: '#FFFFFF',
   black: '#000000',
-  gray: '#8E8E93',
-  background: '#F2F2F7',
-  card: '#FFFFFF',
-  text: '#000000',
-  border: '#C6C6C8',
-  notification: '#FF3B30',
+  gray: '#6E6E6E',
+  border: '#E5E5E5',
+  background: '#F5F5F5',
 };
 
 export const FONTS = {
   regular: 'System',
   medium: 'System-Medium',
   bold: 'System-Bold',
+  sizes: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
+  },
 };
 
 export const SIZES = {
@@ -35,22 +40,16 @@ export const SIZES = {
 };
 
 export const SHADOWS = {
-  light: {
-    shadowColor: COLORS.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+  small: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   medium: {
-    shadowColor: COLORS.black,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,

@@ -2,13 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { NewsState, NewsItem } from '@/types';
 import { newsAPI } from '@/services/api';
 
-interface NewsResponse {
-  status: string;
-  data: {
-    news: NewsItem[] | NewsItem;
-  };
-}
-
 const initialState: NewsState = {
   news: [],
   favorites: [],
@@ -16,37 +9,35 @@ const initialState: NewsState = {
   error: null,
 };
 
-export const fetchNews = createAsyncThunk<NewsResponse>(
+// Haberleri getir
+export const fetchNews = createAsyncThunk<NewsItem[]>(
   'news/fetchNews',
   async () => {
     const response = await newsAPI.getAllNews();
-    return {
-      status: response.status,
-      data: { news: response.data.news }
-    };
+    return response.data.news;
   }
 );
 
-export const createNews = createAsyncThunk(
+// Haber oluştur
+export const createNews = createAsyncThunk<NewsItem, FormData>(
   'news/createNews',
-  async (formData: FormData) => {
+  async (formData) => {
     const response = await newsAPI.createNews(formData);
     return response.data.news;
   }
 );
 
-export const toggleFavorite = createAsyncThunk<NewsResponse, string>(
-  'news/toggleFavorite',
+// Haberi beğen
+export const toggleLike = createAsyncThunk<NewsItem, string>(
+  'news/toggleLike',
   async (newsId) => {
-    const response = await newsAPI.toggleFavorite(newsId);
-    return {
-      status: response.status,
-      data: { news: response.data.news }
-    };
+    const response = await newsAPI.likeNews(newsId);
+    return response.data.news;
   }
 );
 
-export const getAllNews = createAsyncThunk(
+// Tüm haberleri getir
+export const getAllNews = createAsyncThunk<NewsItem[]>(
   'news/getAllNews',
   async () => {
     const response = await newsAPI.getAllNews();
@@ -75,14 +66,16 @@ const newsSlice = createSlice({
     builder
       .addCase(fetchNews.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchNews.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.news = action.payload.data.news as NewsItem[];
+        state.news = action.payload;
+        state.error = null;
       })
       .addCase(fetchNews.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || null;
+        state.error = action.error.message || 'Bir hata oluştu';
       })
       .addCase(createNews.pending, (state) => {
         state.isLoading = true;
@@ -91,10 +84,11 @@ const newsSlice = createSlice({
       .addCase(createNews.fulfilled, (state, action) => {
         state.isLoading = false;
         state.news.unshift(action.payload);
+        state.error = null;
       })
       .addCase(createNews.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || null;
+        state.error = action.error.message || 'Haber oluşturulamadı';
       })
       .addCase(getAllNews.pending, (state) => {
         state.isLoading = true;

@@ -1,61 +1,45 @@
+import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
-import { NewsItem } from '@/types';
-import { useResponsive } from '@/hooks/useResponsive';
-import { COLORS, FONTS, SHADOWS } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { toggleFavorite } from '@/redux/slices/newsSlice';
-import { router } from 'expo-router';
+import { NewsItem } from '@/types';
+import { COLORS, FONTS, SHADOWS } from '@/theme';
+import { formatDate } from '@/utils/date';
 
 interface NewsCardProps {
   news: NewsItem;
+  onPress?: () => void;
 }
 
-export function NewsCard({ news }: NewsCardProps) {
-  const { wp, hp } = useResponsive();
-  const dispatch = useAppDispatch();
-  const { user } = useAppSelector(state => state.auth);
-
-  const handlePress = () => {
-    router.push(`/news/${news.id}`);
-  };
-
-  const handleFavorite = () => {
-    if (user) {
-      dispatch(toggleFavorite(news.id));
-    } else {
-      router.push('/(auth)/login');
-    }
-  };
+export function NewsCard({ news, onPress }: NewsCardProps) {
+  const authorName = `${news.author.firstName} ${news.author.lastName}`;
 
   return (
-    <Pressable 
-      style={[styles.container, { minHeight: hp('20%') }]}
-      onPress={handlePress}
-    >
+    <Pressable onPress={onPress} style={styles.container}>
       {news.imageUrl && (
         <Image 
           source={{ uri: news.imageUrl }} 
-          style={[styles.image, { height: hp('25%') }]}
+          style={styles.image}
           resizeMode="cover"
         />
       )}
-      <View style={[styles.content, { padding: wp('4%') }]}>
-        <View style={styles.header}>
-          <Text style={styles.category}>{news.category}</Text>
-          <Pressable onPress={handleFavorite}>
-            <MaterialIcons
-              name={news.isFavorited ? "favorite" : "favorite-border"}
-              size={24}
-              color={news.isFavorited ? COLORS.danger : COLORS.gray}
-            />
-          </Pressable>
-        </View>
+      
+      <View style={styles.content}>
+        <Text style={styles.category}>{news.category}</Text>
         <Text style={styles.title}>{news.title}</Text>
-        <Text style={styles.author}>By {news.author}</Text>
-        <Text style={styles.date}>
-          {new Date(news.publishedAt).toLocaleDateString()}
+        <Text style={styles.excerpt} numberOfLines={2}>
+          {news.content}
         </Text>
+        
+        <View style={styles.footer}>
+          <View>
+            <Text style={styles.author}>{authorName}</Text>
+            <Text style={styles.date}>{formatDate(news.createdAt)}</Text>
+          </View>
+          <View style={styles.stats}>
+            <MaterialIcons name="favorite" size={16} color={COLORS.primary} />
+            <Text style={styles.statsText}>{news.likes}</Text>
+          </View>
+        </View>
       </View>
     </Pressable>
   );
@@ -66,41 +50,56 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 16,
-    ...SHADOWS.medium,
+    ...SHADOWS.small,
   },
   image: {
     width: '100%',
+    height: 200,
   },
   content: {
-    backgroundColor: COLORS.white,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    padding: 16,
   },
   category: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
     color: COLORS.primary,
+    fontSize: FONTS.sizes.sm,
+    fontFamily: FONTS.medium,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONTS.sizes.lg,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
     marginBottom: 8,
   },
-  author: {
-    fontSize: 14,
+  excerpt: {
+    fontSize: FONTS.sizes.md,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
-    marginBottom: 4,
+    marginBottom: 16,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  author: {
+    fontSize: FONTS.sizes.sm,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
   },
   date: {
-    fontSize: 12,
+    fontSize: FONTS.sizes.sm,
     fontFamily: FONTS.regular,
+    color: COLORS.gray,
+  },
+  stats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statsText: {
+    marginLeft: 4,
+    fontSize: FONTS.sizes.sm,
+    fontFamily: FONTS.medium,
     color: COLORS.gray,
   },
 }); 

@@ -6,23 +6,19 @@ import { Types } from 'mongoose';
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
-  const news = await News.find().populate('author', 'firstName lastName');
-  
+  const news = await News.find().sort('-createdAt');
   res.status(200).json({
     status: 'success',
-    results: news.length,
     data: { news }
   });
 });
 
 // Tek haber getir
-export const getNews = asyncHandler(async (req: Request, res: Response) => {
-  const news = await News.findById(req.params.id).populate('author', 'firstName lastName');
-  
+export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
+  const news = await News.findById(req.params.id);
   if (!news) {
     throw new AppError('News not found', 404);
   }
-
   res.status(200).json({
     status: 'success',
     data: { news }
@@ -33,9 +29,9 @@ export const getNews = asyncHandler(async (req: Request, res: Response) => {
 export const createNews = asyncHandler(async (req: Request, res: Response) => {
   const news = await News.create({
     ...req.body,
-    author: req.user.id
+    author: req.user._id,
+    imageUrl: req.file?.path
   });
-
   res.status(201).json({
     status: 'success',
     data: { news }
@@ -46,14 +42,12 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
 export const updateNews = asyncHandler(async (req: Request, res: Response) => {
   const news = await News.findByIdAndUpdate(
     req.params.id,
-    req.body,
+    { ...req.body, imageUrl: req.file?.path },
     { new: true, runValidators: true }
   );
-
   if (!news) {
     throw new AppError('News not found', 404);
   }
-
   res.status(200).json({
     status: 'success',
     data: { news }
@@ -63,11 +57,9 @@ export const updateNews = asyncHandler(async (req: Request, res: Response) => {
 // Haber sil
 export const deleteNews = asyncHandler(async (req: Request, res: Response) => {
   const news = await News.findByIdAndDelete(req.params.id);
-
   if (!news) {
     throw new AppError('News not found', 404);
   }
-
   res.status(204).json({
     status: 'success',
     data: null
@@ -92,5 +84,35 @@ export const toggleFavorite = asyncHandler(async (req: Request, res: Response) =
   res.status(200).json({
     status: 'success',
     data: { favoriteNews: user.favoriteNews }
+  });
+});
+
+export const likeNews = asyncHandler(async (req: Request, res: Response) => {
+  const news = await News.findByIdAndUpdate(
+    req.params.id,
+    { $addToSet: { likes: req.user._id } },
+    { new: true }
+  );
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { news }
+  });
+});
+
+export const unlikeNews = asyncHandler(async (req: Request, res: Response) => {
+  const news = await News.findByIdAndUpdate(
+    req.params.id,
+    { $pull: { likes: req.user._id } },
+    { new: true }
+  );
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+  res.status(200).json({
+    status: 'success',
+    data: { news }
   });
 }); 

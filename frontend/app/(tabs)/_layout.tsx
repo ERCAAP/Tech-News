@@ -2,38 +2,59 @@ import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAppSelector } from '@/redux/hooks';
 import React from 'react';
+import { COLORS } from '@/theme';
+import { isUserAdmin } from '@/types';
 
 export default function TabLayout() {
   const { user } = useAppSelector(state => state.auth);
 
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#007AFF' }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: COLORS.white,
+          borderTopColor: COLORS.border,
+        },
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.gray,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="home" size={24} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="home" size={size} color={color} />
           ),
         }}
       />
-      {user?.role === 'admin' && (
+      {user && isUserAdmin(user) && (
         <Tabs.Screen
           name="admin"
           options={{
             title: 'Admin',
-            tabBarIcon: ({ color }) => (
-              <MaterialIcons name="admin-panel-settings" size={24} color={color} />
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="admin-panel-settings" size={size} color={color} />
             ),
           }}
         />
       )}
       <Tabs.Screen
+        name="news"
+        options={{
+          title: 'News',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="article" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favorites',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="favorite" size={24} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="favorite" size={size} color={color} />
           ),
         }}
       />
@@ -41,8 +62,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons name="person" size={24} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />

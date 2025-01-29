@@ -1,0 +1,180 @@
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, Image } from 'react-native';
+import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
+import { useAppDispatch } from '@/redux/hooks';
+import { createNews } from '@/redux/slices/newsSlice';
+import * as ImagePicker from 'expo-image-picker';
+import { COLORS, FONTS } from '@/theme';
+
+export function CreateNewsForm() {
+  const dispatch = useAppDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    category: '',
+    imageUrl: '',
+  });
+
+  const handleImagePick = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData(prev => ({ ...prev, imageUrl: result.assets[0].uri }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.content || !formData.category) {
+      Alert.alert('Error', 'Please fill all required fields');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const form = new FormData();
+      form.append('title', formData.title);
+      form.append('content', formData.content);
+      form.append('category', formData.category);
+      
+      if (formData.imageUrl) {
+        const imageUri = formData.imageUrl;
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename || '');
+        const type = match ? `image/${match[1]}` : 'image';
+        
+        form.append('image', {
+          uri: imageUri,
+          name: filename,
+          type,
+        } as any);
+      }
+
+      await dispatch(createNews(form)).unwrap();
+      Alert.alert('Success', 'News created successfully');
+      setFormData({ title: '', content: '', category: '', imageUrl: '' });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create news');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.imageSection}>
+        {formData.imageUrl ? (
+          <View style={styles.imagePreviewContainer}>
+            <Image 
+              source={{ uri: formData.imageUrl }} 
+              style={styles.imagePreview} 
+              resizeMode="cover"
+            />
+            <Button
+              title="Change Image"
+              variant="outline"
+              onPress={handleImagePick}
+              style={styles.imageButton}
+            />
+          </View>
+        ) : (
+          <Button
+            title="Add News Image"
+            variant="outline"
+            onPress={handleImagePick}
+            style={styles.imageButton}
+            icon="image"
+          />
+        )}
+      </View>
+
+      <Input
+        label="News Title"
+        value={formData.title}
+        onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
+        placeholder="Enter an attention-grabbing title"
+        style={styles.titleInput}
+      />
+
+      <Input
+        label="News Category"
+        value={formData.category}
+        onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
+        placeholder="e.g., Technology, Sports, Politics"
+      />
+
+      <Input
+        label="News Content"
+        value={formData.content}
+        onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
+        placeholder="Write your news content here..."
+        multiline
+        numberOfLines={8}
+        style={styles.contentInput}
+      />
+
+      <Button
+        title={isLoading ? "Publishing..." : "Publish News"}
+        onPress={handleSubmit}
+        disabled={isLoading}
+        style={styles.publishButton}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    ...SHADOWS.small,
+  },
+  imageSection: {
+    marginBottom: 16,
+  },
+  imagePreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  imageButton: {
+    marginBottom: 16,
+  },
+  titleInput: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+  },
+  contentInput: {
+    height: 200,
+    textAlignVertical: 'top',
+    paddingTop: 12,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+  },
+  publishButton: {
+    marginTop: 24,
+    backgroundColor: COLORS.primary,
+  },
+}); 

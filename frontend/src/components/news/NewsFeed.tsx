@@ -1,7 +1,8 @@
-import { FlatList, StyleSheet } from 'react-native';
+import React from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { NewsCard } from './NewsCard';
 import { NewsItem } from '@/types';
-import React from 'react';
+import { COLORS } from '@/theme';
 
 interface NewsFeedProps {
   news: NewsItem[];
@@ -11,9 +12,12 @@ export function NewsFeed({ news }: NewsFeedProps) {
   return (
     <FlatList
       data={news}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <NewsCard news={item} />}
+      keyExtractor={(item) => item._id}
+      renderItem={({ item }) => (
+        <NewsCard news={item} />
+      )}
       contentContainerStyle={styles.container}
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
     />
   );
 }
@@ -21,5 +25,8 @@ export function NewsFeed({ news }: NewsFeedProps) {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+  },
+  separator: {
+    height: 16,
   },
 }); 

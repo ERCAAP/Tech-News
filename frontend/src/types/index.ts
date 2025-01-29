@@ -18,20 +18,25 @@ export const getUserInitials = (user: User): string => {
   return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
 };
 
-export const isUserAdmin = (user: User): boolean => {
-  return user.role === 'admin';
+// Admin kontrolü için yardımcı fonksiyon
+export const isUserAdmin = (user: User | null): boolean => {
+  return user?.role === 'admin';
 };
 
 export interface NewsItem {
-  id: string;
+  _id: string;
   title: string;
   content: string;
-  imageUrl?: string;
-  author: string;
-  publishedAt: string;
   category: string;
+  imageUrl?: string;
   likes: number;
-  isFavorited: boolean;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface AuthState {

@@ -1,28 +1,29 @@
-import { Router } from 'express';
-import { protect, restrictTo } from '../middleware/auth';
+import express from 'express';
+import { protect, restrictTo } from '../middleware/authMiddleware';
 import {
   getAllNews,
-  getNews,
+  getNewsById,
   createNews,
   updateNews,
   deleteNews,
-  toggleFavorite
+  likeNews,
+  unlikeNews,
 } from '../controllers/newsController';
+import { upload } from '../utils/upload';
 
-const router = Router();
+const router = express.Router();
 
-// Public routes
-router.get('/', getAllNews);
-router.get('/:id', getNews);
+router
+  .route('/')
+  .get(getAllNews)
+  .post(protect, restrictTo('admin'), upload.single('image'), createNews);
 
-// Protected routes
-router.use(protect);
-router.post('/favorite/:id', toggleFavorite);
+router
+  .route('/:id')
+  .get(getNewsById)
+  .put(protect, restrictTo('admin'), upload.single('image'), updateNews)
+  .delete(protect, restrictTo('admin'), deleteNews);
 
-// Admin only routes
-router.use(restrictTo('admin'));
-router.post('/', createNews);
-router.patch('/:id', updateNews);
-router.delete('/:id', deleteNews);
+router.route('/:id/like').post(protect, likeNews).delete(protect, unlikeNews);
 
 export default router; 
