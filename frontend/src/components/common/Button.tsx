@@ -4,7 +4,9 @@ import {
   Text, 
   StyleSheet, 
   ActivityIndicator,
-  PressableProps 
+  PressableProps,
+  ViewStyle,
+  StyleProp
 } from 'react-native';
 import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
@@ -13,6 +15,7 @@ interface ButtonProps extends PressableProps {
   title: string;
   isLoading?: boolean;
   variant?: 'primary' | 'secondary' | 'outline';
+  style?: StyleProp<ViewStyle>;
 }
 
 export function Button({ 
@@ -48,14 +51,15 @@ export function Button({
 
   return (
     <Pressable
-      style={[
+      style={({ pressed }) => [
         styles.button,
         buttonStyles[variant],
         { 
           height: hp('6%'),
           paddingHorizontal: wp('4%'),
+          opacity: pressed ? 0.8 : 1
         },
-        style,
+        style as ViewStyle
       ]}
       {...props}
     >
