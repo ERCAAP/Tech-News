@@ -5,7 +5,7 @@ import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS, FONTS } from '@/theme';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 
 export function CreateNewsForm() {
   const dispatch = useAppDispatch();
@@ -141,10 +141,10 @@ export function CreateNewsForm() {
 
 const styles = StyleSheet.create({
   container: {
+    ...shadowStyle,
     padding: 16,
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    ...SHADOWS.small,
   },
   imageSection: {
     marginBottom: 16,

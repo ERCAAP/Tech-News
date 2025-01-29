@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '@/services/api';
 import { AuthState, User } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // API Response tipi
 interface ApiResponse {
@@ -20,37 +21,34 @@ const initialState: AuthState = {
 };
 
 // Login thunk
-export const login = createAsyncThunk<ApiResponse, { email: string; password: string }>(
+export const login = createAsyncThunk(
   'auth/login',
-  async (credentials) => {
-    const response = await authAPI.login(credentials.email, credentials.password);
-    if (!response.token) {
-      throw new Error('Token not found in response');
+  async (credentials: { email: string; password: string }) => {
+    try {
+      const response = await authAPI.login(credentials.email, credentials.password);
+      if (response.token) {
+        await AsyncStorage.setItem('token', response.token);
+      }
+      return response;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Giriş yapılamadı' };
     }
-    return {
-      status: response.status,
-      data: response.data,
-      token: response.token
-    };
   }
 );
 
 // Register thunk
-export const register = createAsyncThunk<
-  ApiResponse,
-  { email: string; password: string; firstName: string; lastName: string }
->(
+export const register = createAsyncThunk(
   'auth/register',
-  async (userData) => {
-    const response = await authAPI.register(userData);
-    if (!response.token) {
-      throw new Error('Token not found in response');
+  async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
+    try {
+      const response = await authAPI.register(userData);
+      if (response.token) {
+        await AsyncStorage.setItem('token', response.token);
+      }
+      return response;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Kayıt işlemi başarısız' };
     }
-    return {
-      status: response.status,
-      data: response.data,
-      token: response.token
-    };
   }
 );
 
@@ -75,7 +73,10 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      authAPI.logout();
+      AsyncStorage.removeItem('token');
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -88,11 +89,11 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.data.user;
-        state.token = action.payload.token;
+        state.token = action.payload.token || null; // Burada null ile fallback
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Login failed';
+        state.error = action.error.message || null;
       });
 
     // Register
@@ -104,11 +105,11 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.data.user;
-        state.token = action.payload.token;
+        state.token = action.payload.token || null;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Registration failed';
+        state.error = action.error.message || null;
       });
 
     // Get Me
@@ -129,5 +130,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setToken } = authSlice.actions;
 export default authSlice.reducer; 

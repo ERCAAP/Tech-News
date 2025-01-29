@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NewsItem } from '@/types';
-import { COLORS, FONTS, SHADOWS } from '@/theme';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { formatDate } from '@/utils/date';
 
 interface NewsCardProps {
@@ -14,7 +14,7 @@ export function NewsCard({ news, onPress }: NewsCardProps) {
   const authorName = `${news.author.firstName} ${news.author.lastName}`;
 
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable onPress={onPress} style={styles.card}>
       {news.imageUrl && (
         <Image 
           source={{ uri: news.imageUrl }} 
@@ -46,11 +46,11 @@ export function NewsCard({ news, onPress }: NewsCardProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     overflow: 'hidden',
-    ...SHADOWS.small,
+    ...shadowStyle,
   },
   image: {
     width: '100%',

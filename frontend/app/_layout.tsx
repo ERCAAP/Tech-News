@@ -9,14 +9,19 @@ function RootLayoutContent() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       {!token ? (
-        // Auth stack
-        <>
-          <Stack.Screen name="(auth)/login" options={{ title: 'Login' }} />
-          <Stack.Screen name="(auth)/register" options={{ title: 'Register' }} />
-        </>
+        <Stack.Screen 
+          name="(auth)"
+          options={{
+            headerShown: false,
+          }}
+        />
       ) : (
-        // App stack
-        <Stack.Screen name="(tabs)" options={{ title: 'Home' }} />
+        <Stack.Screen 
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
       )}
     </Stack>
   );

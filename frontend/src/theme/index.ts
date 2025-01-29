@@ -39,21 +39,16 @@ export const SIZES = {
   extraLarge: 24,
 };
 
-export const SHADOWS = {
-  small: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+// Basit gölge stilleri
+export const shadowStyle = {
+  shadowColor: '#000',
+  shadowOffset: {
+    width: 0,
+    height: 2,
   },
-  medium: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 2,
 };
 
 export const theme = {

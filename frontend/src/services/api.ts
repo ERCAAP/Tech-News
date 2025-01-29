@@ -2,18 +2,14 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
 
-const BASE_URL = 'http://10.0.2.2:3000/api/v1'; // Android Emulator için
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api/v1';
 
-console.log('API_URL:', BASE_URL); // Debug için
+console.log('API_URL:', BASE_URL);
 
 interface ApiResponse<T> {
   status: string;
   data: T;
   token?: string;
-}
-
-interface RequestConfig {
-  headers?: Record<string, string>;
 }
 
 export const api = axios.create({
@@ -23,7 +19,37 @@ export const api = axios.create({
   },
 });
 
-// Tek bir newsAPI tanımı
+// Auth interceptor - tip hatalarını çözmek için basitleştirilmiş versiyon
+api.interceptors.request.use(
+  (config) => {
+    const token = AsyncStorage.getItem('token')
+      .then(token => {
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      })
+      .catch(() => config);
+
+    return token;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Hata yakalama interceptor'ı
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error Details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
+
+// API endpoints
 export const newsAPI = {
   getAllNews: async (): Promise<ApiResponse<{ news: NewsItem[] }>> => {
     const response = await api.get<ApiResponse<{ news: NewsItem[] }>>('/news');
@@ -72,11 +98,20 @@ export const newsAPI = {
 // Auth API endpoints
 export const authAPI = {
   login: async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
-    const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', { email, password });
-    if (response.data.token) {
-      await AsyncStorage.setItem('token', response.data.token);
+    try {
+      const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', { 
+        email, 
+        password 
+      });
+      
+      if (response.data.token) {
+        await AsyncStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error: any) {
+      console.error('Login Error:', error.response?.data);
+      throw error;
     }
-    return response.data;
   },
   
   register: async (userData: {
@@ -86,9 +121,7 @@ export const authAPI = {
     lastName: string;
   }): Promise<ApiResponse<{ user: User }>> => {
     try {
-      console.log('Register Request:', userData);
       const response = await api.post<ApiResponse<{ user: User }>>('/auth/register', userData);
-      console.log('Register Response:', response.data);
       
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
@@ -116,29 +149,4 @@ export const authAPI = {
   logout: async () => {
     await AsyncStorage.removeItem('token');
   }
-};
-
-// Auth interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = AsyncStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Hata yakalama interceptor'ı
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('API Error Details:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data
-    });
-    return Promise.reject(error);
-  }
-); 
+}; 

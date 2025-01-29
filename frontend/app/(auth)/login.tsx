@@ -18,9 +18,22 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      await dispatch(login(formData)).unwrap();
+      if (!formData.email || !formData.password) {
+        Alert.alert('Hata', 'Lütfen email ve şifrenizi giriniz');
+        return;
+      }
+      
+      console.log('Login attempt with:', formData); // Debug için
+      
+      const result = await dispatch(login(formData)).unwrap();
+      console.log('Login success:', result); // Debug için
+      
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      console.log('Login Error:', error);
+      Alert.alert(
+        'Giriş Hatası',
+        error.message || 'Giriş yapılırken bir hata oluştu. Lütfen bilgilerinizi kontrol edin.'
+      );
     } finally {
       setIsLoading(false);
     }
