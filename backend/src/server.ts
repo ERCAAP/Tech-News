@@ -8,17 +8,22 @@ import config from './config/loadEnv';
 import { errorHandler } from './utils/errorHandler';
 import { logger } from './utils/logger';
 import routes from './routes';
+import authRoutes from './routes/authRoutes';
+import newsRoutes from './routes/newsRoutes';
 
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:19001'],
-  credentials: true
+  origin: ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:19001', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -28,7 +33,8 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Routes
-app.use('/api', routes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/news', newsRoutes);
 
 // Error handling
 app.use(errorHandler);

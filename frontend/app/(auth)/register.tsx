@@ -17,25 +17,20 @@ export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  const handleRegister = async () => {
+  const handleRegister = async (values: any) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const resultAction = await dispatch(register({
-        email,
-        password,
-        firstName,
-        lastName
-      }));
+      console.log('Registering with:', values); // Debug için
 
-      if (register.fulfilled.match(resultAction)) {
-        router.replace('/(tabs)');
-      } else if (register.rejected.match(resultAction)) {
-        throw new Error(resultAction.error.message);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kayıt olurken bir hata oluştu');
+      const resultAction = await dispatch(register(values)).unwrap();
+      console.log('Register success:', resultAction); // Debug için
+
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      console.error('Register error:', err);
+      setError(err.response?.data?.message || 'Kayıt işlemi sırasında bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +98,7 @@ export default function RegisterScreen() {
 
       <Pressable 
         style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleRegister}
+        onPress={() => handleRegister({ email, password, firstName, lastName })}
         disabled={isLoading}
       >
         <Text style={styles.buttonText}>

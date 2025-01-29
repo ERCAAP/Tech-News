@@ -8,27 +8,28 @@ import authTR from './locales/auth/tr.json';
 import commonEN from './locales/common/en.json';
 import commonTR from './locales/common/tr.json';
 
-const resources = {
-  en: {
-    auth: authEN,
-    common: commonEN
-  },
-  tr: {
-    auth: authTR,
-    common: commonTR
-  }
-};
-
 i18n
   .use(initReactI18next)
   .init({
-    resources,
-    lng: Localization.locale.split('-')[0], // Cihaz dilini al
+    resources: {
+      en: {
+        auth: authEN,
+        common: commonEN
+      },
+      tr: {
+        auth: authTR,
+        common: commonTR
+      }
+    },
+    lng: Localization.locale.split('-')[0],
     fallbackLng: 'en',
     ns: ['auth', 'common'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false
+    },
+    react: {
+      useSuspense: false
     }
   });
 

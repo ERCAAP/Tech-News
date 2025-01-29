@@ -5,47 +5,63 @@ import { User, NewsItem } from '@/types';
 // API URL'ini .env'den al
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+console.log('API_URL:', API_URL); // Debug için
+
 interface ApiResponse<T> {
   status: string;
   data: T;
   token?: string;
 }
 
+interface RequestConfig {
+  headers?: Record<string, string>;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  timeout: 10000 // 10 saniye timeout
 });
 
 // Token interceptor
 api.interceptors.request.use(
-  (config) => {
-    const token = AsyncStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config: any) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    } catch (error) {
+      return Promise.reject(error);
     }
-    return config;
   },
   (error) => {
     return Promise.reject(error);
   }
 );
 
-// Hata yakalama interceptor'ı ekleyelim
+// Hata yakalama interceptor'ı
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    console.error('API Error Details:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return Promise.reject(error);
   }
 );
 
 export const authAPI = {
   login: async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
-    const response = await api.post<ApiResponse<{ user: User }>>('/v1/auth/login', { email, password });
+    const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', { email, password });
     if (response.data.token) {
-      AsyncStorage.setItem('token', response.data.token);
+      await AsyncStorage.setItem('token', response.data.token);
     }
     return response.data;
   },
@@ -57,9 +73,12 @@ export const authAPI = {
     lastName: string;
   }): Promise<ApiResponse<{ user: User }>> => {
     try {
+      console.log('Register Request:', userData);
       const response = await api.post<ApiResponse<{ user: User }>>('/auth/register', userData);
+      console.log('Register Response:', response.data);
+      
       if (response.data.token) {
-        AsyncStorage.setItem('token', response.data.token);
+        await AsyncStorage.setItem('token', response.data.token);
       }
       return response.data;
     } catch (error) {
@@ -82,7 +101,7 @@ export const authAPI = {
   },
 
   logout: async () => {
-    AsyncStorage.removeItem('token');
+    await AsyncStorage.removeItem('token');
   }
 };
 
