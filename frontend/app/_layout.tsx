@@ -6,10 +6,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '@/redux/slices/authSlice';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CustomTabBar from '@/components/navigation/CustomTabBar';
+import { View } from 'react-native';
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
-  const { token } = useAppSelector(state => state.auth);
+  const { token, user } = useAppSelector(state => state.auth);
 
   useEffect(() => {
     checkLoginStatus();
@@ -35,7 +36,7 @@ function RootLayoutContent() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
         {!token ? (
           <Stack.Screen 
@@ -53,8 +54,8 @@ function RootLayoutContent() {
           />
         )}
       </Stack>
-      {token && <CustomTabBar state={{ index: 0 }} navigation={router} />}
-    </>
+      {token && user && <CustomTabBar state={{ index: 0 }} navigation={router} />}
+    </View>
   );
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Alert, SafeAreaView, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, Image, StyleSheet, Alert, SafeAreaView, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
 import { User, getUserFullName, getUserInitials, isUserAdmin } from '@/types';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
@@ -29,16 +29,27 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
     {
       icon: 'edit',
       label: 'Edit Profile',
-      onPress: () => {/* TODO: Implement edit profile */}
+      onPress: () => router.push('/edit-profile')
     },
     {
       icon: 'star',
       label: 'Rate Us',
-      onPress: async () => {
-        if (await StoreReview.hasAction()) {
-          StoreReview.requestReview();
-        } else {
-          Linking.openURL('market://details?id=your.app.id'); // App Store/Play Store URL'inizi ekleyin
+      onPress: () => {
+        try {
+          const storeUrl = Platform.select({
+            ios: 'https://apps.apple.com/app/your-app-id',
+            android: 'market://details?id=com.ercaap55.technews',
+            default: '',
+          });
+          
+          if (storeUrl) {
+            Linking.openURL(storeUrl).catch(() => {
+              Alert.alert('Error', 'Could not open store page');
+            });
+          }
+        } catch (error) {
+          console.error('Error opening store:', error);
+          Alert.alert('Error', 'Could not open store page');
         }
       }
     },
