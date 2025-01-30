@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image, Text, Platform, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert, Image, Text, Platform, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -222,7 +223,7 @@ export function CreateNewsForm() {
   };
 
   return (
-    <>
+    <View style={styles.mainContainer}>
       <ScrollView 
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -294,13 +295,13 @@ export function CreateNewsForm() {
           {/* Content Images Section */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Content Images</Text>
-            {formData.contentImages.length > 0 && (
-              <ScrollView 
-                horizontal 
-                style={styles.contentImagesScroll}
-                showsHorizontalScrollIndicator={false}
-              >
-                {formData.contentImages.map((uri, index) => (
+            <ScrollView 
+              horizontal 
+              style={styles.contentImagesScroll}
+              showsHorizontalScrollIndicator={false}
+            >
+              {formData.contentImages.length > 0 ? (
+                formData.contentImages.map((uri, index) => (
                   <View key={index} style={styles.contentImageContainer}>
                     <Image 
                       source={{ uri }} 
@@ -314,55 +315,56 @@ export function CreateNewsForm() {
                       <Text style={styles.removeImageText}>×</Text>
                     </TouchableOpacity>
                   </View>
-                ))}
-              </ScrollView>
-            )}
+                ))
+              ) : (
+                <Text style={styles.noImagesText}>No images added yet</Text>
+              )}
+            </ScrollView>
           </View>
 
           {/* News Content Section */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>News Content</Text>
-            
-            {/* Butonları ayrı bir container'a alalım */}
-            <View style={styles.contentToolbar}>
+            <View style={styles.contentHeader}>
+              <Text style={styles.sectionTitle}>News Content</Text>
               <Button
-                title="Insert URL"
-                variant="outline"
-                onPress={handleUrlInsert}
-                style={styles.toolbarButton}
-                icon="link"
-              />
-              <Button
-                title="Insert Image"
-                variant="outline"
-                onPress={handleContentImageInsert}
-                style={styles.toolbarButton}
-                icon="image"
+                title={isLoading ? "Publishing..." : "Publish News"}
+                onPress={handleSubmit}
+                disabled={isLoading}
+                style={styles.publishButton}
               />
             </View>
+            
+            <View style={styles.contentToolbar}>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                onPress={handleUrlInsert}
+              >
+                <MaterialIcons name="link" size={20} color={COLORS.primary} />
+                <Text style={styles.toolbarButtonText}>Insert URL</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                onPress={handleContentImageInsert}
+              >
+                <MaterialIcons name="image" size={20} color={COLORS.primary} />
+                <Text style={styles.toolbarButtonText}>Insert Image</Text>
+              </TouchableOpacity>
+            </View>
 
-            {/* İçerik girişi */}
             <View style={styles.contentInputWrapper}>
-              <Input
-                label=""
+              <TextInput
                 value={formData.content}
                 onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
                 placeholder="Write your news content here..."
                 multiline
-                numberOfLines={8}
-                containerStyle={styles.inputContainer}
                 style={styles.contentInput}
+                placeholderTextColor={COLORS.gray}
               />
             </View>
           </View>
-        </View>
-        <View style={styles.publishButtonWrapper}>
-          <Button
-            title={isLoading ? "Publishing..." : "Publish News"}
-            onPress={handleSubmit}
-            disabled={isLoading}
-            style={styles.publishButton}
-          />
+
+          {/* Bottom Spacing */}
+          <View style={styles.bottomSpacing} />
         </View>
       </ScrollView>
 
@@ -403,40 +405,36 @@ export function CreateNewsForm() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
+  mainContainer: {
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
+  scrollContainer: {
+    flex: 1,
+  },
   scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 150,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    padding: 16,
+    paddingBottom: 160, // Daha fazla bottom spacing
   },
   container: {
-    flex: 1,
-    gap: 20,
+    gap: 16,
   },
   formSection: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     ...shadowStyle,
-    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: FONTS.semiBold,
     color: COLORS.dark,
-    marginBottom: 20,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+    marginBottom: 16,
   },
   imagePreviewContainer: {
     alignItems: 'center',
@@ -485,20 +483,67 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     textAlign: 'center',
   },
+  contentImagesScroll: {
+    minHeight: 120,
+  },
+  contentImageContainer: {
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...shadowStyle,
+  },
+  contentImagePreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  noImagesText: {
+    color: COLORS.gray,
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 40,
+  },
   contentToolbar: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 8,
   },
   toolbarButton: {
     flex: 1,
-    height: 44,
-    backgroundColor: '#F8FAFC',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  toolbarButtonText: {
+    marginLeft: 8,
+    color: COLORS.dark,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
   },
   contentInputWrapper: {
     backgroundColor: '#F8FAFC',
@@ -507,67 +552,30 @@ const styles = StyleSheet.create({
   },
   contentInput: {
     minHeight: 200,
-    maxHeight: 400,
-    textAlignVertical: 'top',
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
     padding: 16,
     fontSize: 16,
     fontFamily: FONTS.regular,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+    color: COLORS.dark,
+    textAlignVertical: 'top',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
-  contentImagesContainer: {
-    marginTop: 16,
+  bottomSpacing: {
+    height: 100,
   },
-  contentImagesScroll: {
-    marginTop: 16,
-    paddingBottom: 8,
-  },
-  contentImageContainer: {
-    marginRight: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    ...shadowStyle,
-  },
-  contentImagePreview: {
-    width: 140,
-    height: 140,
-    borderRadius: 12,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(255, 59, 48, 0.95)',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
+  contentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    ...shadowStyle,
-  },
-  removeImageText: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  publishButtonWrapper: {
-    position: 'absolute',
-    bottom: 80,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.white,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.08)',
-    ...shadowStyle,
+    marginBottom: 16,
   },
   publishButton: {
+    minWidth: 120,
+    height: 40,
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    height: 56,
+    borderRadius: 20,
   },
   modalOverlay: {
     flex: 1,

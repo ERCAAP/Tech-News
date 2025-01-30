@@ -23,7 +23,12 @@ export default function CustomTabBar({ state, navigation }: TabBarProps) {
   const pathname = usePathname();
   const { user } = useAppSelector(state => state.auth);
 
-  if (pathname === '/register'|| pathname === '/login') {
+  if (
+    pathname === '/register' || 
+    pathname === '/login' || 
+    pathname === '/src/components/admin/NewsForm' ||  // Admin write sayfası
+    pathname === '/(tabs)/admin/edit-news'       // Admin edit sayfası
+  ) {
     return null;
   }
 
