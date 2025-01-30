@@ -23,6 +23,10 @@ export default function CustomTabBar({ state, navigation }: TabBarProps) {
   const pathname = usePathname();
   const { user } = useAppSelector(state => state.auth);
 
+  if (pathname === '/register'|| pathname === '/login') {
+    return null;
+  }
+
   const tabs = [
     { name: '/(tabs)', label: 'Home', icon: 'home' },
     { name: '/(tabs)/favorites', label: 'Favorites', icon: 'favorite' },

@@ -38,7 +38,7 @@ function RootLayoutContent() {
   };
 
   // Bottom bar'ı sadece auth dışındaki sayfalarda göster
-  const isAuthScreen = pathname.startsWith('/(auth)');
+  const isAuthScreen = pathname.includes('(auth)');
   const shouldShowTabBar = token && user && !isAuthScreen;
 
   useEffect(() => {
@@ -67,7 +67,7 @@ function RootLayoutContent() {
           />
         )}
       </Stack>
-      {shouldShowTabBar && (
+      {shouldShowTabBar && !isAuthScreen && (
         <CustomTabBar 
           state={{ index: 0 }} 
           navigation={router} 
