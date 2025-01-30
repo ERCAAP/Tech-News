@@ -17,15 +17,15 @@ interface InputProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
+  secureTextEntry?: boolean;
+  leftIcon?: string;
+  rightIcon?: string;
+  onRightIconPress?: () => void;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  secureTextEntry?: boolean;
-  leftIcon?: keyof typeof MaterialIcons.glyphMap;
-  darkMode?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
-  error?: string;
-  style?: StyleProp<TextStyle>;
+  darkMode?: boolean;
 }
 
 export function Input({ 

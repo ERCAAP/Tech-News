@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Platform, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { login } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
@@ -9,7 +9,7 @@ import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from '@/components/common/Checkbox';
 
@@ -23,10 +23,11 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadThemePreference();
-    checkRememberMe();
+    loadSavedCredentials();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -45,39 +46,33 @@ export default function LoginScreen() {
     }
   };
 
-  const checkRememberMe = async () => {
+  const loadSavedCredentials = async () => {
     try {
       const savedRememberMe = await AsyncStorage.getItem('rememberMe');
       const savedEmail = await AsyncStorage.getItem('userEmail');
       const savedPassword = await AsyncStorage.getItem('userPassword');
 
       if (savedRememberMe === 'true' && savedEmail && savedPassword) {
-        dispatch(login({ email: savedEmail, password: savedPassword })).unwrap()
-          .then(() => {
-            router.replace('/(tabs)');
-            setRememberMe(true);
-            setFormData(prev => ({
-              ...prev,
-              email: savedEmail,
-              password: savedPassword
-            }));
-          })
-          .catch(async (error) => {
-            console.error('Auto login failed:', error);
-            await AsyncStorage.setItem('rememberMe', 'false');
-            await AsyncStorage.removeItem('userPassword');
-            setRememberMe(false);
-            setFormData(prev => ({ ...prev, email: savedEmail }));
-          });
-      } else if (savedEmail) {
+        setRememberMe(true);
         setFormData(prev => ({
           ...prev,
-          email: savedEmail
+          email: savedEmail,
+          password: savedPassword
         }));
+      } else {
+        setRememberMe(false);
+        setFormData({ email: '', password: '' });
       }
     } catch (error) {
-      console.error('Error checking remember me:', error);
+      console.error('Error loading saved credentials:', error);
+      setRememberMe(false);
+      setFormData({ email: '', password: '' });
     }
+  };
+
+  const handleRememberMeChange = async (value: boolean) => {
+    setRememberMe(value);
+    await AsyncStorage.setItem('rememberMe', value ? 'true' : 'false');
   };
 
   const toggleTheme = async () => {
@@ -99,15 +94,13 @@ export default function LoginScreen() {
       }
       
       if (rememberMe) {
-        await AsyncStorage.setItem('rememberMe', 'true');
         await AsyncStorage.setItem('userEmail', formData.email);
         await AsyncStorage.setItem('userPassword', formData.password);
       } else {
-        await AsyncStorage.setItem('rememberMe', 'false');
         await AsyncStorage.removeItem('userEmail');
         await AsyncStorage.removeItem('userPassword');
       }
-
+      
       await dispatch(login(formData)).unwrap();
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -118,6 +111,14 @@ export default function LoginScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    Alert.alert('Info', 'Google login will be implemented soon');
+  };
+
+  const handleFacebookLogin = () => {
+    Alert.alert('Info', 'Facebook login will be implemented soon');
   };
 
   const isDark = colorScheme === 'dark';
@@ -178,15 +179,17 @@ export default function LoginScreen() {
             value={formData.password}
             onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
             placeholder="Enter your password"
-            secureTextEntry
+            secureTextEntry={!showPassword}
             leftIcon="lock"
+            rightIcon={showPassword ? "visibility" : "visibility-off"}
+            onRightIconPress={() => setShowPassword(!showPassword)}
             darkMode={isDark}
           />
 
           <View style={styles.rememberMeContainer}>
             <Checkbox
               checked={rememberMe}
-              onPress={() => setRememberMe(!rememberMe)}
+              onPress={() => handleRememberMeChange(!rememberMe)}
               label="Remember Me"
               darkMode={isDark}
             />
@@ -200,6 +203,30 @@ export default function LoginScreen() {
             isLoading={isLoading}
             darkMode={isDark}
           />
+
+          <View style={styles.dividerContainer}>
+            <View style={[styles.divider, isDark && styles.dividerDark]} />
+            <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>or continue with</Text>
+            <View style={[styles.divider, isDark && styles.dividerDark]} />
+          </View>
+
+          <View style={styles.socialButtonsContainer}>
+            <TouchableOpacity 
+              style={[styles.socialButton, isDark && styles.socialButtonDark]} 
+              onPress={handleGoogleLogin}
+            >
+              <FontAwesome name="google" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.socialButton, isDark && styles.socialButtonDark]} 
+              onPress={handleFacebookLogin}
+            >
+              <FontAwesome name="facebook" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Facebook</Text>
+            </TouchableOpacity>
+          </View>
 
           <Link 
             href="/(auth)/register" 
@@ -277,5 +304,67 @@ const styles = StyleSheet.create({
   rememberMeContainer: {
     marginTop: 8,
     marginBottom: 16,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.gray,
+  },
+  dividerDark: {
+    backgroundColor: COLORS.darkSecondary,
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: COLORS.gray,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+  },
+  dividerTextDark: {
+    color: COLORS.gray,
+  },
+  socialButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    width: '48%',
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.dark,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  socialButtonDark: {
+    backgroundColor: COLORS.darkSecondary,
+    borderColor: COLORS.dark,
+  },
+  socialButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  socialButtonTextDark: {
+    color: COLORS.white,
   },
 }); 
