@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/theme';
 import { useAppSelector } from '@/redux/hooks';
 import { isUserAdmin } from '@/types';
+import React from 'react';
 
 export default function TabsLayout() {
   const { user } = useAppSelector(state => state.auth);

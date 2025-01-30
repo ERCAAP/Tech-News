@@ -18,7 +18,7 @@ export default function AdminScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <Header title="Admin Panel" />
+
       <View style={styles.content}>
         <CreateNewsForm />
       </View>
