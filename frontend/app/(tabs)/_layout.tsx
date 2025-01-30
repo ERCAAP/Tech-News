@@ -3,10 +3,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAppSelector } from '@/redux/hooks';
 import React from 'react';
 import { COLORS, FONTS } from '@/theme';
+import { isUserAdmin } from '@/types';
 import { Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 
 export default function TabLayout() {
+  const { user } = useAppSelector(state => state.auth);
   const { isDark } = useAppSelector(state => state.theme);
 
   return (
@@ -16,8 +18,6 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: isDark ? COLORS.darkBackground : COLORS.white,
           borderTopColor: isDark ? COLORS.darkSecondary : COLORS.border,
-          height: Platform.OS === 'ios' ? 88 : 60,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: isDark ? COLORS.white : COLORS.gray,
@@ -38,11 +38,21 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="search"
+        name="favorites"
         options={{
-          title: 'Search',
+          title: 'Favorites',
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="search" size={size} color={color} />
+            <MaterialIcons name="favorite" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" size={size} color={color} />
           ),
         }}
       />
@@ -57,27 +67,23 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Hidden screens */}
       <Tabs.Screen
         name="news/[id]"
         options={{
           href: null,
+          tabBarButton: () => null,
         }}
       />
 
-      <Tabs.Screen
-        name="admin"
-        options={{
-          href: null,
-        }}
-      />
-
-      <Tabs.Screen
-        name="create-news"
-        options={{
-          href: null,
-        }}
-      />
+      {user && isUserAdmin(user) && (
+        <Tabs.Screen
+          name="admin"
+          options={{
+            href: null,
+            tabBarButton: () => null,
+          }}
+        />
+      )}
     </Tabs>
   );
 } 

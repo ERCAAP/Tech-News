@@ -2,19 +2,12 @@ import { Stack } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function RootLayoutContent() {
   const { token } = useAppSelector(state => state.auth);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-        gestureEnabled: true,
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       {!token ? (
         <Stack.Screen 
           name="(auth)"
@@ -36,10 +29,8 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ReduxProvider>
-        <RootLayoutContent />
-      </ReduxProvider>
-    </GestureHandlerRootView>
+    <ReduxProvider>
+      <RootLayoutContent />
+    </ReduxProvider>
   );
 } 
