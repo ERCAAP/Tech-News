@@ -13,7 +13,7 @@ import { COLORS, FONTS } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface InputProps {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
