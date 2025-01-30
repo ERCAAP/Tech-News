@@ -321,33 +321,39 @@ export function CreateNewsForm() {
 
           {/* News Content Section */}
           <View style={styles.formSection}>
-            <View style={styles.contentHeader}>
-              <Text style={styles.sectionTitle}>News Content</Text>
-              <View style={styles.contentActions}>
-                <TouchableOpacity
-                  style={[styles.actionButton, { marginRight: 8 }]}
-                  onPress={handleUrlInsert}
-                >
-                  <Text style={styles.actionButtonText}>Insert URL</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={handleContentImageInsert}
-                >
-                  <Text style={styles.actionButtonText}>Insert Image</Text>
-                </TouchableOpacity>
-              </View>
+            <Text style={styles.sectionTitle}>News Content</Text>
+            
+            {/* Butonları ayrı bir container'a alalım */}
+            <View style={styles.contentToolbar}>
+              <Button
+                title="Insert URL"
+                variant="outline"
+                onPress={handleUrlInsert}
+                style={styles.toolbarButton}
+                icon="link"
+              />
+              <Button
+                title="Insert Image"
+                variant="outline"
+                onPress={handleContentImageInsert}
+                style={styles.toolbarButton}
+                icon="image"
+              />
             </View>
-            <Input
-              label=""
-              value={formData.content}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
-              placeholder="Write your news content here..."
-              multiline
-              numberOfLines={8}
-              containerStyle={styles.inputContainer}
-              style={styles.contentInput}
-            />
+
+            {/* İçerik girişi */}
+            <View style={styles.contentInputWrapper}>
+              <Input
+                label=""
+                value={formData.content}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
+                placeholder="Write your news content here..."
+                multiline
+                numberOfLines={8}
+                containerStyle={styles.inputContainer}
+                style={styles.contentInput}
+              />
+            </View>
           </View>
         </View>
         <View style={styles.publishButtonWrapper}>
@@ -404,167 +410,206 @@ export function CreateNewsForm() {
 const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#F5F7FA',
   },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 150,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   container: {
     flex: 1,
-    ...shadowStyle,
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
+    gap: 20,
   },
   formSection: {
-    marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    paddingBottom: 24,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    ...shadowStyle,
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.semiBold,
     color: COLORS.dark,
-    marginBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
   },
   imagePreviewContainer: {
     alignItems: 'center',
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F8FAFC',
   },
   coverImagePreview: {
     width: '100%',
     height: 200,
-    borderRadius: 8,
     marginBottom: 16,
   },
+  imageButton: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: COLORS.primary,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   categoryContainer: {
     marginBottom: 8,
   },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
   categoryButton: {
-    backgroundColor: COLORS.lightGray,
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   categoryButtonText: {
     color: COLORS.dark,
     fontSize: 16,
+    fontFamily: FONTS.medium,
+    textAlign: 'center',
   },
-  contentHeader: {
+  contentToolbar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
     marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.06)',
   },
-  contentActions: {
-    flexDirection: 'row',
+  toolbarButton: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
-  actionButton: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  actionButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-  },
-  contentImagesContainer: {
-    marginTop: 24,
-  },
-  contentImagesTitle: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.dark,
-    marginBottom: 12,
-  },
-  contentImagesScroll: {
-    flexGrow: 0,
-  },
-  contentImageContainer: {
-    marginRight: 12,
-    position: 'relative',
-  },
-  contentImagePreview: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: COLORS.danger,
-    width: 24,
-    height: 24,
+  contentInputWrapper: {
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  removeImageText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
+    padding: 2,
   },
   contentInput: {
     minHeight: 200,
+    maxHeight: 400,
     textAlignVertical: 'top',
-    paddingTop: 8,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  contentImagesContainer: {
+    marginTop: 16,
+  },
+  contentImagesScroll: {
+    marginTop: 16,
+    paddingBottom: 8,
+  },
+  contentImageContainer: {
+    marginRight: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...shadowStyle,
+  },
+  contentImagePreview: {
+    width: 140,
+    height: 140,
+    borderRadius: 12,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.95)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadowStyle,
+  },
+  removeImageText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   publishButtonWrapper: {
     position: 'absolute',
     bottom: 80,
-    left: 16,
-    right: 16,
+    left: 0,
+    right: 0,
     backgroundColor: COLORS.white,
     paddingVertical: 16,
+    paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
+    ...shadowStyle,
   },
   publishButton: {
     backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    height: 56,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
+    borderRadius: 20,
+    padding: 24,
+    width: '85%',
     maxWidth: 400,
+    ...shadowStyle,
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: FONTS.medium,
+    fontSize: 20,
+    fontFamily: FONTS.semiBold,
     color: COLORS.dark,
-    marginBottom: 16,
+    marginBottom: 24,
     textAlign: 'center',
   },
   categoryOption: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: COLORS.lightGray,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   selectedCategory: {
     backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   categoryOptionText: {
     fontSize: 16,
     color: COLORS.dark,
-    fontFamily: FONTS.regular,
+    fontFamily: FONTS.medium,
+    textAlign: 'center',
   },
   selectedCategoryText: {
     color: COLORS.white,
-    fontFamily: FONTS.medium,
   },
 }); 
