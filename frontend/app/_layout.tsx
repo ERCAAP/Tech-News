@@ -1,9 +1,11 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import React, { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { login } from '@/redux/slices/authSlice';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import CustomTabBar from '@/components/navigation/CustomTabBar';
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
@@ -33,30 +35,35 @@ function RootLayoutContent() {
   };
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {!token ? (
-        <Stack.Screen 
-          name="(auth)"
-          options={{
-            headerShown: false,
-          }}
-        />
-      ) : (
-        <Stack.Screen 
-          name="(tabs)"
-          options={{
-            headerShown: false,
-          }}
-        />
-      )}
-    </Stack>
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        {!token ? (
+          <Stack.Screen 
+            name="(auth)"
+            options={{
+              headerShown: false,
+            }}
+          />
+        ) : (
+          <Stack.Screen 
+            name="(tabs)"
+            options={{
+              headerShown: false,
+            }}
+          />
+        )}
+      </Stack>
+      {token && <CustomTabBar state={{ index: 0 }} navigation={router} />}
+    </>
   );
 }
 
 export default function RootLayout() {
   return (
-    <ReduxProvider>
-      <RootLayoutContent />
-    </ReduxProvider>
+    <SafeAreaProvider>
+      <ReduxProvider>
+        <RootLayoutContent />
+      </ReduxProvider>
+    </SafeAreaProvider>
   );
 } 

@@ -6,6 +6,8 @@ import { COLORS, FONTS } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
+import { useAppSelector } from '@/redux/hooks';
+import { isUserAdmin } from '@/types';
 
 interface TabBarProps {
   state: any;
@@ -15,10 +17,14 @@ interface TabBarProps {
 export default function CustomTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user } = useAppSelector(state => state.auth);
 
   const tabs = [
     { name: 'index', label: 'Home', icon: 'home' },
     { name: 'favorites', label: 'Favorites', icon: 'favorite' },
+    ...(isUserAdmin(user) ? [
+      { name: 'create-news', label: 'Write', icon: 'edit' }
+    ] : []),
     { name: 'profile', label: 'Profile', icon: 'person' },
   ];
 
@@ -32,7 +38,13 @@ export default function CustomTabBar({ state, navigation }: TabBarProps) {
             return (
               <TouchableOpacity
                 key={tab.name}
-                onPress={() => navigation.navigate(tab.name)}
+                onPress={() => {
+                  if (tab.name === 'create-news') {
+                    router.push('/create-news');
+                  } else {
+                    navigation.navigate(tab.name);
+                  }
+                }}
                 style={styles.tab}
               >
                 <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
