@@ -6,13 +6,14 @@ import {
   View, 
   Text,
   StyleProp,
-  TextStyle
+  TextStyle,
+  ViewStyle
 } from 'react-native';
 import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 
-interface InputProps {
+export interface InputProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -26,6 +27,8 @@ interface InputProps {
   multiline?: boolean;
   numberOfLines?: number;
   darkMode?: boolean;
+  style?: StyleProp<TextStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 export function Input({ 
