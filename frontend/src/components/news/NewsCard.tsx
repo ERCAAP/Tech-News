@@ -1,105 +1,201 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { NewsItem } from '@/types';
-import { COLORS, FONTS, shadowStyle } from '@/theme';
-import { formatDate } from '@/utils/date';
+import { COLORS, FONTS } from '@/theme';
+import { format } from 'date-fns';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+
+const { width } = Dimensions.get('window');
+const CARD_MARGIN = 16;
+const CARD_WIDTH = width - (CARD_MARGIN * 2);
+
+interface Author {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  avatar?: string;
+}
+
+interface NewsItem {
+  _id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  category?: string;
+  author: Author;
+  createdAt: string;
+}
 
 interface NewsCardProps {
   news: NewsItem;
-  onPress?: () => void;
+  onPress: () => void;
+  index?: number;
 }
 
-export function NewsCard({ news, onPress }: NewsCardProps) {
-  const authorName = `${news.author.firstName} ${news.author.lastName}`;
+export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
+  if (!news || !news.author) return null;
 
   return (
-    <Pressable onPress={onPress} style={styles.card}>
-      {news.imageUrl && (
-        <Image 
-          source={{ uri: news.imageUrl }} 
+    <Animated.View
+      entering={FadeInDown.delay(index * 100).springify()}
+      style={styles.container}
+    >
+      <TouchableOpacity
+        style={styles.card}
+        onPress={onPress}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={{ uri: news.imageUrl || 'https://picsum.photos/800/400' }}
           style={styles.image}
           resizeMode="cover"
         />
-      )}
-      
-      <View style={styles.content}>
-        <Text style={styles.category}>{news.category}</Text>
-        <Text style={styles.title}>{news.title}</Text>
-        <Text style={styles.excerpt} numberOfLines={2}>
-          {news.content}
-        </Text>
         
-        <View style={styles.footer}>
-          <View>
-            <Text style={styles.author}>{authorName}</Text>
-            <Text style={styles.date}>{formatDate(news.createdAt)}</Text>
-          </View>
-          <View style={styles.stats}>
-            <MaterialIcons name="favorite" size={16} color={COLORS.primary} />
-            <Text style={styles.statsText}>{news.likes}</Text>
+        <View style={styles.overlay}>
+          <View style={styles.content}>
+            {news.category && (
+              <View style={styles.categoryContainer}>
+                <Text style={styles.category}>{news.category}</Text>
+              </View>
+            )}
+            
+            <Text style={styles.title} numberOfLines={2}>
+              {news.title || 'Untitled'}
+            </Text>
+
+            <View style={styles.footer}>
+              <View style={styles.authorContainer}>
+                {news.author.avatar ? (
+                  <Image
+                    source={{ uri: news.author.avatar }}
+                    style={styles.authorAvatar}
+                  />
+                ) : (
+                  <View style={styles.authorAvatarPlaceholder}>
+                    <Text style={styles.authorInitials}>
+                      {`${news.author.firstName?.[0] || ''}${news.author.lastName?.[0] || ''}`}
+                    </Text>
+                  </View>
+                )}
+                <Text style={styles.authorName}>
+                  {`${news.author.firstName || ''} ${news.author.lastName || ''}`}
+                </Text>
+              </View>
+
+              <View style={styles.metaContainer}>
+                <MaterialIcons name="access-time" size={14} color={COLORS.lightGray} />
+                <Text style={styles.date}>
+                  {format(new Date(news.createdAt || new Date()), 'dd MMM yyyy')}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-      </View>
-    </Pressable>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
+    width: CARD_WIDTH,
+    marginHorizontal: CARD_MARGIN,
+    marginBottom: 20,
+    borderRadius: 16,
     backgroundColor: COLORS.white,
-    borderRadius: 12,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
     overflow: 'hidden',
-    ...shadowStyle,
+  },
+  card: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
     height: 200,
   },
+  overlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
   content: {
     padding: 16,
   },
-  category: {
-    color: COLORS.primary,
-    fontSize: FONTS.sizes.sm,
-    fontFamily: FONTS.medium,
+  categoryContainer: {
+    backgroundColor: COLORS.primary + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
     marginBottom: 8,
+  },
+  category: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+    textTransform: 'uppercase',
   },
   title: {
-    fontSize: FONTS.sizes.lg,
+    color: COLORS.white,
+    fontSize: 18,
     fontFamily: FONTS.bold,
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  excerpt: {
-    fontSize: FONTS.sizes.md,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-    marginBottom: 16,
+    marginBottom: 12,
+    lineHeight: 24,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  author: {
-    fontSize: FONTS.sizes.sm,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-  },
-  date: {
-    fontSize: FONTS.sizes.sm,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-  },
-  stats: {
+  authorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  statsText: {
-    marginLeft: 4,
-    fontSize: FONTS.sizes.sm,
+  authorAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  authorAvatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary + '40',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  authorInitials: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontFamily: FONTS.bold,
+  },
+  authorName: {
+    color: COLORS.lightGray,
+    fontSize: 12,
     fontFamily: FONTS.medium,
-    color: COLORS.gray,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  date: {
+    color: COLORS.lightGray,
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    marginLeft: 4,
   },
 }); 

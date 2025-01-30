@@ -34,20 +34,27 @@ export default function HomeScreen() {
     return <Loading />;
   }
 
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    if (!item || !item._id) return null;
+    
+    return (
+      <NewsCard
+        news={item}
+        onPress={() => handleNewsPress(item._id)}
+        index={index}
+      />
+    );
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={news}
-        renderItem={({ item }) => (
-          <NewsCard
-            news={item}
-            onPress={() => handleNewsPress(item._id)}
-          />
-        )}
-        keyExtractor={item => item._id}
+        data={news?.filter(item => item && item._id) || []}
+        renderItem={renderItem}
+        keyExtractor={item => item?._id || Math.random().toString()}
         contentContainerStyle={[
           styles.list,
-          { paddingTop: insets.top + 16 } // Safe area için üst padding
+          { paddingTop: insets.top + 16, paddingBottom: 100 }
         ]}
         showsVerticalScrollIndicator={false}
       />
