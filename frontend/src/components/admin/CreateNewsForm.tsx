@@ -11,7 +11,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
   { label: 'Artificial Intelligence', value: 'ai' },
-  { label: 'Science', value: 'science' },
+  { label: 'Technology', value: 'technology' },
 ] as const;
 
 type NewsCategory = typeof NEWS_CATEGORIES[number]['value'];
