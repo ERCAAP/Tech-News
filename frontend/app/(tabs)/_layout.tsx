@@ -79,7 +79,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="news/[id]"
         options={{
-          href: null,
           tabBarButton: () => null,
         }}
       />
@@ -88,7 +87,6 @@ export default function TabLayout() {
         <Tabs.Screen
           name="admin"
           options={{
-            href: null,
             tabBarButton: () => null,
           }}
         />

@@ -12,6 +12,7 @@ import authRoutes from './routes/authRoutes';
 import newsRoutes from './routes/newsRoutes';
 import connectDB from './config/database';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -39,6 +40,9 @@ app.use(limiter);
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/news', newsRoutes);
+
+// Statik dosya servisi
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Error handling
 app.use(errorHandler);

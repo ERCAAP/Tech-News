@@ -65,14 +65,21 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
 
 // Haber güncelle
 export const updateNews = asyncHandler(async (req: Request, res: Response) => {
+  const updateData = {
+    ...req.body,
+    ...(req.file && { imageUrl: req.file.path })
+  };
+
   const news = await News.findByIdAndUpdate(
     req.params.id,
-    { ...req.body, imageUrl: req.file?.path },
+    updateData,
     { new: true, runValidators: true }
   );
+
   if (!news) {
     throw new AppError('News not found', 404);
   }
+
   res.status(200).json({
     status: 'success',
     data: { news }
