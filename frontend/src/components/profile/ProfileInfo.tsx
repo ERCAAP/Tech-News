@@ -9,7 +9,6 @@ import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { useResponsive } from '@/hooks/useResponsive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as StoreReview from 'expo-store-review';
 
 interface ProfileInfoProps {
   user: User | null;
@@ -24,6 +23,18 @@ interface SettingItem {
 export function ProfileInfo({ user }: ProfileInfoProps) {
   const dispatch = useAppDispatch();
   const { wp, hp } = useResponsive();
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('rememberMe');
+      await AsyncStorage.removeItem('userEmail');
+      await AsyncStorage.removeItem('userPassword');
+      dispatch(logout());
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const settings: SettingItem[] = [
     {
@@ -95,31 +106,6 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
       onPress: handleLogout
     }
   ];
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.setItem('rememberMe', 'false');
-              await AsyncStorage.removeItem('userEmail');
-              await AsyncStorage.removeItem('userPassword');
-              dispatch(logout());
-              router.replace('/(auth)/login');
-            } catch (error) {
-              console.error('Error during logout:', error);
-            }
-          },
-        },
-      ],
-    );
-  };
 
   if (!user) return null;
 

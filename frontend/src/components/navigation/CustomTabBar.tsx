@@ -1,63 +1,79 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
 import { isUserAdmin } from '@/types';
+import * as Haptics from 'expo-haptics';
 
 interface TabBarProps {
   state: any;
   navigation: any;
 }
 
+const { width } = Dimensions.get('window');
+
 export default function CustomTabBar({ state, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAppSelector(state => state.auth);
 
   const tabs = [
-    { name: 'index', label: 'Home', icon: 'home' },
-    { name: 'favorites', label: 'Favorites', icon: 'favorite' },
+    { name: '/(tabs)', label: 'Home', icon: 'home' },
+    { name: '/(tabs)/favorites', label: 'Favorites', icon: 'favorite' },
     ...(isUserAdmin(user) ? [
-      { name: 'create-news', label: 'Write', icon: 'edit' }
+      { name: '/(tabs)/admin', label: 'Write', icon: 'edit' }
     ] : []),
-    { name: 'profile', label: 'Profile', icon: 'person' },
+    { name: '/(tabs)/profile', label: 'Profile', icon: 'person' },
   ];
+
+  const isActive = (path: string) => {
+    if (path === '/(tabs)' && pathname === '/(tabs)/index') return true;
+    return pathname.startsWith(path);
+  };
+
+  const handlePress = async (tab: any) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (tab.name === '/(tabs)') {
+      router.push('/');
+    } else {
+      router.push(tab.name as any);
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      <BlurView intensity={80} tint="light" style={styles.blur}>
+      <BlurView intensity={90} tint="light" style={styles.blur}>
         <View style={styles.content}>
-          {tabs.map((tab, index) => {
-            const isFocused = state.index === index;
+          {tabs.map((tab) => {
+            const active = isActive(tab.name);
 
             return (
               <TouchableOpacity
                 key={tab.name}
-                onPress={() => {
-                  if (tab.name === 'create-news') {
-                    router.push('/create-news');
-                  } else {
-                    navigation.navigate(tab.name);
-                  }
-                }}
+                onPress={() => handlePress(tab)}
                 style={styles.tab}
+                activeOpacity={0.7}
               >
-                <View style={[styles.iconContainer, isFocused && styles.activeIconContainer]}>
+                <Animated.View style={[
+                  styles.iconContainer,
+                  active && styles.activeIconContainer,
+                ]}>
                   <MaterialIcons
                     name={tab.icon as any}
                     size={24}
-                    color={isFocused ? COLORS.white : COLORS.gray}
+                    color={active ? COLORS.white : COLORS.gray}
                   />
-                </View>
+                </Animated.View>
                 <Text
                   style={[
                     styles.label,
-                    { color: isFocused ? COLORS.primary : COLORS.gray },
+                    { color: active ? COLORS.primary : COLORS.gray },
                   ]}
                 >
                   {tab.label}
@@ -78,39 +94,62 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
+    width: width,
   },
   blur: {
-    margin: 8,
-    marginBottom: Platform.OS === 'ios' ? 16 : 8,
-    borderRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   tab: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingVertical: 4,
+    paddingVertical: 8,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 4,
+    backgroundColor: 'transparent',
+    transform: [{ scale: 1 }],
   },
   activeIconContainer: {
     backgroundColor: COLORS.primary,
+    transform: [{ scale: 1.1 }],
+    shadowColor: COLORS.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: FONTS.medium,
-    marginTop: 2,
+    marginTop: 4,
   },
 }); 

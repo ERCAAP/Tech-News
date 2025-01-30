@@ -7,10 +7,12 @@ import { login } from '@/redux/slices/authSlice';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CustomTabBar from '@/components/navigation/CustomTabBar';
 import { View } from 'react-native';
+import { usePathname } from 'expo-router';
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
   const { token, user } = useAppSelector(state => state.auth);
+  const pathname = usePathname();
 
   useEffect(() => {
     checkLoginStatus();
@@ -35,6 +37,17 @@ function RootLayoutContent() {
     }
   };
 
+  // Bottom bar'ı sadece auth dışındaki sayfalarda göster
+  const isAuthScreen = pathname.startsWith('/(auth)');
+  const shouldShowTabBar = token && user && !isAuthScreen;
+
+  useEffect(() => {
+    // Giriş yapıldığında ana sayfaya yönlendir
+    if (token && user && pathname === '/') {
+      router.push('/');
+    }
+  }, [token, user, pathname]);
+
   return (
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -54,7 +67,12 @@ function RootLayoutContent() {
           />
         )}
       </Stack>
-      {token && user && <CustomTabBar state={{ index: 0 }} navigation={router} />}
+      {shouldShowTabBar && (
+        <CustomTabBar 
+          state={{ index: 0 }} 
+          navigation={router} 
+        />
+      )}
     </View>
   );
 }
