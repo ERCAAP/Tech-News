@@ -24,19 +24,19 @@ export const isUserAdmin = (user: User | null): boolean => {
 };
 
 export interface NewsItem {
-  id: string;
+  _id: string;
   title: string;
   content: string;
+  category: string;
   imageUrl?: string;
+  likes: number;
+  createdAt: string;
+  updatedAt: string;
   author: {
-    id: string;
+    _id: string;
     firstName: string;
     lastName: string;
   };
-  category: string;
-  createdAt: string;
-  publishedAt: string;
-  likes: number;
 }
 
 export interface AuthState {
@@ -51,8 +51,4 @@ export interface NewsState {
   favorites: NewsItem[];
   isLoading: boolean;
   error: string | null;
-}
-
-export interface ThemeState {
-  isDark: boolean;
 } 

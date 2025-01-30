@@ -1,51 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { COLORS, shadowStyle } from '@/theme';
-
-interface CardProps {
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-  variant?: 'elevated' | 'outlined';
-  darkMode?: boolean;
-}
-
-export function Card({ 
-  children, 
-  style, 
-  variant = 'elevated',
-  darkMode,
-}: CardProps) {
-  const cardStyle = variant === 'outlined' 
-    ? styles.outlinedCard 
-    : styles.elevatedCard;
-
-  return (
-    <View style={[
-      styles.card,
-      cardStyle,
-      darkMode && styles.darkCard,
-      style,
-    ]}>
-      {children}
-    </View>
-  );
-}
+import { StyleSheet } from 'react-native';
+import { shadowStyle } from '@/theme';
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
-    padding: 16,
-  },
-  elevatedCard: {
-    backgroundColor: COLORS.white,
     ...shadowStyle,
-  },
-  outlinedCard: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  darkCard: {
-    backgroundColor: COLORS.darkSecondary,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
   },
 }); 

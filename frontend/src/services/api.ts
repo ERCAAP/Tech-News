@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
 
@@ -21,7 +21,7 @@ const api = axios.create({
 
 // Request interceptor'ı düzelt
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
+  async (config) => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (token && config.headers) {

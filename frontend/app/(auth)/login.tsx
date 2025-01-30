@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  Alert, 
-  Animated, 
-  Image, 
-  Platform,
-  KeyboardAvoidingView,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { login } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
@@ -18,26 +9,48 @@ import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Card } from '@/components/common/Card';
-import { FloatingButton } from '@/components/common/FloatingButton';
-import { useAppSelector } from '@/redux/hooks';
-import { toggleTheme } from '@/redux/slices/themeSlice';
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
-  const { isDark } = useAppSelector(state => state.theme);
+  const systemColorScheme = useColorScheme();
+  const [colorScheme, setColorScheme] = useState<'light' | 'dark'>(
+    (systemColorScheme as 'light' | 'dark') ?? 'light'
+  );
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   React.useEffect(() => {
+    loadThemePreference();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
     }).start();
   }, []);
+
+  const loadThemePreference = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setColorScheme(savedTheme);
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
+    }
+  };
+
+  const toggleTheme = async () => {
+    const newTheme = colorScheme === 'dark' ? 'light' : 'dark';
+    setColorScheme(newTheme);
+    try {
+      await AsyncStorage.setItem('theme', newTheme);
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
+  };
 
   const handleLogin = async () => {
     try {
@@ -59,97 +72,86 @@ export default function LoginScreen() {
     }
   };
 
+  const isDark = colorScheme === 'dark';
+
   return (
     <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       
-      <View style={[
-        StyleSheet.absoluteFill,
-        { backgroundColor: isDark ? COLORS.darkBackground : COLORS.primary }
-      ]} />
-
-      <FloatingButton
-        icon="light-mode"
-        onPress={() => dispatch(toggleTheme())}
-        position="topRight"
-        darkMode={isDark}
-      />
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+      {/* Header Section */}
+      <View style={[styles.header, isDark && styles.headerDark]}>
+        <TouchableOpacity 
+          style={styles.themeToggle}
+          onPress={toggleTheme}
         >
-          <Animated.View style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{
-                translateY: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0],
-                })
-              }]
-            }
-          ]}>
-            <Image 
-              source={require('../../assets/images/news-logo.png')} 
-              style={styles.logo}
-              resizeMode="contain"
-            />
+          <MaterialIcons 
+            name={isDark ? 'light-mode' : 'dark-mode'} 
+            size={24} 
+            color={isDark ? COLORS.white : COLORS.dark}
+          />
+        </TouchableOpacity>
+        
+        <Image 
+          source={require('../../../frontend/assets/images/news-logo.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
 
-            <Card
-              variant="elevated"
-              darkMode={isDark}
-              style={styles.formCard}
-            >
-              <Input
-                label="Email"
-                value={formData.email}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                leftIcon="mail"
-                darkMode={isDark}
-                variant="outlined"
-              />
+      {/* Form Section */}
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{
+              translateY: fadeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [50, 0],
+              })
+            }]
+          }
+        ]}
+      >
+        <View style={[styles.formContainer, isDark && styles.formContainerDark]}>
+          <Input
+            label="Email"
+            value={formData.email}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            leftIcon="mail"
+            darkMode={isDark}
+          />
 
-              <Input
-                label="Password"
-                value={formData.password}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
-                placeholder="Enter your password"
-                secureTextEntry
-                leftIcon="lock"
-                darkMode={isDark}
-                variant="outlined"
-              />
+          <Input
+            label="Password"
+            value={formData.password}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
+            placeholder="Enter your password"
+            secureTextEntry
+            leftIcon="lock"
+            darkMode={isDark}
+          />
 
-              <Button
-                title={isLoading ? "Logging in..." : "Login"}
-                onPress={handleLogin}
-                disabled={isLoading}
-                style={styles.button}
-                isLoading={isLoading}
-                darkMode={isDark}
-                variant="primary"
-                fullWidth
-              />
+          <Button
+            title={isLoading ? "Logging in..." : "Login"}
+            onPress={handleLogin}
+            disabled={isLoading}
+            style={styles.button}
+            isLoading={isLoading}
+            darkMode={isDark}
+          />
 
-              <Link 
-                href="/(auth)/register" 
-                style={[styles.link, isDark && styles.linkDark]}
-              >
-                Don't have an account? Register
-              </Link>
-            </Card>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <Link 
+            href="/(auth)/register" 
+            style={[styles.link, isDark && styles.linkDark]}
+          >
+            Don't have an account? Register
+          </Link>
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -157,29 +159,41 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   containerDark: {
     backgroundColor: COLORS.darkBackground,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+  header: {
+    height: 120,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    ...shadowStyle,
   },
-  content: {
-    padding: 24,
+  headerDark: {
+    backgroundColor: COLORS.primaryDark,
   },
   logo: {
-    width: 200,
-    height: 80,
-    alignSelf: 'center',
-    marginBottom: 32,
+    width: 150,
+    height: 60,
     tintColor: COLORS.white,
   },
-  formCard: {
+  content: {
+    flex: 1,
+    justifyContent: 'center',
     padding: 24,
+  },
+  formContainer: {
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 16,
+    ...shadowStyle,
+  },
+  formContainerDark: {
+    backgroundColor: COLORS.darkSecondary,
   },
   button: {
     marginTop: 24,
@@ -187,11 +201,20 @@ const styles = StyleSheet.create({
   link: {
     marginTop: 16,
     textAlign: 'center',
-    color: COLORS.white,
+    color: COLORS.primary,
     fontFamily: FONTS.medium,
-    fontSize: FONTS.sizes.md,
+    fontSize: 16,
   },
   linkDark: {
     color: COLORS.primaryLight,
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    zIndex: 1,
   },
 }); 
