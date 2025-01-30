@@ -18,6 +18,12 @@ export const COLORS = {
   danger: '#DC3545',
   border: '#E5E5E5',
   black: '#000000',
+  gradient: {
+    primary: ['#2563EB', '#60A5FA'] as const,
+    secondary: ['#10B981', '#34D399'] as const,
+    dark: ['#1F2937', '#374151'] as const,
+    light: ['#F3F4F6', '#F9FAFB'] as const,
+  },
 };
 
 export const FONTS = {
@@ -60,5 +66,18 @@ export const theme = {
   colors: {
     ...DefaultTheme.colors,
     ...COLORS,
+  },
+};
+
+export const ANIMATION = {
+  duration: {
+    fast: 200,
+    normal: 300,
+    slow: 500,
+  },
+  easing: {
+    easeInOut: 'easeInOut',
+    easeIn: 'easeIn',
+    easeOut: 'easeOut',
   },
 }; 

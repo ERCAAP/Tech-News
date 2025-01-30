@@ -1,7 +1,7 @@
-import { View } from 'react-native';
+import React from 'react';
+import { View, Text } from 'react-native';
 import { ProfileInfo } from '@/components/profile/ProfileInfo';
 import { useAppSelector } from '../../src/redux/hooks';
-import React from 'react';
 
 export default function ProfileScreen() {
   const { user } = useAppSelector(state => state.auth);

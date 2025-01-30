@@ -26,6 +26,7 @@ interface InputProps {
   numberOfLines?: number;
   error?: string;
   style?: StyleProp<TextStyle>;
+  variant?: 'outlined' | 'filled';
 }
 
 export function Input({ 

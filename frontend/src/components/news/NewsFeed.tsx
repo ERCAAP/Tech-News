@@ -12,7 +12,7 @@ export function NewsFeed({ news }: NewsFeedProps) {
   return (
     <FlatList
       data={news}
-      keyExtractor={(item) => item._id}
+      keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
         <NewsCard news={item} />
       )}

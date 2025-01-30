@@ -23,6 +23,8 @@ interface ButtonProps {
   gradient?: boolean;
   variant?: 'primary' | 'secondary' | 'outline';
   icon?: keyof typeof MaterialIcons.glyphMap;
+  size?: 'small' | 'medium' | 'large';
+  fullWidth?: boolean;
 }
 
 export function Button({ 

@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAppSelector(state => state.auth);
   const { news, isLoading } = useAppSelector(state => state.news);
+  const { isDark } = useAppSelector(state => state.theme);
 
   useEffect(() => {
     dispatch(fetchNews());
@@ -58,8 +59,10 @@ export default function HomeScreen() {
       {/* Admin için Haber Ekleme Butonu */}
       {user && isUserAdmin(user) && (
         <FloatingButton
-          icon={<MaterialIcons name="add" size={24} color={COLORS.white} />}
+          icon="add"
           onPress={handleCreatePress}
+          position="bottomRight"
+          darkMode={isDark}
         />
       )}
     </View>
