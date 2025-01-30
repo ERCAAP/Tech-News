@@ -11,7 +11,7 @@ export default function NewsDetailScreen() {
   const { wp, hp } = useResponsive();
   const { news, isLoading } = useAppSelector(state => state.news);
   
-  const newsItem = news.find(item => item.id === id);
+  const newsItem = news.find(item => item._id === id);
 
   if (isLoading) return <Loading />;
   if (!newsItem) return null;
@@ -27,9 +27,9 @@ export default function NewsDetailScreen() {
       )}
       <View style={[styles.content, { padding: wp('4%') }]}>
         <Text style={styles.title}>{newsItem.title}</Text>
-        <Text style={styles.author}>By {newsItem.author}</Text>
+        <Text style={styles.author}>By {`${newsItem.author.firstName} ${newsItem.author.lastName}`}</Text>
         <Text style={styles.date}>
-          {new Date(newsItem.publishedAt).toLocaleDateString()}
+          {new Date(newsItem.createdAt).toLocaleDateString()}
         </Text>
         <Text style={styles.content}>{newsItem.content}</Text>
       </View>

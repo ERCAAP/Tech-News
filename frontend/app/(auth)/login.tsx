@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Checkbox } from '@/components/common/Checkbox';
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
@@ -21,9 +22,11 @@ export default function LoginScreen() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [rememberMe, setRememberMe] = useState(false);
 
   React.useEffect(() => {
     loadThemePreference();
+    checkRememberMe();
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
@@ -39,6 +42,41 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error('Error loading theme:', error);
+    }
+  };
+
+  const checkRememberMe = async () => {
+    try {
+      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+      const savedEmail = await AsyncStorage.getItem('userEmail');
+      const savedPassword = await AsyncStorage.getItem('userPassword');
+
+      if (savedRememberMe === 'true' && savedEmail && savedPassword) {
+        dispatch(login({ email: savedEmail, password: savedPassword })).unwrap()
+          .then(() => {
+            router.replace('/(tabs)');
+            setRememberMe(true);
+            setFormData(prev => ({
+              ...prev,
+              email: savedEmail,
+              password: savedPassword
+            }));
+          })
+          .catch(async (error) => {
+            console.error('Auto login failed:', error);
+            await AsyncStorage.setItem('rememberMe', 'false');
+            await AsyncStorage.removeItem('userPassword');
+            setRememberMe(false);
+            setFormData(prev => ({ ...prev, email: savedEmail }));
+          });
+      } else if (savedEmail) {
+        setFormData(prev => ({
+          ...prev,
+          email: savedEmail
+        }));
+      }
+    } catch (error) {
+      console.error('Error checking remember me:', error);
     }
   };
 
@@ -60,6 +98,16 @@ export default function LoginScreen() {
         return;
       }
       
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberMe', 'true');
+        await AsyncStorage.setItem('userEmail', formData.email);
+        await AsyncStorage.setItem('userPassword', formData.password);
+      } else {
+        await AsyncStorage.setItem('rememberMe', 'false');
+        await AsyncStorage.removeItem('userEmail');
+        await AsyncStorage.removeItem('userPassword');
+      }
+
       await dispatch(login(formData)).unwrap();
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -134,6 +182,15 @@ export default function LoginScreen() {
             leftIcon="lock"
             darkMode={isDark}
           />
+
+          <View style={styles.rememberMeContainer}>
+            <Checkbox
+              checked={rememberMe}
+              onPress={() => setRememberMe(!rememberMe)}
+              label="Remember Me"
+              darkMode={isDark}
+            />
+          </View>
 
           <Button
             title={isLoading ? "Logging in..." : "Login"}
@@ -216,5 +273,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.2)',
     zIndex: 1,
+  },
+  rememberMeContainer: {
+    marginTop: 8,
+    marginBottom: 16,
   },
 }); 

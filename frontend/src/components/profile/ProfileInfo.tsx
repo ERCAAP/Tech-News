@@ -7,6 +7,7 @@ import { logout } from '@/redux/slices/authSlice';
 import { router } from 'expo-router';
 import { COLORS, FONTS } from '@/theme';
 import { useResponsive } from '@/hooks/useResponsive';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ProfileInfoProps {
   user: User | null;
@@ -16,7 +17,7 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
   const dispatch = useAppDispatch();
   const { wp, hp } = useResponsive();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -28,9 +29,18 @@ export function ProfileInfo({ user }: ProfileInfoProps) {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            dispatch(logout());
-            router.replace('/(auth)/login');
+          onPress: async () => {
+            try {
+              // Tüm bilgileri temizle
+              await AsyncStorage.setItem('rememberMe', 'false');
+              await AsyncStorage.removeItem('userEmail');
+              await AsyncStorage.removeItem('userPassword');
+              
+              dispatch(logout());
+              router.replace('/(auth)/login');
+            } catch (error) {
+              console.error('Error during logout:', error);
+            }
           },
         },
       ],
