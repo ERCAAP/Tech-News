@@ -6,16 +6,23 @@ import {
   ActivityIndicator,
   PressableProps,
   ViewStyle,
-  StyleProp
+  StyleProp,
+  View
 } from 'react-native';
 import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
+import { MaterialIcons } from '@expo/vector-icons';
 
-interface ButtonProps extends PressableProps {
+interface ButtonProps {
   title: string;
-  isLoading?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline';
+  onPress: () => void;
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  isLoading?: boolean;
+  darkMode?: boolean;
+  gradient?: boolean;
+  variant?: 'primary' | 'secondary' | 'outline';
+  icon?: keyof typeof MaterialIcons.glyphMap;
 }
 
 export function Button({ 
@@ -23,6 +30,7 @@ export function Button({
   isLoading, 
   variant = 'primary',
   style,
+  icon,
   ...props 
 }: ButtonProps) {
   const { wp, hp } = useResponsive();
@@ -66,7 +74,17 @@ export function Button({
       {isLoading ? (
         <ActivityIndicator color={variant === 'outline' ? COLORS.primary : COLORS.white} />
       ) : (
-        <Text style={[styles.text, textStyles[variant]]}>{title}</Text>
+        <View style={styles.buttonContent}>
+          {icon && (
+            <MaterialIcons 
+              name={icon} 
+              size={24} 
+              color={variant === 'outline' ? COLORS.primary : COLORS.white}
+              style={styles.icon}
+            />
+          )}
+          <Text style={[styles.text, textStyles[variant]]}>{title}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -81,5 +99,13 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontFamily: FONTS.medium,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    marginRight: 8,
   },
 }); 

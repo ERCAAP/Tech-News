@@ -1,173 +1,261 @@
-import { useState } from 'react';
-import { View, TextInput, StyleSheet, Pressable, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { register } from '@/redux/slices/authSlice';
-import { router } from 'expo-router';
-import { useTranslation } from 'react-i18next';
-import React from 'react';
+import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
+import { Link, router } from 'expo-router';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useColorScheme } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const systemColorScheme = useColorScheme();
+  const [colorScheme, setColorScheme] = useState<'light' | 'dark'>(
+    (systemColorScheme as 'light' | 'dark') ?? 'light'
+  );
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const slideAnim = useState(new Animated.Value(0))[0];
 
-  const handleRegister = async (values: any) => {
+  React.useEffect(() => {
+    loadThemePreference();
+    Animated.spring(slideAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 12,
+      bounciness: 8,
+    }).start();
+  }, []);
+
+  const loadThemePreference = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setColorScheme(savedTheme);
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
+    }
+  };
+
+  const toggleTheme = async () => {
+    const newTheme = colorScheme === 'dark' ? 'light' : 'dark';
+    setColorScheme(newTheme);
+    try {
+      await AsyncStorage.setItem('theme', newTheme);
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
+  };
+
+  const handleRegister = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+        Alert.alert('Error', 'Please fill in all required fields');
+        return;
+      }
+      
+      if (formData.password !== formData.confirmPassword) {
+        Alert.alert('Error', 'Passwords do not match');
+        return;
+      }
 
-      console.log('Registering with:', values); // Debug için
-
-      const resultAction = await dispatch(register(values)).unwrap();
-      console.log('Register success:', resultAction); // Debug için
-
+      await dispatch(register(formData)).unwrap();
       router.replace('/(tabs)');
-    } catch (err: any) {
-      console.error('Register error:', err);
-      setError(err.response?.data?.message || 'Kayıt işlemi sırasında bir hata oluştu');
+    } catch (error: any) {
+      Alert.alert(
+        'Registration Error',
+        error.message || 'Failed to register. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Kayıt Ol</Text>
+    <SafeAreaView style={[styles.container, isDark && styles.containerDark]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      
+      {/* Header Section */}
+      <View style={[styles.header, isDark && styles.headerDark]}>
+        <TouchableOpacity 
+          style={styles.themeToggle}
+          onPress={toggleTheme}
+        >
+          <MaterialIcons 
+            name={isDark ? 'light-mode' : 'dark-mode'} 
+            size={24} 
+            color={isDark ? COLORS.white : COLORS.dark}
+          />
+        </TouchableOpacity>
+        
+        <Image 
+         source={require('../../../frontend/assets/images/news-logo.png')} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
 
-      {error && (
-        <Text style={styles.errorText}>{error}</Text>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Kullanıcı Adı"
-        value={username}
-        onChangeText={setUsername}
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Şifre"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Şifre Tekrar"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Adı"
-        value={firstName}
-        onChangeText={setFirstName}
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Soyadı"
-        value={lastName}
-        onChangeText={setLastName}
-        editable={!isLoading}
-      />
-
-      <Pressable 
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={() => handleRegister({ email, password, firstName, lastName })}
-        disabled={isLoading}
+      {/* Form Section */}
+      <Animated.ScrollView 
+        style={[
+          styles.content,
+          {
+            opacity: slideAnim,
+            transform: [{
+              translateX: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [100, 0],
+              })
+            }]
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
-        </Text>
-      </Pressable>
+        <View style={[styles.formContainer, isDark && styles.formContainerDark]}>
+          <Input
+            label="First Name"
+            value={formData.firstName}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
+            placeholder="Enter your first name"
+            leftIcon="person"
+            darkMode={isDark}
+          />
 
-      <Pressable 
-        style={styles.loginButton}
-        onPress={() => router.back()}
-        disabled={isLoading}
-      >
-        <Text style={styles.loginText}>Zaten hesabınız var mı? Giriş yapın</Text>
-      </Pressable>
-    </View>
+          <Input
+            label="Last Name"
+            value={formData.lastName}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
+            placeholder="Enter your last name"
+            leftIcon="person"
+            darkMode={isDark}
+          />
+
+          <Input
+            label="Email"
+            value={formData.email}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            leftIcon="email"
+            darkMode={isDark}
+          />
+
+          <Input
+            label="Password"
+            value={formData.password}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
+            placeholder="Enter your password"
+            secureTextEntry
+            leftIcon="lock"
+            darkMode={isDark}
+          />
+
+          <Input
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
+            placeholder="Confirm your password"
+            secureTextEntry
+            leftIcon="lock"
+            darkMode={isDark}
+          />
+
+          <Button
+            title={isLoading ? "Creating Account..." : "Create Account"}
+            onPress={handleRegister}
+            disabled={isLoading}
+            style={styles.button}
+            isLoading={isLoading}
+            darkMode={isDark}
+          />
+
+          <Link 
+            href="/(auth)/login" 
+            style={[styles.link, isDark && styles.linkDark]}
+          >
+            Already have an account? Login
+          </Link>
+        </View>
+      </Animated.ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    backgroundColor: COLORS.background,
+  },
+  containerDark: {
+    backgroundColor: COLORS.darkBackground,
+  },
+  header: {
+    height: 120,
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    ...shadowStyle,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 32,
-    textAlign: 'center',
+  headerDark: {
+    backgroundColor: COLORS.primaryDark,
   },
-  input: {
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  logo: {
+    width: 150,
+    height: 60,
+    tintColor: COLORS.white,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+  },
+  formContainer: {
+    backgroundColor: COLORS.white,
+    padding: 24,
+    borderRadius: 16,
+    ...shadowStyle,
+  },
+  formContainerDark: {
+    backgroundColor: COLORS.darkSecondary,
   },
   button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  loginButton: {
     marginTop: 24,
-    alignItems: 'center',
   },
-  loginText: {
-    color: '#007AFF',
+  link: {
+    marginTop: 16,
+    textAlign: 'center',
+    color: COLORS.primary,
+    fontFamily: FONTS.medium,
     fontSize: 16,
   },
-  errorText: {
-    color: '#ff3b30',
-    marginBottom: 16,
-    textAlign: 'center',
+  linkDark: {
+    color: COLORS.primaryLight,
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    zIndex: 1,
   },
 }); 

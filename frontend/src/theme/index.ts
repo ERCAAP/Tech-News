@@ -1,25 +1,29 @@
 import { DefaultTheme } from '@react-navigation/native';
 
 export const COLORS = {
-  primary: '#007AFF',
-  secondary: '#5856D6',
-  success: '#34C759',
-  danger: '#FF3B30',
-  warning: '#FF9500',
-  info: '#5856D6',
-  light: '#F2F2F7',
-  dark: '#000000',
+  primary: '#FF6B6B',
+  primaryDark: '#2C3E50',
+  primaryLight: '#4ECDC4',
+  secondary: '#4ECDC4',
+  secondaryDark: '#3498DB',
+  background: '#F8F9FA',
+  darkBackground: '#1A1B1E',
+  darkSecondary: '#2D3436',
   white: '#FFFFFF',
-  black: '#000000',
-  gray: '#6E6E6E',
+  dark: '#212529',
+  gray: '#6C757D',
+  error: '#DC3545',
+  success: '#28A745',
+  warning: '#FFC107',
+  danger: '#DC3545',
   border: '#E5E5E5',
-  background: '#F5F5F5',
+  black: '#000000',
 };
 
 export const FONTS = {
-  regular: 'System',
-  medium: 'System-Medium',
-  bold: 'System-Bold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  bold: 'Inter_700Bold',
   sizes: {
     xs: 12,
     sm: 14,
@@ -46,9 +50,9 @@ export const shadowStyle = {
     width: 0,
     height: 2,
   },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-  elevation: 2,
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 5,
 };
 
 export const theme = {

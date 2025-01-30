@@ -1,0 +1,24 @@
+{
+  "news": {
+    "create": {
+      "title": "Haber Oluştur",
+      "form": {
+        "title": "Başlık",
+        "content": "İçerik",
+        "category": "Kategori",
+        "image": "Görsel",
+        "submit": "Yayınla"
+      }
+    },
+    "detail": {
+      "author": "Yazar: {{name}}",
+      "publishedAt": "Yayın tarihi: {{date}}"
+    },
+    "actions": {
+      "like": "Beğen",
+      "share": "Paylaş",
+      "edit": "Düzenle",
+      "delete": "Sil"
+    }
+  }
+} 

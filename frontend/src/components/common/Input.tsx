@@ -4,14 +4,28 @@ import {
   TextInputProps, 
   StyleSheet, 
   View, 
-  Text 
+  Text,
+  StyleProp,
+  TextStyle
 } from 'react-native';
 import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
+import { MaterialIcons } from '@expo/vector-icons';
 
-interface InputProps extends TextInputProps {
-  label?: string;
+interface InputProps {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  secureTextEntry?: boolean;
+  leftIcon?: keyof typeof MaterialIcons.glyphMap;
+  darkMode?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
   error?: string;
+  style?: StyleProp<TextStyle>;
 }
 
 export function Input({ 

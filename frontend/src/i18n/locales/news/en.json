@@ -1,0 +1,24 @@
+{
+  "news": {
+    "create": {
+      "title": "Create News",
+      "form": {
+        "title": "Title",
+        "content": "Content",
+        "category": "Category",
+        "image": "Image",
+        "submit": "Publish"
+      }
+    },
+    "detail": {
+      "author": "By {{name}}",
+      "publishedAt": "Published {{date}}"
+    },
+    "actions": {
+      "like": "Like",
+      "share": "Share",
+      "edit": "Edit",
+      "delete": "Delete"
+    }
+  }
+} 
