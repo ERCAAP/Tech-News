@@ -757,3 +757,47 @@
 {"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:18:51.151Z"}
 {"category":"technology","content":"adsfads\n[IMAGE:/uploads/1738343931078-919872313.png]\n","contentImages":["/uploads/1738343931078-919872313.png"],"displayTitle":"dafsdf","imageUrl":"/uploads/1738343930998-510397420.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:18:51.151Z","title":"adfddteknoap"}
 {"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"adsfads\n[IMAGE:/uploads/1738343931078-919872313.png]\n","contentImages":[],"displayTitle":"dafsdf","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343931078-919872313.png]\n","timestamp":"2025-01-31T17:18:51.151Z","title":"adfddteknoap"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T18:31:08.262Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T18:31:08.267Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T18:47:05.938Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T18:47:05.945Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:48:17.165Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:48:18.374Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:50:52.323Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:50:53.814Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T18:52:06.385Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T18:52:06.386Z"}
+{"exp":1740941453,"iat":1738349453,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T18:52:06.388Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T18:52:06.391Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T18:52:06.492Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T18:52:06.492Z"}
+{"exp":1740941453,"iat":1738349453,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T18:52:06.494Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T18:52:06.497Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T18:52:06.587Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T18:52:06.587Z"}
+{"exp":1740941453,"iat":1738349453,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T18:52:06.588Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T18:52:06.590Z"}
+{"category":"ai","content":"dsafdas\n[IMAGE:/uploads/1738349526498-925469221.png]\nasdfsa","contentImages":["/uploads/1738349526498-925469221.png"],"displayTitle":"ads","imageUrl":"/uploads/1738349526397-203450908.png","level":"info","message":"Request body:","timestamp":"2025-01-31T18:52:06.591Z","title":"asd"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"dsafdas\n[IMAGE:/uploads/1738349526498-925469221.png]\nasdfsa","contentImages":[],"displayTitle":"ads","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"dsafdas\n[IMAGE:/uploads/1738349526498-925469221.png]\nasdfsa","timestamp":"2025-01-31T18:52:06.591Z","title":"asd"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:53:53.291Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:54:20.432Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:57:02.909Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:57:04.717Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:59:34.189Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T18:59:35.284Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:02:38.027Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:02:38.034Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:06:02.548Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:06:02.549Z"}
+{"exp":1740941975,"iat":1738349975,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:06:02.553Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:06:02.576Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:06:02.681Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:06:02.683Z"}
+{"exp":1740941975,"iat":1738349975,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:06:02.685Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:06:02.688Z"}
+{"category":"technology","content":"asdas\n[IMAGE:/uploads/1738350362582-570801912.png]\n","contentImages":["/uploads/1738350362582-570801912.png"],"displayTitle":"dasf","imageUrl":"","level":"info","message":"Request body:","timestamp":"2025-01-31T19:06:02.689Z","title":"asdasds"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"asdas\n[IMAGE:/uploads/1738350362582-570801912.png]\n","contentImages":[],"displayTitle":"dasf","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"asdas\n[IMAGE:/uploads/1738350362582-570801912.png]\n","timestamp":"2025-01-31T19:06:02.690Z","title":"asdasds"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:09:49.700Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:09:51.075Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:12:29.360Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:12:30.617Z"}

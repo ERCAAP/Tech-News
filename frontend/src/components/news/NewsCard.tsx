@@ -1,37 +1,13 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, FONTS } from '@/theme';
-import { format } from 'date-fns';
+import { NewsItem } from '@/types';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { getImageUrl } from '@/utils/imageHelper';
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
 const CARD_WIDTH = width - (CARD_MARGIN * 2);
-
-const CATEGORIES = [
-  'Technology',
-  'AI',
-  'App'
-] as const;
-
-interface Author {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  avatar?: string;
-}
-
-interface NewsItem {
-  _id: string;
-  title: string;
-  content: string;
-  imageUrl?: string;
-  contentImages?: string[];
-  category?: string;
-  author: Author;
-  createdAt: string;
-}
 
 interface NewsCardProps {
   news: NewsItem;
@@ -42,26 +18,28 @@ interface NewsCardProps {
 export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
   if (!news || !news.author) return null;
 
-  // İçerikteki resim URL'lerini bul ve göster
+  // İçerikteki resimleri ve metinleri ayrıştır
   const renderContent = (content: string) => {
-    const contentParts = content.split('\n');
-    return contentParts.map((part, idx) => {
-      // [IMAGE:url] formatındaki resimleri bul
+    return content.split('\n').map((part, index) => {
+      // [IMAGE:/uploads/...] formatındaki resimleri bul
       const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
+      
       if (imageMatch) {
         const imageUrl = imageMatch[1];
         return (
-          <Image
-            key={`image-${idx}`}
-            source={{ uri: `http://10.0.2.2:3000${imageUrl}` }}
-            style={styles.contentImage}
-            resizeMode="cover"
-          />
+          <View key={`image-${index}`} style={styles.contentImageContainer}>
+            <Image
+              source={{ uri: getImageUrl(imageUrl) }}
+              style={styles.contentImage}
+              resizeMode="cover"
+            />
+          </View>
         );
       }
+
       // Normal metin
       return part.trim() ? (
-        <Text key={`text-${idx}`} style={styles.contentText}>
+        <Text key={`text-${index}`} style={styles.contentText}>
           {part}
         </Text>
       ) : null;
@@ -70,7 +48,7 @@ export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 100).springify()}
+      entering={FadeInDown.delay(index * 200).springify()}
       style={styles.container}
     >
       <TouchableOpacity
@@ -79,55 +57,37 @@ export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
         activeOpacity={0.9}
       >
         {news.imageUrl && (
-          <Image
-            source={{ uri: `http://10.0.2.2:3000${news.imageUrl}` }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
+          <View style={styles.coverImageContainer}>
+            <Image
+              source={{ uri: getImageUrl(news.imageUrl) }}
+              style={styles.coverImage}
+              resizeMode="cover"
+            />
+          </View>
         )}
-        
-        <View style={styles.overlay}>
-          <View style={styles.content}>
-            {news.category && (
-              <View style={styles.categoryContainer}>
-                <Text style={styles.category}>{news.category}</Text>
-              </View>
-            )}
-            
-            <Text style={styles.title} numberOfLines={2}>
-              {news.title || 'Untitled'}
+
+        <View style={styles.content}>
+          {news.category && (
+            <View style={styles.categoryContainer}>
+              <Text style={styles.category}>{news.category}</Text>
+            </View>
+          )}
+          
+          <Text style={styles.title} numberOfLines={2}>
+            {news.title}
+          </Text>
+
+          <View style={styles.authorInfo}>
+            <Text style={styles.authorName}>
+              {news.author.firstName} {news.author.lastName}
             </Text>
+            <Text style={styles.date}>
+              {new Date(news.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
 
-            <View style={styles.footer}>
-              <View style={styles.authorContainer}>
-                {news.author.avatar ? (
-                  <Image
-                    source={{ uri: news.author.avatar }}
-                    style={styles.authorAvatar}
-                  />
-                ) : (
-                  <View style={styles.authorAvatarPlaceholder}>
-                    <Text style={styles.authorInitials}>
-                      {`${news.author.firstName?.[0] || ''}${news.author.lastName?.[0] || ''}`}
-                    </Text>
-                  </View>
-                )}
-                <Text style={styles.authorName}>
-                  {`${news.author.firstName || ''} ${news.author.lastName || ''}`}
-                </Text>
-              </View>
-
-              <View style={styles.metaContainer}>
-                <MaterialIcons name="access-time" size={14} color={COLORS.lightGray} />
-                <Text style={styles.date}>
-                  {format(new Date(news.createdAt || new Date()), 'dd MMM yyyy')}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.contentContainer}>
-              {renderContent(news.content)}
-            </View>
+          <View style={styles.contentContainer}>
+            {renderContent(news.content)}
           </View>
         </View>
       </TouchableOpacity>
@@ -139,117 +99,78 @@ const styles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     marginHorizontal: CARD_MARGIN,
-    marginBottom: 20,
-    borderRadius: 16,
-    backgroundColor: COLORS.white,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    overflow: 'hidden',
+    marginBottom: 16,
   },
   card: {
-    borderRadius: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
     overflow: 'hidden',
+  },
+  coverImageContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: COLORS.border,
   },
   coverImage: {
     width: '100%',
-    height: 200,
-  },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
   },
   content: {
     padding: 16,
   },
   categoryContainer: {
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: COLORS.primaryLight,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 16,
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
   category: {
-    color: COLORS.white,
+    color: COLORS.primary,
     fontSize: 12,
     fontFamily: FONTS.medium,
-    textTransform: 'uppercase',
   },
   title: {
-    color: COLORS.white,
     fontSize: 18,
     fontFamily: FONTS.bold,
-    marginBottom: 12,
-    lineHeight: 24,
+    color: COLORS.dark,
+    marginBottom: 8,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  authorContainer: {
+  authorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  authorAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  authorAvatarPlaceholder: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary + '40',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  authorInitials: {
-    color: COLORS.white,
-    fontSize: 10,
-    fontFamily: FONTS.bold,
+    gap: 8,
+    marginBottom: 16,
   },
   authorName: {
-    color: COLORS.lightGray,
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: FONTS.medium,
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    color: COLORS.dark,
   },
   date: {
-    color: COLORS.lightGray,
     fontSize: 12,
     fontFamily: FONTS.regular,
-    marginLeft: 4,
+    color: COLORS.gray,
+  },
+  contentContainer: {
+    gap: 8,
+  },
+  contentImageContainer: {
+    width: '100%',
+    height: 200,
+    backgroundColor: COLORS.border,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   contentImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  contentContainer: {
-    marginTop: 12,
+    height: '100%',
   },
   contentText: {
     fontSize: 16,
-    lineHeight: 24,
+    fontFamily: FONTS.regular,
     color: COLORS.dark,
-    marginVertical: 4,
+    lineHeight: 24,
   },
 }); 

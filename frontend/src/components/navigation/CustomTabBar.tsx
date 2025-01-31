@@ -11,13 +11,13 @@ import { isUserAdmin } from '@/types';
 import * as Haptics from 'expo-haptics';
 
 interface TabBarProps {
-  state: any;
-  navigation: any;
+  state?: any;
+  navigation?: any;
 }
 
 const { width } = Dimensions.get('window');
 
-export default function CustomTabBar({ state, navigation }: TabBarProps) {
+export default function CustomTabBar(_props: TabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();

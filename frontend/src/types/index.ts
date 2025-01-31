@@ -27,16 +27,32 @@ export interface NewsItem {
   _id: string;
   title: string;
   content: string;
-  category: string;
+  summary?: string;
   imageUrl?: string;
-  likes: number;
+  contentImages?: string[];
+  category?: string;
+  author: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
+  likes?: string[];
+  comments?: Comment[];
+  status?: 'draft' | 'published' | 'archived';
+}
+
+interface Comment {
+  _id: string;
+  content: string;
   author: {
     _id: string;
     firstName: string;
     lastName: string;
   };
+  createdAt: string;
 }
 
 export interface AuthState {

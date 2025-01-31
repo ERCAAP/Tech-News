@@ -3,6 +3,7 @@ import { View, StyleSheet, SectionList, Dimensions, Image, Text, TouchableOpacit
 import { NewsItem } from '@/types';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { router } from 'expo-router';
+import { getImageUrl } from '@/utils/imageHelper';
 
 interface NewsFeedProps {
   news: NewsItem[];
@@ -13,6 +14,10 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 32;
 
 export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
+  const handleNewsPress = (newsItem: NewsItem) => {
+    router.push(`/news/${newsItem._id}`);
+  };
+
   // Haberleri kategorilere göre grupla
   const groupedNews = React.useMemo(() => {
     const groups = news.reduce((acc, item) => {
@@ -30,10 +35,6 @@ export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
     }));
   }, [news]);
 
-  const handleNewsPress = (newsItem: NewsItem) => {
-    router.push(`/news/${newsItem._id}`);
-  };
-
   const renderItem = ({ item }: { item: NewsItem }) => (
     <TouchableOpacity 
       style={styles.card}
@@ -41,11 +42,13 @@ export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
       activeOpacity={0.9}
     >
       {item.imageUrl && (
-        <Image
-          source={{ uri: `http://10.0.2.2:3000${item.imageUrl}` }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: getImageUrl(item.imageUrl) }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
       )}
       
       <View style={styles.content}>
@@ -56,7 +59,7 @@ export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
         <View style={styles.footer}>
           <View style={styles.authorInfo}>
             <Text style={styles.authorName}>
-              {`${item.author.firstName} ${item.author.lastName}`}
+              {item.author.firstName} {item.author.lastName}
             </Text>
             <Text style={styles.date}>
               {new Date(item.createdAt).toLocaleDateString()}
@@ -99,9 +102,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadowStyle,
   },
-  image: {
+  imageContainer: {
     width: '100%',
     height: 200,
+    backgroundColor: COLORS.border,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     padding: 16,
@@ -120,12 +128,12 @@ const styles = StyleSheet.create({
   authorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   authorName: {
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: COLORS.dark,
-    marginRight: 8,
   },
   date: {
     fontSize: 12,
