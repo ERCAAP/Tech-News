@@ -8,7 +8,12 @@ import { upload } from '../utils/upload';
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
-  const news = await News.find().sort('-createdAt');
+  const news = await News.find()
+    .sort('-createdAt')
+    .populate('author', 'firstName lastName');
+
+  console.log('Sending news:', news); // Debug için
+
   res.status(200).json({
     status: 'success',
     data: { news }
@@ -31,7 +36,6 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 export const createNews = asyncHandler(async (req: Request, res: Response) => {
   try {
     logger.info('Request body:', req.body);
-    logger.info('Request files:', req.files);
 
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     
@@ -39,15 +43,13 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     let imageUrl = '';
     if (files?.coverImage?.[0]) {
       const filename = files.coverImage[0].filename;
-      imageUrl = `/uploads/${filename}`; // Basitleştirilmiş URL
-      logger.info('Cover image uploaded:', imageUrl);
+      imageUrl = `/uploads/${filename}`;
     }
 
     // İçerik görselleri
     let contentImages: string[] = [];
     if (files?.contentImage0) {
       contentImages = files.contentImage0.map(file => `/uploads/${file.filename}`);
-      logger.info('Content images uploaded:', contentImages);
     }
 
     // İçeriği düzenle
@@ -59,21 +61,15 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
       );
     });
 
-    // Kategoriyi düzelt
-    let category = req.body.category;
-    if (category) {
-      category = category.charAt(0).toUpperCase() + category.slice(1);
-      if (category.toLowerCase() === 'ai') {
-        category = 'AI';
-      }
-    }
+    // Kategori kontrolü - sadece küçük harften büyük harfe çevir
+    let category = req.body.category.charAt(0).toUpperCase() + req.body.category.slice(1);
 
     const newsData = {
       title: req.body.title,
       displayTitle: req.body.displayTitle || req.body.title,
       content: content,
       summary: req.body.content.substring(0, 200),
-      category: category || 'General',
+      category: category,
       author: req.user._id,
       imageUrl,
       contentImages,
@@ -91,12 +87,12 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    // Detaylı hata loglaması
     logger.error('Create news error details:', {
       error: error.message,
       stack: error.stack,
       name: error.name,
-      code: error.code
+      code: error.code,
+      body: req.body // Gelen veriyi de görelim
     });
 
     if (error.name === 'ValidationError') {

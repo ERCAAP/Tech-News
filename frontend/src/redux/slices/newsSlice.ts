@@ -16,8 +16,10 @@ export const fetchNews = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/news');
+      console.log('Fetched news:', response.data); // Debug için
       return response.data.data.news;
     } catch (error: any) {
+      console.error('Error fetching news:', error); // Debug için
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch news');
     }
   }

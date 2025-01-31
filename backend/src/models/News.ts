@@ -51,11 +51,8 @@ const newsSchema = new Schema<INews>({
   category: {
     type: String,
     required: true,
-    enum: {
-      values: ['Technology', 'AI', 'App Development', 'Cyber Security', 'General'],
-      message: 'Geçersiz kategori seçimi'
-    },
-    default: 'General'
+    enum: ['Technology', 'AI', 'App'],
+    message: 'Geçersiz kategori seçimi'
   },
   subCategory: {
     type: String,

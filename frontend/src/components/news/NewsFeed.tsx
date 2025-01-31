@@ -1,116 +1,77 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet, FlatList, Dimensions, Image, Text, TouchableOpacity } from 'react-native';
 import { NewsItem } from '@/types';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { router } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
 
 interface NewsFeedProps {
   news: NewsItem[];
+  refreshControl?: React.ReactElement;
 }
 
 const { width } = Dimensions.get('window');
-const FEATURED_HEIGHT = 200;
-const SLIDER_HEIGHT = 250;
-const GRID_ITEM_WIDTH = (width - 48) / 2;
+const CARD_WIDTH = width - 32;
 
-export function NewsFeed({ news }: NewsFeedProps) {
-  const [activeSlide, setActiveSlide] = useState(0);
-  
-  // En çok okunan haberi al (örnek olarak ilk haber)
-  const featuredNews = news[0];
-  
-  // Görseli olan haberleri filtrele
-  const newsWithImages = news.filter(item => item.imageUrl);
-  
-  // Diğer haberler
-  const otherNews = news.filter(item => !item.imageUrl);
+const CATEGORIES = [
+  'Technology',
+  'AI',
+  'App'
+] as const;
 
+export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
   const handleNewsPress = (newsItem: NewsItem) => {
     router.push(`/news/${newsItem._id}`);
   };
 
-  const renderFeaturedNews = () => (
-    <TouchableOpacity 
-      style={styles.featuredContainer}
-      onPress={() => handleNewsPress(featuredNews)}
-    >
-      <Image 
-        source={{ uri: featuredNews.imageUrl }} 
-        style={styles.featuredImage}
-      />
-      <View style={styles.featuredOverlay}>
-        <View style={styles.featuredBadge}>
-          <MaterialIcons name="trending-up" size={16} color={COLORS.white} />
-          <Text style={styles.featuredBadgeText}>Most Read Today</Text>
-        </View>
-        <Text style={styles.featuredTitle}>{featuredNews.title}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderImageSlider = () => (
-    <View style={styles.sliderContainer}>
-      <FlatList
-        data={newsWithImages}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={(e) => {
-          const slideIndex = Math.round(e.nativeEvent.contentOffset.x / width);
-          setActiveSlide(slideIndex);
-        }}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={styles.slideItem}
-            onPress={() => handleNewsPress(item)}
-          >
-            <Image source={{ uri: item.imageUrl }} style={styles.slideImage} />
-            <View style={styles.slideOverlay}>
-              <Text style={styles.slideTitle}>{item.title}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        keyExtractor={item => item._id}
-      />
-      <View style={styles.pagination}>
-        {newsWithImages.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.paginationDot,
-              index === activeSlide && styles.paginationDotActive
-            ]}
+  const renderNewsItem = ({ item }: { item: NewsItem }) => {
+    return (
+      <TouchableOpacity 
+        style={styles.card}
+        onPress={() => handleNewsPress(item)}
+        activeOpacity={0.9}
+      >
+        {item.imageUrl && (
+          <Image
+            source={{ uri: `http://10.0.2.2:3000${item.imageUrl}` }}
+            style={styles.image}
+            resizeMode="cover"
           />
-        ))}
-      </View>
-    </View>
-  );
+        )}
+        
+        <View style={styles.content}>
+          {item.category && (
+            <View style={styles.categoryContainer}>
+              <Text style={styles.category}>{item.category}</Text>
+            </View>
+          )}
+          
+          <Text style={styles.title} numberOfLines={2}>
+            {item.title}
+          </Text>
 
-  const renderGridItem = ({ item }: { item: NewsItem }) => (
-    <TouchableOpacity 
-      style={styles.gridItem}
-      onPress={() => handleNewsPress(item)}
-    >
-      <Text style={styles.gridItemTitle} numberOfLines={2}>{item.title}</Text>
-      <Text style={styles.gridItemCategory}>{item.category}</Text>
-    </TouchableOpacity>
-  );
+          <View style={styles.footer}>
+            <View style={styles.authorInfo}>
+              <Text style={styles.authorName}>
+                {`${item.author.firstName} ${item.author.lastName}`}
+              </Text>
+              <Text style={styles.date}>
+                {new Date(item.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <FlatList
-      data={otherNews}
-      numColumns={2}
-      ListHeaderComponent={
-        <>
-          {featuredNews && renderFeaturedNews()}
-          {newsWithImages.length > 0 && renderImageSlider()}
-        </>
-      }
-      renderItem={renderGridItem}
+      data={news}
+      renderItem={renderNewsItem}
       keyExtractor={item => item._id}
       contentContainerStyle={styles.container}
-      columnWrapperStyle={styles.gridRow}
+      showsVerticalScrollIndicator={false}
+      refreshControl={refreshControl}
     />
   );
 }
@@ -119,109 +80,59 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
   },
-  featuredContainer: {
-    height: FEATURED_HEIGHT,
-    marginBottom: 16,
+  card: {
+    width: CARD_WIDTH,
+    backgroundColor: COLORS.white,
     borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
     ...shadowStyle,
   },
-  featuredImage: {
+  image: {
     width: '100%',
-    height: '100%',
+    height: 200,
   },
-  featuredOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+  content: {
     padding: 16,
-    justifyContent: 'space-between',
   },
-  featuredBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
+  categoryContainer: {
+    backgroundColor: COLORS.primary + '20',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 4,
+    borderRadius: 12,
     alignSelf: 'flex-start',
+    marginBottom: 8,
   },
-  featuredBadgeText: {
-    color: COLORS.white,
-    marginLeft: 4,
+  category: {
+    color: COLORS.primary,
     fontSize: 12,
     fontFamily: FONTS.medium,
+    textTransform: 'uppercase',
   },
-  featuredTitle: {
-    color: COLORS.white,
-    fontSize: 20,
+  title: {
+    fontSize: 18,
     fontFamily: FONTS.bold,
+    color: COLORS.dark,
+    marginBottom: 12,
   },
-  sliderContainer: {
-    height: SLIDER_HEIGHT,
-    marginBottom: 16,
-  },
-  slideItem: {
-    width: width - 32,
-    height: SLIDER_HEIGHT - 20,
-    marginRight: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    ...shadowStyle,
-  },
-  slideImage: {
-    width: '100%',
-    height: '100%',
-  },
-  slideOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    padding: 16,
-    justifyContent: 'flex-end',
-  },
-  slideTitle: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-  },
-  pagination: {
+  footer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.gray,
-    marginHorizontal: 4,
-  },
-  paginationDotActive: {
-    backgroundColor: COLORS.primary,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  gridRow: {
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  gridItem: {
-    width: GRID_ITEM_WIDTH,
-    backgroundColor: COLORS.white,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    ...shadowStyle,
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  gridItemTitle: {
+  authorName: {
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: COLORS.dark,
-    marginBottom: 8,
+    marginRight: 8,
   },
-  gridItemCategory: {
+  date: {
     fontSize: 12,
     fontFamily: FONTS.regular,
-    color: COLORS.primary,
+    color: COLORS.gray,
   },
 }); 

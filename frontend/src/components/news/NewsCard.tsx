@@ -9,6 +9,12 @@ const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
 const CARD_WIDTH = width - (CARD_MARGIN * 2);
 
+const CATEGORIES = [
+  'Technology',
+  'AI',
+  'App'
+] as const;
+
 interface Author {
   _id: string;
   firstName: string;

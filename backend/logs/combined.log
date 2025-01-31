@@ -224,3 +224,478 @@
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:43:58.280Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:49:26.610Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:49:27.567Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T16:51:11.750Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T16:51:11.755Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:52:43.459Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:52:44.528Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:53:34.305Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:53:34.306Z"}
+{"exp":1740934364,"iat":1738342364,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:53:34.308Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:53:34.312Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:53:34.408Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:53:34.409Z"}
+{"exp":1740934364,"iat":1738342364,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:53:34.411Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:53:34.414Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:53:34.504Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:53:34.504Z"}
+{"exp":1740934364,"iat":1738342364,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:53:34.505Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:53:34.507Z"}
+{"category":"app","content":"APPP\n[IMAGE:/uploads/1738342414415-356770107.jpeg]\nAPP","contentImages":["/uploads/1738342414415-356770107.jpeg"],"displayTitle":"APP","imageUrl":"/uploads/1738342414316-18659300.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:53:34.508Z","title":"APP"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:53:34.508Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"APPP\n[IMAGE:/uploads/1738342414415-356770107.jpeg]\nAPP","contentImages":[],"displayTitle":"APP","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"APPP\n[IMAGE:/uploads/1738342414415-356770107.jpeg]\nAPP","timestamp":"2025-01-31T16:53:34.509Z","title":"APP"}
+{"error":"News validation failed: category: Geçersiz kategori seçimi","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: Geçersiz kategori seçimi\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T16:53:34.517Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T16:55:58.011Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T16:55:58.016Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:56:52.703Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:56:54.064Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:57:32.357Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:57:32.358Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:57:32.360Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:57:32.364Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:57:32.529Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:57:32.530Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:57:32.531Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:57:32.534Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:57:32.691Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:57:32.691Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:57:32.692Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:57:32.694Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738342652536-556198292.jpeg]\nselamar","contentImages":["/uploads/1738342652536-556198292.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342652368-895047736.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:57:32.695Z","title":"selamlar"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:57:32.695Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"\n[IMAGE:/uploads/1738342652536-556198292.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342652536-556198292.jpeg]\nselamar","timestamp":"2025-01-31T16:57:32.696Z","title":"selamlar"}
+{"error":"News validation failed: category: `App` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `App` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T16:57:32.705Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T16:58:23.586Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T16:58:23.592Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:30.042Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:30.043Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:30.046Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:30.062Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:30.154Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:30.154Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:30.156Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:30.160Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:30.267Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:30.268Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:30.269Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:30.273Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738342710162-490215339.jpeg]\nselamar","contentImages":["/uploads/1738342710162-490215339.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342710067-21917993.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:58:30.274Z","title":"selamlar"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:58:30.274Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"\n[IMAGE:/uploads/1738342710162-490215339.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342710162-490215339.jpeg]\nselamar","timestamp":"2025-01-31T16:58:30.274Z","title":"selamlar"}
+{"error":"News validation failed: category: `App` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `App` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T16:58:30.283Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:50.215Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:50.216Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:50.217Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:50.221Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:50.319Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:50.319Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:50.322Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:50.325Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:58:50.421Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:58:50.422Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:58:50.422Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:58:50.425Z"}
+{"category":"ai","content":"\n[IMAGE:/uploads/1738342730326-487011586.jpeg]\nselamar","contentImages":["/uploads/1738342730326-487011586.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342730223-284183763.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:58:50.426Z","title":"selamlar"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:58:50.426Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"\n[IMAGE:/uploads/1738342730326-487011586.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342730326-487011586.jpeg]\nselamar","timestamp":"2025-01-31T16:58:50.427Z","title":"selamlar"}
+{"error":"News validation failed: category: `AI` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `AI` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T16:58:50.429Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T16:59:33.990Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T16:59:33.996Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:34.027Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:34.028Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:34.033Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:34.066Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:34.127Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:34.128Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:34.129Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:34.133Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:34.235Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:34.236Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:34.237Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:34.239Z"}
+{"category":"ai","content":"\n[IMAGE:/uploads/1738342774135-664830483.jpeg]\nselamar","contentImages":["/uploads/1738342774135-664830483.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342774072-465023684.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:59:34.240Z","title":"selamlar"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:59:34.240Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"\n[IMAGE:/uploads/1738342774135-664830483.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342774135-664830483.jpeg]\nselamar","timestamp":"2025-01-31T16:59:34.241Z","title":"selamlar"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:44.783Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:44.783Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:44.785Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:44.788Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:44.916Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:44.916Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:44.918Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:44.922Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:59:45.027Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:59:45.027Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:59:45.029Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:59:45.032Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738342784925-866113829.jpeg]\nselamar","contentImages":["/uploads/1738342784925-866113829.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342784789-77594138.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:59:45.032Z","title":"selamlar"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:59:45.033Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"\n[IMAGE:/uploads/1738342784925-866113829.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342784925-866113829.jpeg]\nselamar","timestamp":"2025-01-31T16:59:45.033Z","title":"selamlar"}
+{"error":"News validation failed: category: `App` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `App` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T16:59:45.039Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:01:07.686Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:01:07.691Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:10.974Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:10.974Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:10.978Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:10.995Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:11.116Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:11.116Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:11.118Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:11.121Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:11.270Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:11.270Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:11.272Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:11.275Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738342871123-349519933.jpeg]\nselamar","contentImages":["/uploads/1738342871123-349519933.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342871001-515772213.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:01:11.276Z","title":"selamlar"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:01:11.276Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"app","content":"\n[IMAGE:/uploads/1738342871123-349519933.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlar","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342871123-349519933.jpeg]\nselamar","timestamp":"2025-01-31T17:01:11.277Z","title":"selamlar"}
+{"body":{"category":"app","content":"\n[IMAGE:/uploads/1738342871123-349519933.jpeg]\nselamar","contentImages":["/uploads/1738342871123-349519933.jpeg"],"displayTitle":"selamlar","imageUrl":"/uploads/1738342871001-515772213.jpeg","title":"selamlar"},"error":"News validation failed: category: `app` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `app` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:01:11.288Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:24.257Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:24.257Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:24.259Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:24.264Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:24.386Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:24.386Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:24.388Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:24.392Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:01:24.489Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:01:24.489Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:01:24.491Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:01:24.493Z"}
+{"category":"ai","content":"\n[IMAGE:/uploads/1738342884393-771470629.jpeg]\nselamar","contentImages":["/uploads/1738342884393-771470629.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738342884265-201986901.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:01:24.494Z","title":"selamlar"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:01:24.494Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"ai","content":"\n[IMAGE:/uploads/1738342884393-771470629.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342884393-771470629.jpeg]\nselamar","timestamp":"2025-01-31T17:01:24.494Z","title":"selamlar"}
+{"body":{"category":"ai","content":"\n[IMAGE:/uploads/1738342884393-771470629.jpeg]\nselamar","contentImages":["/uploads/1738342884393-771470629.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738342884265-201986901.jpeg","title":"selamlar"},"error":"News validation failed: category: `ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:01:24.499Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:02:07.054Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:02:07.059Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:07.358Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:07.358Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:07.362Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:07.376Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:07.444Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:07.445Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:07.446Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:07.449Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:07.542Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:07.542Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:07.543Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:07.546Z"}
+{"category":"ai","content":"\n[IMAGE:/uploads/1738342927450-580094792.jpeg]\nselamar","contentImages":["/uploads/1738342927450-580094792.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738342927381-637355895.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:02:07.547Z","title":"selamlar"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:02:07.547Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"\n[IMAGE:/uploads/1738342927450-580094792.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342927450-580094792.jpeg]\nselamar","timestamp":"2025-01-31T17:02:07.547Z","title":"selamlar"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:28.506Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:28.507Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:28.509Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:28.512Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:28.617Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:28.618Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:28.619Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:28.622Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:02:28.713Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:02:28.713Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:02:28.714Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:02:28.716Z"}
+{"category":"technology","content":"\n[IMAGE:/uploads/1738342948623-616845326.jpeg]\nselamar","contentImages":["/uploads/1738342948623-616845326.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738342948514-666692330.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:02:28.717Z","title":"selamlar"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:02:28.717Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"\n[IMAGE:/uploads/1738342948623-616845326.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738342948623-616845326.jpeg]\nselamar","timestamp":"2025-01-31T17:02:28.718Z","title":"selamlar"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:03:44.014Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:03:44.019Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:03:48.552Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:03:48.552Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:03:48.556Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:03:48.576Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:03:48.693Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:03:48.694Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:03:48.695Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:03:48.700Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:03:48.814Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:03:48.814Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:03:48.816Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:03:48.836Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738343028702-35965351.jpeg]\nselamar","contentImages":["/uploads/1738343028702-35965351.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738343028583-641417516.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:03:48.856Z","title":"selamlar"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:03:48.896Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"app","content":"\n[IMAGE:/uploads/1738343028702-35965351.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738343028702-35965351.jpeg]\nselamar","timestamp":"2025-01-31T17:03:48.911Z","title":"selamlar"}
+{"body":{"category":"app","content":"\n[IMAGE:/uploads/1738343028702-35965351.jpeg]\nselamar","contentImages":["/uploads/1738343028702-35965351.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738343028583-641417516.jpeg","title":"selamlar"},"error":"News validation failed: category: `app` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `app` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:03:48.969Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:03:59.978Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:03:59.978Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:03:59.979Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:03:59.982Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:04:00.133Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:04:00.134Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:04:00.135Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:04:00.137Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:04:00.236Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:04:00.237Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:04:00.238Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:04:00.242Z"}
+{"category":"technology","content":"\n[IMAGE:/uploads/1738343040138-35603099.jpeg]\nselamar","contentImages":["/uploads/1738343040138-35603099.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738343039983-444159491.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:04:00.242Z","title":"selamlar tekno"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:04:00.243Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"\n[IMAGE:/uploads/1738343040138-35603099.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738343040138-35603099.jpeg]\nselamar","timestamp":"2025-01-31T17:04:00.243Z","title":"selamlar tekno"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:05:03.927Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:05:03.938Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:05:06.491Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:05:06.491Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:05:06.495Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:05:06.513Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:05:06.586Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:05:06.587Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:05:06.589Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:05:06.593Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:05:06.689Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:05:06.690Z"}
+{"exp":1740934614,"iat":1738342614,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:05:06.691Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:05:06.694Z"}
+{"category":"app","content":"\n[IMAGE:/uploads/1738343106595-390206871.jpeg]\nselamar","contentImages":["/uploads/1738343106595-390206871.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738343106517-243672441.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:05:06.694Z","title":"selamlar tekno"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:05:06.695Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"app","content":"\n[IMAGE:/uploads/1738343106595-390206871.jpeg]\nselamar","contentImages":[],"displayTitle":"selamlars","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"\n[IMAGE:/uploads/1738343106595-390206871.jpeg]\nselamar","timestamp":"2025-01-31T17:05:06.695Z","title":"selamlar tekno"}
+{"body":{"category":"app","content":"\n[IMAGE:/uploads/1738343106595-390206871.jpeg]\nselamar","contentImages":["/uploads/1738343106595-390206871.jpeg"],"displayTitle":"selamlars","imageUrl":"/uploads/1738343106517-243672441.jpeg","title":"selamlar tekno"},"error":"News validation failed: category: `app` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `app` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:05:06.705Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:05:14.852Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:05:15.711Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:05:45.171Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:05:46.251Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:07:11.739Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:07:11.745Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:09:57.654Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:09:58.527Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:10:25.662Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:10:25.662Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:10:25.664Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:10:25.669Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:10:25.725Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:10:25.725Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:10:25.726Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:10:25.730Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:10:25.747Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:10:25.747Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:10:25.748Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:10:25.750Z"}
+{"category":"technology","content":"tekno\n[IMAGE:/uploads/1738343425732-928670409.jpeg]\n","contentImages":["/uploads/1738343425732-928670409.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343425674-46055072.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:10:25.751Z","title":"sad"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:10:25.752Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"tekno\n[IMAGE:/uploads/1738343425732-928670409.jpeg]\n","contentImages":[],"displayTitle":"fgfd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"tekno\n[IMAGE:/uploads/1738343425732-928670409.jpeg]\n","timestamp":"2025-01-31T17:10:25.752Z","title":"sad"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:11:29.061Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:11:29.066Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:33.023Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:33.024Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:33.028Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:33.044Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:33.086Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:33.086Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:33.088Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:33.092Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:33.124Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:33.124Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:33.126Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:33.130Z"}
+{"category":"app","content":"tekno\n[IMAGE:/uploads/1738343493094-156003708.jpeg]\n","contentImages":["/uploads/1738343493094-156003708.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343493048-613675243.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:11:33.131Z","title":"sad"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:11:33.132Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"app","content":"tekno\n[IMAGE:/uploads/1738343493094-156003708.jpeg]\n","contentImages":[],"displayTitle":"fgfd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"tekno\n[IMAGE:/uploads/1738343493094-156003708.jpeg]\n","timestamp":"2025-01-31T17:11:33.132Z","title":"sad"}
+{"body":{"category":"app","content":"tekno\n[IMAGE:/uploads/1738343493094-156003708.jpeg]\n","contentImages":["/uploads/1738343493094-156003708.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343493048-613675243.jpeg","title":"sad"},"error":"News validation failed: category: `app` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `app` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:11:33.144Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:36.682Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:36.683Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:36.684Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:36.687Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:36.751Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:36.751Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:36.752Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:36.755Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:36.777Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:36.777Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:36.779Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:36.782Z"}
+{"category":"ai","content":"tekno\n[IMAGE:/uploads/1738343496756-857805878.jpeg]\n","contentImages":["/uploads/1738343496756-857805878.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343496688-735244635.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:11:36.782Z","title":"sad"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:11:36.783Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"ai","content":"tekno\n[IMAGE:/uploads/1738343496756-857805878.jpeg]\n","contentImages":[],"displayTitle":"fgfd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"tekno\n[IMAGE:/uploads/1738343496756-857805878.jpeg]\n","timestamp":"2025-01-31T17:11:36.783Z","title":"sad"}
+{"body":{"category":"ai","content":"tekno\n[IMAGE:/uploads/1738343496756-857805878.jpeg]\n","contentImages":["/uploads/1738343496756-857805878.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343496688-735244635.jpeg","title":"sad"},"error":"News validation failed: category: `ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:11:36.785Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:39.956Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:39.956Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:39.958Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:39.961Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:40.026Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:40.027Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:40.028Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:40.031Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:11:40.049Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:11:40.049Z"}
+{"exp":1740935398,"iat":1738343398,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:11:40.051Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:11:40.053Z"}
+{"category":"technology","content":"tekno\n[IMAGE:/uploads/1738343500032-72847936.jpeg]\n","contentImages":["/uploads/1738343500032-72847936.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343499962-55319835.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T17:11:40.053Z","title":"sad"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:11:40.054Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"technology","content":"tekno\n[IMAGE:/uploads/1738343500032-72847936.jpeg]\n","contentImages":[],"displayTitle":"fgfd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"tekno\n[IMAGE:/uploads/1738343500032-72847936.jpeg]\n","timestamp":"2025-01-31T17:11:40.054Z","title":"sad"}
+{"body":{"category":"technology","content":"tekno\n[IMAGE:/uploads/1738343500032-72847936.jpeg]\n","contentImages":["/uploads/1738343500032-72847936.jpeg"],"displayTitle":"fgfd","imageUrl":"/uploads/1738343499962-55319835.jpeg","title":"sad"},"error":"News validation failed: category: `technology` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `technology` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:11:40.056Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:11:46.051Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T17:11:46.794Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:04.922Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:04.923Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:04.924Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:04.927Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:04.989Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:04.989Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:04.990Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:04.993Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:05.055Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:05.056Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:05.056Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:05.058Z"}
+{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343524993-972971257.png]\n","contentImages":["/uploads/1738343524993-972971257.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343524927-576329894.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:12:05.059Z","title":"adf"}
+{"level":"info","message":"Category received:","timestamp":"2025-01-31T17:12:05.059Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"app","content":"adsfads\n[IMAGE:/uploads/1738343524993-972971257.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343524993-972971257.png]\n","timestamp":"2025-01-31T17:12:05.059Z","title":"adf"}
+{"body":{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343524993-972971257.png]\n","contentImages":["/uploads/1738343524993-972971257.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343524927-576329894.png","title":"adf"},"error":"News validation failed: category: `app` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `app` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:12:05.061Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T17:12:56.559Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T17:12:56.564Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:58.237Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:58.237Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:58.242Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:58.261Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:58.313Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:58.313Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:58.315Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:58.319Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:12:58.389Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:12:58.390Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:12:58.391Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:12:58.394Z"}
+{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343578321-463174018.png]\n","contentImages":["/uploads/1738343578321-463174018.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343578267-949309206.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:12:58.395Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"adsfads\n[IMAGE:/uploads/1738343578321-463174018.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343578321-463174018.png]\n","timestamp":"2025-01-31T17:12:58.395Z","title":"adf"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:09.484Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:09.485Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:09.486Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:09.489Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:09.569Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:09.569Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:09.571Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:09.573Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:09.642Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:09.643Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:09.644Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:09.646Z"}
+{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343589574-690982703.png]\n","contentImages":["/uploads/1738343589574-690982703.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343589491-756240161.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:13:09.646Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Ai","content":"adsfads\n[IMAGE:/uploads/1738343589574-690982703.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343589574-690982703.png]\n","timestamp":"2025-01-31T17:13:09.646Z","title":"adf"}
+{"body":{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343589574-690982703.png]\n","contentImages":["/uploads/1738343589574-690982703.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343589491-756240161.png","title":"adf"},"error":"News validation failed: category: `Ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `Ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:13:09.649Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:12.797Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:12.798Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:12.801Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:12.807Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:12.882Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:12.883Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:12.884Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:12.895Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:13:12.951Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:13:12.951Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:13:12.952Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:13:12.956Z"}
+{"category":"technology","content":"adsfads\n[IMAGE:/uploads/1738343592898-205652454.png]\n","contentImages":["/uploads/1738343592898-205652454.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343592808-338077206.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:13:12.956Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"adsfads\n[IMAGE:/uploads/1738343592898-205652454.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343592898-205652454.png]\n","timestamp":"2025-01-31T17:13:12.956Z","title":"adf"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:12.624Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:12.624Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:12.626Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:12.629Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:12.702Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:12.702Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:12.704Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:12.707Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:12.778Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:12.778Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:12.779Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:12.782Z"}
+{"category":"technology","content":"adsfads\n[IMAGE:/uploads/1738343712707-96181416.png]\n","contentImages":["/uploads/1738343712707-96181416.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343712630-119033633.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:15:12.782Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"adsfads\n[IMAGE:/uploads/1738343712707-96181416.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343712707-96181416.png]\n","timestamp":"2025-01-31T17:15:12.782Z","title":"adf"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:18.461Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:18.461Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:18.462Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:18.464Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:18.548Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:18.549Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:18.550Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:18.552Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:18.616Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:18.616Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:18.617Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:18.620Z"}
+{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343718553-346088426.png]\n","contentImages":["/uploads/1738343718553-346088426.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343718465-389689493.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:15:18.620Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Ai","content":"adsfads\n[IMAGE:/uploads/1738343718553-346088426.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343718553-346088426.png]\n","timestamp":"2025-01-31T17:15:18.620Z","title":"adf"}
+{"body":{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343718553-346088426.png]\n","contentImages":["/uploads/1738343718553-346088426.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343718465-389689493.png","title":"adf"},"error":"News validation failed: category: `Ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `Ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:15:18.622Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:21.447Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:21.448Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:21.449Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:21.451Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:21.533Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:21.533Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:21.534Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:21.537Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:15:21.615Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:15:21.616Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:15:21.617Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:15:21.619Z"}
+{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343721537-984592079.png]\n","contentImages":["/uploads/1738343721537-984592079.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343721453-344505952.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:15:21.620Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"adsfads\n[IMAGE:/uploads/1738343721537-984592079.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343721537-984592079.png]\n","timestamp":"2025-01-31T17:15:21.620Z","title":"adf"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:12.176Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:12.177Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:12.178Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:12.180Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:12.260Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:12.260Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:12.261Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:12.264Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:12.345Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:12.345Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:12.346Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:12.348Z"}
+{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343772265-100063187.png]\n","contentImages":["/uploads/1738343772265-100063187.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343772181-234439205.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:16:12.349Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Ai","content":"adsfads\n[IMAGE:/uploads/1738343772265-100063187.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343772265-100063187.png]\n","timestamp":"2025-01-31T17:16:12.349Z","title":"adf"}
+{"body":{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343772265-100063187.png]\n","contentImages":["/uploads/1738343772265-100063187.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343772181-234439205.png","title":"adf"},"error":"News validation failed: category: `Ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `Ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:16:12.350Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:24.813Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:24.813Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:24.814Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:24.816Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:24.894Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:24.894Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:24.895Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:24.897Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:24.968Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:24.969Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:24.970Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:24.971Z"}
+{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343784898-54382130.png]\n","contentImages":["/uploads/1738343784898-54382130.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343784817-295013121.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:16:24.971Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"Ai","content":"adsfads\n[IMAGE:/uploads/1738343784898-54382130.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343784898-54382130.png]\n","timestamp":"2025-01-31T17:16:24.972Z","title":"adf"}
+{"body":{"category":"ai","content":"adsfads\n[IMAGE:/uploads/1738343784898-54382130.png]\n","contentImages":["/uploads/1738343784898-54382130.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343784817-295013121.png","title":"adf"},"error":"News validation failed: category: `Ai` is not a valid enum value for path `category`.","level":"error","message":"Create news error details:","name":"ValidationError","stack":"ValidationError: News validation failed: category: `Ai` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T17:16:24.973Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:27.953Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:27.953Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:27.955Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:27.958Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:28.033Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:28.033Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:28.034Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:28.036Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:28.105Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:28.105Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:28.106Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:28.108Z"}
+{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343788037-355951628.png]\n","contentImages":["/uploads/1738343788037-355951628.png"],"displayTitle":"dafsd","imageUrl":"/uploads/1738343787959-989440767.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:16:28.109Z","title":"adf"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"adsfads\n[IMAGE:/uploads/1738343788037-355951628.png]\n","contentImages":[],"displayTitle":"dafsd","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343788037-355951628.png]\n","timestamp":"2025-01-31T17:16:28.109Z","title":"adf"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:41.669Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:41.678Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:41.680Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:41.682Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:41.758Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:41.759Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:41.761Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:41.763Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:41.832Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:41.835Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:41.837Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:41.839Z"}
+{"category":"app","content":"adsfads\n[IMAGE:/uploads/1738343801764-233442401.png]\n","contentImages":["/uploads/1738343801764-233442401.png"],"displayTitle":"dafsdf","imageUrl":"/uploads/1738343801683-668788678.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:16:41.840Z","title":"adfdd"}
+{"author":"679aa9a0b51159282c1a947d","category":"App","content":"adsfads\n[IMAGE:/uploads/1738343801764-233442401.png]\n","contentImages":[],"displayTitle":"dafsdf","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343801764-233442401.png]\n","timestamp":"2025-01-31T17:16:41.840Z","title":"adfdd"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:53.870Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:53.871Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:53.872Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:53.874Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:53.954Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:53.955Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:53.956Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:53.959Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T17:16:54.032Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T17:16:54.032Z"}
+{"exp":1740935506,"iat":1738343506,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T17:16:54.033Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T17:16:54.035Z"}
+{"category":"technology","content":"adsfads\n[IMAGE:/uploads/1738343813959-166709017.png]\n","contentImages":["/uploads/1738343813959-166709017.png"],"displayTitle":"dafsdf","imageUrl":"/uploads/1738343813875-538723004.png","level":"info","message":"Request body:","timestamp":"2025-01-31T17:16:54.035Z","title":"adfddtekno"}
+{"author":"679aa9a0b51159282c1a947d","category":"Technology","content":"adsfads\n[IMAGE:/uploads/1738343813959-166709017.png]\n","contentImages":[],"displayTitle":"dafsdf","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"adsfads\n[IMAGE:/uploads/1738343813959-166709017.png]\n","timestamp":"2025-01-31T17:16:54.036Z","title":"adfddtekno"}

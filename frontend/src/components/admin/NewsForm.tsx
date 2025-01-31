@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image } from 'react-native';
+import { View, StyleSheet, Alert, Image, TouchableOpacity, Text } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
@@ -7,13 +7,23 @@ import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS } from '@/theme';
 
+// Kategori seçenekleri backend ile eşleşmeli
+const CATEGORIES = [
+  'Technology',
+  'AI',
+  'App'
+] as const;
+
+type Category = typeof CATEGORIES[number];
+
 export function NewsForm() {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: '',
+    category: '' as Category,
     imageUrl: '',
   });
 
@@ -40,6 +50,11 @@ export function NewsForm() {
     }
   };
 
+  const handleCategorySelect = (category: Category) => {
+    setFormData(prev => ({ ...prev, category }));
+    setShowCategoryPicker(false);
+  };
+
   const handleSubmit = async () => {
     if (!formData.title || !formData.content || !formData.category) {
       Alert.alert('Error', 'Please fill all required fields');
@@ -51,7 +66,8 @@ export function NewsForm() {
       const form = new FormData();
       form.append('title', formData.title);
       form.append('content', formData.content);
-      form.append('category', formData.category);
+      // Kategoriyi tam olarak seçilen değer olarak gönder
+      form.append('category', formData.category); // Değişiklik yok, sadece doğru değerin gönderildiğinden emin oluyoruz
       
       if (formData.imageUrl) {
         const imageUri = formData.imageUrl;
@@ -66,11 +82,20 @@ export function NewsForm() {
         } as any);
       }
 
+      // Debug için log ekleyelim
+      console.log('Sending category:', formData.category);
+
       await dispatch(createNews(form)).unwrap();
       Alert.alert('Success', 'News created successfully');
-      setFormData({ title: '', content: '', category: '', imageUrl: '' });
+      setFormData({
+        title: '',
+        content: '',
+        category: '' as Category,
+        imageUrl: '',
+      });
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Something went wrong');
+      console.error('Error details:', error); // Debug için hata detaylarını görelim
+      Alert.alert('Error', error.message || 'Failed to create news');
     } finally {
       setIsLoading(false);
     }
@@ -112,12 +137,37 @@ export function NewsForm() {
         style={styles.titleInput}
       />
 
-      <Input
-        label="News Category"
-        value={formData.category}
-        onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
-        placeholder="e.g., Technology, Sports, Politics"
-      />
+      <TouchableOpacity
+        style={styles.categoryButton}
+        onPress={() => setShowCategoryPicker(true)}
+      >
+        <Text style={styles.categoryButtonText}>
+          {formData.category || 'Select Category'}
+        </Text>
+      </TouchableOpacity>
+
+      {showCategoryPicker && (
+        <View style={styles.categoryPicker}>
+          <Text style={styles.pickerTitle}>Select Category</Text>
+          {CATEGORIES.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryOption,
+                formData.category === category && styles.selectedCategory
+              ]}
+              onPress={() => handleCategorySelect(category)}
+            >
+              <Text style={[
+                styles.categoryOptionText,
+                formData.category === category && styles.selectedCategoryText
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <Input
         label="News Content"
@@ -180,5 +230,56 @@ const styles = StyleSheet.create({
   publishButton: {
     marginTop: 24,
     backgroundColor: COLORS.primary,
+  },
+  categoryButton: {
+    backgroundColor: COLORS.white,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+  },
+  categoryButtonText: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
+  },
+  categoryPicker: {
+    position: 'absolute',
+    top: '30%',
+    left: '10%',
+    right: '10%',
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 5,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  pickerTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  categoryOption: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedCategory: {
+    backgroundColor: COLORS.primary,
+  },
+  categoryOptionText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    textAlign: 'center',
+  },
+  selectedCategoryText: {
+    color: COLORS.white,
   },
 }); 
