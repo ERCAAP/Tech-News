@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, Dimensions, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, SectionList, Dimensions, Image, Text, TouchableOpacity } from 'react-native';
 import { NewsItem } from '@/types';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { router } from 'expo-router';
@@ -12,66 +12,77 @@ interface NewsFeedProps {
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 32;
 
-const CATEGORIES = [
-  'Technology',
-  'AI',
-  'App'
-] as const;
-
 export function NewsFeed({ news, refreshControl }: NewsFeedProps) {
+  // Haberleri kategorilere göre grupla
+  const groupedNews = React.useMemo(() => {
+    const groups = news.reduce((acc, item) => {
+      const category = item.category || 'Other';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    }, {} as Record<string, NewsItem[]>);
+
+    return Object.entries(groups).map(([title, data]) => ({
+      title,
+      data
+    }));
+  }, [news]);
+
   const handleNewsPress = (newsItem: NewsItem) => {
     router.push(`/news/${newsItem._id}`);
   };
 
-  const renderNewsItem = ({ item }: { item: NewsItem }) => {
-    return (
-      <TouchableOpacity 
-        style={styles.card}
-        onPress={() => handleNewsPress(item)}
-        activeOpacity={0.9}
-      >
-        {item.imageUrl && (
-          <Image
-            source={{ uri: `http://10.0.2.2:3000${item.imageUrl}` }}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        )}
-        
-        <View style={styles.content}>
-          {item.category && (
-            <View style={styles.categoryContainer}>
-              <Text style={styles.category}>{item.category}</Text>
-            </View>
-          )}
-          
-          <Text style={styles.title} numberOfLines={2}>
-            {item.title}
-          </Text>
+  const renderItem = ({ item }: { item: NewsItem }) => (
+    <TouchableOpacity 
+      style={styles.card}
+      onPress={() => handleNewsPress(item)}
+      activeOpacity={0.9}
+    >
+      {item.imageUrl && (
+        <Image
+          source={{ uri: `http://10.0.2.2:3000${item.imageUrl}` }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+      )}
+      
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={2}>
+          {item.title}
+        </Text>
 
-          <View style={styles.footer}>
-            <View style={styles.authorInfo}>
-              <Text style={styles.authorName}>
-                {`${item.author.firstName} ${item.author.lastName}`}
-              </Text>
-              <Text style={styles.date}>
-                {new Date(item.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
+        <View style={styles.footer}>
+          <View style={styles.authorInfo}>
+            <Text style={styles.authorName}>
+              {`${item.author.firstName} ${item.author.lastName}`}
+            </Text>
+            <Text style={styles.date}>
+              {new Date(item.createdAt).toLocaleDateString()}
+            </Text>
           </View>
         </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderSectionHeader = ({ section: { title } }: { section: { title: string } }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+  );
 
   return (
-    <FlatList
-      data={news}
-      renderItem={renderNewsItem}
+    <SectionList
+      sections={groupedNews}
+      renderItem={renderItem}
+      renderSectionHeader={renderSectionHeader}
       keyExtractor={item => item._id}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={refreshControl}
+      stickySectionHeadersEnabled={false}
     />
   );
 }
@@ -94,20 +105,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-  },
-  categoryContainer: {
-    backgroundColor: COLORS.primary + '20',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
-  },
-  category: {
-    color: COLORS.primary,
-    fontSize: 12,
-    fontFamily: FONTS.medium,
-    textTransform: 'uppercase',
   },
   title: {
     fontSize: 18,
@@ -134,5 +131,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
+  },
+  sectionHeader: {
+    paddingVertical: 12,
+    backgroundColor: COLORS.background,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
   },
 }); 

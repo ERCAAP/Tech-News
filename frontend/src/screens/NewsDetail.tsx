@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
 import { format } from 'date-fns';
 import { COLORS, FONTS } from '@/theme';
+import { Loading } from '@/components/Loading';
 
 interface NewsItem {
   _id: string;
@@ -22,30 +23,9 @@ export default function NewsDetailScreen() {
   const { news } = useAppSelector((state: { news: { news: NewsItem[] } }) => state.news);
   const newsItem = news.find(item => item._id === id);
 
-  const renderContent = (content: string) => {
-    const contentParts = content.split('\n');
-    return contentParts.map((part, idx) => {
-      const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
-      if (imageMatch) {
-        const imageUrl = imageMatch[1];
-        return (
-          <Image
-            key={`image-${idx}`}
-            source={{ uri: `http://10.0.2.2:3000${imageUrl}` }}
-            style={styles.contentImage}
-            resizeMode="cover"
-          />
-        );
-      }
-      return part.trim() ? (
-        <Text key={`text-${idx}`} style={styles.contentText}>
-          {part}
-        </Text>
-      ) : null;
-    });
-  };
-
-  if (!newsItem) return null;
+  if (!newsItem) {
+    return <Loading />;
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -56,21 +36,38 @@ export default function NewsDetailScreen() {
           resizeMode="cover"
         />
       )}
-      
+
       <View style={styles.content}>
         <Text style={styles.title}>{newsItem.title}</Text>
-        <View style={styles.authorInfo}>
-          <Text style={styles.authorName}>
-            {`${newsItem.author.firstName} ${newsItem.author.lastName}`}
+        
+        <View style={styles.meta}>
+          <Text style={styles.author}>
+            By {newsItem.author.firstName} {newsItem.author.lastName}
           </Text>
           <Text style={styles.date}>
-            {format(new Date(newsItem.createdAt), 'dd MMM yyyy')}
+            {format(new Date(newsItem.createdAt), 'MMM dd, yyyy')}
           </Text>
         </View>
-        
-        <View style={styles.contentContainer}>
-          {renderContent(newsItem.content)}
-        </View>
+
+        {/* İçerikteki resimleri göster */}
+        {newsItem.content.split('\n').map((part, index) => {
+          const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
+          if (imageMatch) {
+            return (
+              <Image
+                key={`image-${index}`}
+                source={{ uri: `http://10.0.2.2:3000${imageMatch[1]}` }}
+                style={styles.contentImage}
+                resizeMode="cover"
+              />
+            );
+          }
+          return part.trim() ? (
+            <Text key={`text-${index}`} style={styles.contentText}>
+              {part}
+            </Text>
+          ) : null;
+        })}
       </View>
     </ScrollView>
   );
@@ -96,12 +93,12 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginBottom: 12,
   },
-  authorInfo: {
+  meta: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  authorName: {
+  author: {
     fontSize: 16,
     fontFamily: FONTS.medium,
     color: COLORS.dark,
@@ -111,9 +108,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.gray,
     marginLeft: 8,
-  },
-  contentContainer: {
-    marginTop: 12,
   },
   contentImage: {
     width: '100%',
