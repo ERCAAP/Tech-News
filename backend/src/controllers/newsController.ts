@@ -61,8 +61,15 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
       );
     });
 
-    // Kategori kontrolü - sadece küçük harften büyük harfe çevir
-    let category = req.body.category.charAt(0).toUpperCase() + req.body.category.slice(1);
+    // Kategori ismini düzelt (büyük/küçük harf duyarlılığı için)
+    let category = req.body.category;
+    if (category === 'ai' || category === 'Ai' || category === 'aI') {
+      category = 'AI';
+    } else if (category === 'app') {
+      category = 'App';
+    } else if (category === 'technology') {
+      category = 'Technology';
+    }
 
     const newsData = {
       title: req.body.title,

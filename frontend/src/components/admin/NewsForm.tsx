@@ -7,14 +7,12 @@ import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS } from '@/theme';
 
-// Kategori seçenekleri backend ile eşleşmeli
+// Kategori seçenekleri ve gösterim isimleri
 const CATEGORIES = [
-  'Technology',
-  'AI',
-  'App'
+  { id: 'Technology', label: 'Technology' },
+  { id: 'AI', label: 'Artificial Intelligence' },
+  { id: 'App', label: 'App Development' }
 ] as const;
-
-type Category = typeof CATEGORIES[number];
 
 export function NewsForm() {
   const dispatch = useAppDispatch();
@@ -23,7 +21,7 @@ export function NewsForm() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: '' as Category,
+    category: '' as typeof CATEGORIES[number]['id'],
     imageUrl: '',
   });
 
@@ -50,8 +48,8 @@ export function NewsForm() {
     }
   };
 
-  const handleCategorySelect = (category: Category) => {
-    setFormData(prev => ({ ...prev, category }));
+  const handleCategorySelect = (categoryId: string) => {
+    setFormData(prev => ({ ...prev, category: categoryId }));
     setShowCategoryPicker(false);
   };
 
@@ -90,7 +88,7 @@ export function NewsForm() {
       setFormData({
         title: '',
         content: '',
-        category: '' as Category,
+        category: '' as typeof CATEGORIES[number]['id'],
         imageUrl: '',
       });
     } catch (error: any) {
@@ -142,7 +140,7 @@ export function NewsForm() {
         onPress={() => setShowCategoryPicker(true)}
       >
         <Text style={styles.categoryButtonText}>
-          {formData.category || 'Select Category'}
+          {CATEGORIES.find(c => c.id === formData.category)?.label || 'Select Category'}
         </Text>
       </TouchableOpacity>
 
@@ -151,18 +149,18 @@ export function NewsForm() {
           <Text style={styles.pickerTitle}>Select Category</Text>
           {CATEGORIES.map((category) => (
             <TouchableOpacity
-              key={category}
+              key={category.id}
               style={[
                 styles.categoryOption,
-                formData.category === category && styles.selectedCategory
+                formData.category === category.id && styles.selectedCategory
               ]}
-              onPress={() => handleCategorySelect(category)}
+              onPress={() => handleCategorySelect(category.id)}
             >
               <Text style={[
                 styles.categoryOptionText,
-                formData.category === category && styles.selectedCategoryText
+                formData.category === category.id && styles.selectedCategoryText
               ]}>
-                {category}
+                {category.label}
               </Text>
             </TouchableOpacity>
           ))}
