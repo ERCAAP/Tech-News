@@ -5,6 +5,26 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
+import multer from 'multer';
+import path from 'path';
+
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/news');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+
+const uploadMulter = multer({ storage });
+
+interface MulterRequest extends Omit<Request, 'files'> {
+  files?: {
+    [fieldname: string]: Express.Multer.File[];
+  };
+}
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
@@ -39,14 +59,14 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     let imageUrl = '';
     if (files?.coverImage?.[0]) {
       const filename = files.coverImage[0].filename;
-      imageUrl = `/uploads/${filename}`; // Basitleştirilmiş URL
+      imageUrl = `/uploads/news/${filename}`;
       logger.info('Cover image uploaded:', imageUrl);
     }
 
     // İçerik görselleri
     let contentImages: string[] = [];
     if (files?.contentImage0) {
-      contentImages = files.contentImage0.map(file => `/uploads/${file.filename}`);
+      contentImages = files.contentImage0.map(file => `/uploads/news/${file.filename}`);
       logger.info('Content images uploaded:', contentImages);
     }
 
@@ -122,12 +142,12 @@ export const updateNews = asyncHandler(async (req: Request, res: Response) => {
 
     // Ana görsel güncelleme
     if (files && files['image'] && files['image'][0]) {
-      updateData.imageUrl = `/uploads/${files['image'][0].filename}`;
+      updateData.imageUrl = `/uploads/news/${files['image'][0].filename}`;
     }
 
     // İçerik görselleri güncelleme
     if (files && files['contentImages']) {
-      updateData.contentImages = files['contentImages'].map(file => `/uploads/${file.filename}`);
+      updateData.contentImages = files['contentImages'].map(file => `/uploads/news/${file.filename}`);
     }
 
     // Tags array'ini parse et
@@ -224,4 +244,25 @@ export const unlikeNews = asyncHandler(async (req: Request, res: Response) => {
     status: 'success',
     data: { news }
   });
+});
+
+// News creation endpoint
+export const createNewsWithImages = asyncHandler(async (req: Request, res: Response) => {
+  const multerReq = req as MulterRequest;
+  const { title, displayTitle, content, category, imageRefs } = multerReq.body;
+  
+  const coverImagePath = multerReq.files?.coverImage?.[0] 
+    ? `/uploads/news/${multerReq.files.coverImage[0].filename}` 
+    : '';
+
+  const news = await News.create({
+    title,
+    displayTitle,
+    content,
+    category,
+    coverImage: coverImagePath,
+    imageRefs: JSON.parse(imageRefs),
+  });
+
+  res.status(201).json(news);
 }); 

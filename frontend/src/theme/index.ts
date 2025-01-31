@@ -22,9 +22,10 @@ export const COLORS = {
 };
 
 export const FONTS = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  bold: 'Inter_700Bold',
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  bold: 'Inter-Bold',
+  semiBold: 'Inter-SemiBold',
   sizes: {
     xs: 12,
     sm: 14,

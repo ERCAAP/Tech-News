@@ -7,6 +7,7 @@ import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import { API_URL } from '@/config';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -15,6 +16,21 @@ const NEWS_CATEGORIES = [
 ] as const;
 
 type NewsCategory = typeof NEWS_CATEGORIES[number]['value'];
+
+interface ImageRef {
+  url: string;
+  filename: string;
+}
+
+interface NewsDocument {
+  title: string;
+  displayTitle: string;
+  content: string;
+  category: string;
+  coverImage: string;
+  imageRefs: ImageRef[];
+  // ... diğer alanlar
+}
 
 interface NewsFormData {
   title: string;
@@ -27,6 +43,45 @@ interface NewsFormData {
     type: 'text' | 'image';
     content: string;
   }>;
+}
+
+function formatContentWithImageUrls(content: string, images: string[]): string {
+  let formattedContent = content;
+  
+  // Replace each [IMAGE-X] placeholder with actual image URL
+  images.forEach((imageUri, index) => {
+    const imageTag = `[IMAGE-${index}]`;
+    const imageUrl = `${API_URL}/uploads/news/${imageUri.split('/').pop()}`;
+    formattedContent = formattedContent.replace(imageTag, `![image-${index}](${imageUrl})`);
+  });
+  
+  return formattedContent;
+}
+
+function prepareNewsContent(content: string, images: string[]): {
+  content: string;
+  imageRefs: Array<{ url: string; filename: string }>;
+} {
+  const imageRefs: Array<{ url: string; filename: string }> = [];
+  let formattedContent = content;
+
+  images.forEach((imageUri, index) => {
+    const timestamp = Date.now();
+    const filename = `news-content-${timestamp}-${index}-${Math.random().toString(36).substring(7)}.${imageUri.split('.').pop()}`;
+    
+    imageRefs.push({
+      url: `${API_URL}/uploads/news/${filename}`,
+      filename
+    });
+
+    const imageTag = `[IMAGE-${index}]`;
+    formattedContent = formattedContent.replace(imageTag, `<img src="${API_URL}/uploads/news/${filename}" alt="news-image-${index}" />`);
+  });
+
+  return {
+    content: formattedContent,
+    imageRefs
+  };
 }
 
 export function CreateNewsForm() {
@@ -174,33 +229,34 @@ export function CreateNewsForm() {
     try {
       setIsLoading(true);
       const form = new FormData();
+      
+      const { content: formattedContent, imageRefs } = prepareNewsContent(formData.content, formData.contentImages);
+      
+      // Form verilerini ekle
       form.append('title', formData.title);
       form.append('displayTitle', formData.displayTitle);
-      form.append('content', formData.content);
+      form.append('content', formattedContent);
       form.append('category', formData.category);
+      form.append('imageRefs', JSON.stringify(imageRefs));
       
-      // Add cover image
-      const coverImageUri = formData.coverImage;
-      const coverFilename = coverImageUri.split('/').pop();
-      const coverMatch = /\.(\w+)$/.exec(coverFilename || '');
-      const coverType = coverMatch ? `image/${coverMatch[1]}` : 'image';
-      
-      form.append('coverImage', {
-        uri: coverImageUri,
-        name: coverFilename,
-        type: coverType,
-      } as any);
-
-      // Add content images
-      formData.contentImages.forEach((imageUri, index) => {
-        const filename = imageUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename || '');
-        const type = match ? `image/${match[1]}` : 'image';
+      // Kapak resmi
+      if (formData.coverImage) {
+        const timestamp = Date.now();
+        const coverFilename = `news-cover-${timestamp}-${Math.random().toString(36).substring(7)}.${formData.coverImage.split('.').pop()}`;
         
+        form.append('coverImage', {
+          uri: formData.coverImage,
+          name: coverFilename,
+          type: `image/${formData.coverImage.split('.').pop()}`,
+        } as any);
+      }
+
+      // İçerik resimleri
+      formData.contentImages.forEach((imageUri, index) => {
         form.append(`contentImage${index}`, {
           uri: imageUri,
-          name: filename,
-          type,
+          name: imageRefs[index].filename,
+          type: `image/${imageUri.split('.').pop()}`,
         } as any);
       });
 
