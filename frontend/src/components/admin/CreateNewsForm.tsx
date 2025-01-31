@@ -7,7 +7,6 @@ import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
-import api from '@/api/axios';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -30,13 +29,6 @@ interface NewsFormData {
   }>;
 }
 
-interface ApiResponse {
-  status: string;
-  data: {
-    news: any; // You can define a proper type for news if needed
-  };
-}
-
 export function CreateNewsForm() {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,8 +43,14 @@ export function CreateNewsForm() {
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
-  const handleImagePick = async (type: 'cover' | 'content') => {
+  const handleCoverImagePick = async () => {
     try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -61,22 +59,10 @@ export function CreateNewsForm() {
       });
 
       if (!result.canceled) {
-        if (type === 'cover') {
-          setFormData(prev => ({
-            ...prev,
-            coverImage: result.assets[0].uri
-          }));
-        } else {
-          const newContent = `${formData.content}\n[IMAGE-${formData.contentImages.length}]\n`;
-          setFormData(prev => ({
-            ...prev,
-            content: newContent,
-            contentImages: [...prev.contentImages, result.assets[0].uri]
-          }));
-        }
+        setFormData(prev => ({ ...prev, coverImage: result.assets[0].uri }));
       }
     } catch (error) {
-      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
@@ -187,61 +173,50 @@ export function CreateNewsForm() {
 
     try {
       setIsLoading(true);
-
       const form = new FormData();
       form.append('title', formData.title);
       form.append('displayTitle', formData.displayTitle);
       form.append('content', formData.content);
       form.append('category', formData.category);
+      
+      // Add cover image
+      const coverImageUri = formData.coverImage;
+      const coverFilename = coverImageUri.split('/').pop();
+      const coverMatch = /\.(\w+)$/.exec(coverFilename || '');
+      const coverType = coverMatch ? `image/${coverMatch[1]}` : 'image';
+      
+      form.append('coverImage', {
+        uri: coverImageUri,
+        name: coverFilename,
+        type: coverType,
+      } as any);
 
-      // Kapak resmi ekle
-      if (formData.coverImage) {
-        const imageUri = formData.coverImage;
-        const filename = imageUri.split('/').pop() || 'cover-image.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-        // @ts-ignore - FormData in React Native has different typing
-        form.append('coverImage', {
-          uri: imageUri,
-          name: filename,
-          type,
-        });
-      }
-
-      // İçerik resimleri ekle
-      formData.contentImages.forEach((image, index) => {
-        const imageUri = image;
-        const filename = imageUri.split('/').pop() || `content-image-${index}.jpg`;
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
-
-        // @ts-ignore - FormData in React Native has different typing
+      // Add content images
+      formData.contentImages.forEach((imageUri, index) => {
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename || '');
+        const type = match ? `image/${match[1]}` : 'image';
+        
         form.append(`contentImage${index}`, {
           uri: imageUri,
           name: filename,
           type,
-        });
+        } as any);
       });
 
-      const response = await api.post<ApiResponse>('/news', form);
-
-      if (response.data.status === 'success') {
-        Alert.alert('Başarılı', 'Haber başarıyla oluşturuldu');
-        // Form verilerini sıfırla
-        setFormData({
-          title: '',
-          displayTitle: '',
-          content: '',
-          category: '',
-          coverImage: '',
-          contentImages: [],
-          contentWithImages: [],
-        });
-      }
-    } catch (error) {
-      console.error('Haber oluşturma hatası:', error);
-      Alert.alert('Hata', 'Haber oluşturulurken bir hata oluştu');
+      await dispatch(createNews(form)).unwrap();
+      Alert.alert('Success', 'News created successfully');
+      setFormData({
+        title: '',
+        displayTitle: '',
+        content: '',
+        category: '',
+        coverImage: '',
+        contentImages: [],
+        contentWithImages: [],
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create news');
     } finally {
       setIsLoading(false);
     }
@@ -268,7 +243,7 @@ export function CreateNewsForm() {
                 <Button
                   title="Change Cover Image"
                   variant="outline"
-                  onPress={() => handleImagePick('cover')}
+                  onPress={handleCoverImagePick}
                   style={styles.imageButton}
                 />
               </View>
@@ -276,7 +251,7 @@ export function CreateNewsForm() {
               <Button
                 title="Add Cover Image"
                 variant="outline"
-                onPress={() => handleImagePick('cover')}
+                onPress={handleCoverImagePick}
                 style={styles.imageButton}
                 icon="image"
               />
@@ -457,7 +432,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.semiBold,
     color: COLORS.dark,
     marginBottom: 16,
   },
@@ -618,7 +593,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.semiBold,
     color: COLORS.dark,
     marginBottom: 24,
     textAlign: 'center',

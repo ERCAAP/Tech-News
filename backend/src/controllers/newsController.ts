@@ -5,7 +5,6 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
-import path from 'path';
 
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
@@ -40,23 +39,23 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     let imageUrl = '';
     if (files?.coverImage?.[0]) {
       const filename = files.coverImage[0].filename;
-      imageUrl = `${process.env.BASE_URL}/uploads/${filename}`; // Tam URL kullan
+      imageUrl = `/uploads/${filename}`; // Basitleştirilmiş URL
+      logger.info('Cover image uploaded:', imageUrl);
     }
 
     // İçerik görselleri
     let contentImages: string[] = [];
     if (files?.contentImage0) {
-      contentImages = files.contentImage0.map(file => 
-        `${process.env.BASE_URL}/uploads/${file.filename}`
-      );
+      contentImages = files.contentImage0.map(file => `/uploads/${file.filename}`);
+      logger.info('Content images uploaded:', contentImages);
     }
 
-    // İçeriği düzenle ve görselleri ekle
+    // İçeriği düzenle
     let content = req.body.content;
     contentImages.forEach((imageUrl, index) => {
       content = content.replace(
-        `[IMAGE-${index}]`,
-        `<img src="${imageUrl}" alt="Content image ${index + 1}" style="max-width: 100%; height: auto;" />`
+        `[IMAGE-${index}]`, 
+        `<img src="${imageUrl}" alt="Content image ${index + 1}" />`
       );
     });
 
