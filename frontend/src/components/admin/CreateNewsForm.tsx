@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image, Text, Platform, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
+import { View, StyleSheet, Alert, Image, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -45,9 +46,10 @@ export function CreateNewsForm() {
 
   const handleCoverImagePick = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+      // İzinleri kontrol et
+      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (mediaStatus !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant media library permissions to upload images');
         return;
       }
 
@@ -56,33 +58,33 @@ export function CreateNewsForm() {
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.8,
+        exif: false,
       });
 
-      if (!result.canceled) {
-        setFormData(prev => ({ ...prev, coverImage: result.assets[0].uri }));
+      if (!result.canceled && result.assets[0]) {
+        const { uri } = result.assets[0];
+        
+        // Geçici dosya oluştur
+        const fileExtension = uri.split('.').pop();
+        const fileName = `${Date.now()}.${fileExtension}`;
+        const newUri = FileSystem.documentDirectory + fileName;
+        
+        try {
+          // Dosyayı kopyala
+          await FileSystem.copyAsync({
+            from: uri,
+            to: newUri
+          });
+          
+          setFormData(prev => ({ ...prev, coverImage: newUri }));
+        } catch (error) {
+          console.error('Error copying file:', error);
+          Alert.alert('Error', 'Failed to process image');
+        }
       }
     } catch (error) {
+      console.error('Image picker error:', error);
       Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
-  const handleContentImagePick = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        const newImages = result.assets.map(asset => asset.uri);
-        setFormData(prev => ({
-          ...prev,
-          contentImages: [...prev.contentImages, ...newImages],
-        }));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick images');
     }
   };
 
@@ -109,32 +111,52 @@ export function CreateNewsForm() {
     });
   };
 
-  const handleContentImageInsert = async () => {
+  const handleContentImagePick = async () => {
     try {
+      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (mediaStatus !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant media library permissions to upload images');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
+        aspect: [16, 9],
         quality: 0.8,
+        exif: false,
       });
 
-      if (!result.canceled) {
-        const currentContent = formData.content;
-        const cursorPosition = currentContent.length; // Mevcut içeriğin sonuna ekle
+      if (!result.canceled && result.assets[0]) {
+        const { uri } = result.assets[0];
         
-        // Resmi contentImages'a ekle
-        const newImages = [...formData.contentImages, result.assets[0].uri];
+        // Geçici dosya oluştur
+        const fileExtension = uri.split('.').pop();
+        const fileName = `${Date.now()}.${fileExtension}`;
+        const newUri = FileSystem.documentDirectory + fileName;
         
-        // Yeni içeriği oluştur
-        const newContent = currentContent + '\n[IMAGE-' + (newImages.length - 1) + ']\n';
-        
-        setFormData(prev => ({
-          ...prev,
-          content: newContent,
-          contentImages: newImages,
-        }));
+        try {
+          // Dosyayı kopyala
+          await FileSystem.copyAsync({
+            from: uri,
+            to: newUri
+          });
+          
+          // Yeni resmi ekle
+          const newIndex = formData.contentImages.length;
+          setFormData(prev => ({
+            ...prev,
+            contentImages: [...prev.contentImages, newUri],
+            content: prev.content + `\n[IMAGE-${newIndex}]\n`
+          }));
+        } catch (error) {
+          console.error('Error copying file:', error);
+          Alert.alert('Error', 'Failed to process image');
+        }
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to insert image');
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
@@ -344,7 +366,7 @@ export function CreateNewsForm() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
-                onPress={handleContentImageInsert}
+                onPress={handleContentImagePick}
               >
                 <MaterialIcons name="image" size={20} color={COLORS.primary} />
                 <Text style={styles.toolbarButtonText}>Insert Image</Text>
@@ -432,7 +454,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: FONTS.semiBold,
+    fontFamily: FONTS.bold,
     color: COLORS.dark,
     marginBottom: 16,
   },
@@ -593,7 +615,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontFamily: FONTS.semiBold,
+    fontFamily: FONTS.bold,
     color: COLORS.dark,
     marginBottom: 24,
     textAlign: 'center',
