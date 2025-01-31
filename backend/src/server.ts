@@ -13,6 +13,7 @@ import newsRoutes from './routes/newsRoutes';
 import connectDB from './config/database';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -26,7 +27,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors());
+// Uploads klasörünü oluştur
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
+// Uploads klasörü için statik dosya servisi
+const uploadsPath = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
+
+// CORS ayarları
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Disposition']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,9 +57,6 @@ app.use(limiter);
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/news', newsRoutes);
-
-// Uploads klasörü için statik dosya servisi
-app.use('/uploads', express.static('uploads'));
 
 // Error handling
 app.use(errorHandler);

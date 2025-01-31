@@ -33,13 +33,13 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     logger.info('Request body:', req.body);
     logger.info('Request files:', req.files);
 
-    // Dosyaları kontrol et
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
     
     // Ana görsel URL'i
     let imageUrl = '';
     if (files?.coverImage?.[0]) {
-      imageUrl = `/uploads/${files.coverImage[0].filename}`;
+      const filename = files.coverImage[0].filename;
+      imageUrl = `/uploads/${filename}`; // Basitleştirilmiş URL
       logger.info('Cover image uploaded:', imageUrl);
     }
 
@@ -50,6 +50,15 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
       logger.info('Content images uploaded:', contentImages);
     }
 
+    // İçeriği düzenle
+    let content = req.body.content;
+    contentImages.forEach((imageUrl, index) => {
+      content = content.replace(
+        `[IMAGE-${index}]`, 
+        `<img src="${imageUrl}" alt="Content image ${index + 1}" />`
+      );
+    });
+
     // Kategoriyi düzelt
     let category = req.body.category;
     if (category) {
@@ -59,13 +68,6 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
       }
     }
 
-    // İçeriği düzenle - görsel referanslarını ekle
-    let content = req.body.content;
-    contentImages.forEach((imageUrl, index) => {
-      content = content.replace(`[IMAGE-${index}]`, `<img src="${imageUrl}" alt="Content image ${index + 1}" />`);
-    });
-
-    // Haber verilerini hazırla
     const newsData = {
       title: req.body.title,
       displayTitle: req.body.displayTitle || req.body.title,
@@ -75,13 +77,11 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
       author: req.user._id,
       imageUrl,
       contentImages,
-      videoUrl: req.body.videoUrl || '',
-      status: req.body.status || 'published'
+      status: 'published'
     };
 
     logger.info('Creating news with data:', newsData);
 
-    // Haberi oluştur
     const news = await News.create(newsData);
     await news.populate('author', 'firstName lastName');
 
@@ -91,10 +91,25 @@ export const createNews = asyncHandler(async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    logger.error('Create news error:', error);
+    // Detaylı hata loglaması
+    logger.error('Create news error details:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message
+      });
+    }
+
     return res.status(500).json({
       status: 'error',
-      message: error.message || 'Haber oluşturulamadı'
+      message: 'Haber oluşturulurken bir hata oluştu',
+      details: error.message
     });
   }
 });

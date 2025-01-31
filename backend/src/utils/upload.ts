@@ -1,7 +1,6 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { AppError } from './AppError';
 
 // Uploads klasörünü oluştur
 const uploadDir = 'uploads';
@@ -21,22 +20,18 @@ const storage = multer.diskStorage({
 });
 
 // Dosya filtresi
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-  
-  if (allowedTypes.includes(file.mimetype)) {
+const fileFilter = (req: any, file: any, cb: any) => {
+  if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, JPG and WebP are allowed'));
+    cb(new Error('Sadece görsel dosyalar yüklenebilir!'), false);
   }
 };
 
-// Multer konfigürasyonu
 export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 10 // Maksimum dosya sayısı
+    fileSize: 5 * 1024 * 1024 // 5MB
   }
 }); 
