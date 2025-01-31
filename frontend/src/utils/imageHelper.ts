@@ -1,23 +1,16 @@
-import { Platform } from 'react-native';
+import { API_URL } from '@/config';
 
-const API_URL = Platform.select({
-  ios: 'http://localhost:3000',
-  android: 'http://10.0.2.2:3000'
-});
-
-export const getImageUrl = (path: string | undefined): string => {
+export function getImageUrl(path?: string): string {
   if (!path) return '';
   
-  console.log('Original image path:', path);
+  // [IMAGE:] formatını temizle
+  const cleanPath = path.replace(/\[IMAGE:|]/g, '').trim();
   
-  // Eğer tam URL ise direkt kullan
-  if (path.startsWith('http')) {
-    console.log('Using full URL:', path);
-    return path;
+  // Eğer path zaten tam URL ise direkt döndür
+  if (cleanPath.startsWith('http')) {
+    return cleanPath;
   }
   
-  // Değilse API URL'i ile birleştir
-  const fullUrl = `${API_URL}${path}`;
-  console.log('Generated full URL:', fullUrl);
-  return fullUrl;
-}; 
+  // API_URL ile birleştir
+  return `${API_URL}${cleanPath}`;
+} 

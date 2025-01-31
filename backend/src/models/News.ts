@@ -1,20 +1,20 @@
-import { Schema, model, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface INews extends Document {
+export interface INews extends mongoose.Document {
   title: string;          // Haber başlığı
   displayTitle: string;   // Görünen başlık
   content: string;        // İçerik
   summary: string;        // Özet
-  author: Schema.Types.ObjectId;
+  author: mongoose.Schema.Types.ObjectId;
   category: string;
   subCategory?: string;   // Alt kategori
   tags: string[];
-  imageUrl?: string;      // Kapak görseli
-  contentImages?: string[]; // İçerik görselleri
+  imageUrl: string;      // Sadece tek bir image alanı
+  contentImages: string[]; 
   videoUrl?: string;
   status: 'draft' | 'published' | 'archived';
   viewCount: number;      // Görüntülenme sayısı
-  likes: Schema.Types.ObjectId[]; // Beğenenler
+  likes: mongoose.Schema.Types.ObjectId[]; // Beğenenler
   createdAt: Date;
   updatedAt: Date;
   publishedAt?: Date;     // Yayınlanma tarihi
@@ -22,7 +22,7 @@ export interface INews extends Document {
   readTime: number;       // Okuma süresi (dakika)
 }
 
-const newsSchema = new Schema<INews>({
+const newsSchema = new mongoose.Schema<INews>({
   title: {
     type: String,
     required: [true, 'Başlık zorunludur'],
@@ -44,14 +44,14 @@ const newsSchema = new Schema<INews>({
     maxlength: 200
   },
   author: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
   category: {
     type: String,
     required: true,
-    enum: ['Technology', 'AI', 'App'],
+    enum: ['TECHNOLOGY', 'AI', 'APP'],
     message: 'Geçersiz kategori seçimi'
   },
   subCategory: {
@@ -62,7 +62,13 @@ const newsSchema = new Schema<INews>({
     type: String,
     trim: true
   }],
-  imageUrl: String,
+  imageUrl: {
+    type: String,
+    get: function(v: any) {
+      if (!v) return '';
+      return v;
+    }
+  },
   contentImages: [String],
   videoUrl: String,
   status: {
@@ -75,7 +81,7 @@ const newsSchema = new Schema<INews>({
     default: 0
   },
   likes: [{
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
   publishedAt: {
@@ -88,9 +94,13 @@ const newsSchema = new Schema<INews>({
   readTime: {
     type: Number,
     default: 0
-  }
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { getters: true },
+  toObject: { getters: true }
 });
 
 // Okuma süresini hesapla (ortalama 200 kelime/dakika)
@@ -111,4 +121,4 @@ newsSchema.index({ category: 1, status: 1 });
 newsSchema.index({ publishedAt: -1 });
 newsSchema.index({ viewCount: -1 });
 
-export const News = model<INews>('News', newsSchema); 
+export const News = mongoose.model<INews>('News', newsSchema); 

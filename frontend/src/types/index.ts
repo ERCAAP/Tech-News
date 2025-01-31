@@ -29,7 +29,7 @@ export interface NewsItem {
   content: string;
   imageUrl?: string;
   coverImage?: string;
-  category?: string;
+  category: string;
   author: {
     _id: string;
     firstName: string;

@@ -1,37 +1,19 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function NewsDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const { news, isLoading } = useAppSelector(state => state.news);
-  
   const newsItem = news.find(item => item._id === id);
 
-  // Debug için haber detaylarını logla
-  React.useEffect(() => {
-    if (newsItem) {
-      console.log('📰 News Detail Loaded:', {
-        id: newsItem._id,
-        title: newsItem.title,
-        hasImage: !!newsItem.imageUrl,
-        imageUrl: newsItem.imageUrl ? getImageUrl(newsItem.imageUrl) : 'No image',
-        contentLength: newsItem.content.length
-      });
-    }
-  }, [newsItem]);
-
-  // İçerikteki resimleri ve metinleri ayrıştır
   const renderContent = (content: string) => {
-    console.log('📝 Parsing content:', {
-      length: content.length,
-      hasImages: content.includes('[IMAGE:')
-    });
+    if (!content) return null;
 
     return content.split('\n').map((part, index) => {
       // [IMAGE:/uploads/...] formatındaki resimleri bul
@@ -41,20 +23,13 @@ export default function NewsDetailScreen() {
         const imagePath = imageMatch[1];
         const fullImageUrl = getImageUrl(imagePath);
         
-        console.log('🖼️ Found content image:', {
-          index,
-          path: imagePath,
-          fullUrl: fullImageUrl
-        });
-        
         return (
           <View key={`image-${index}`} style={styles.contentImageContainer}>
             <Image 
-              source={{ uri: fullImageUrl }} 
+              source={{ uri: fullImageUrl }}
               style={styles.contentImage}
               resizeMode="cover"
-              onError={(error) => console.error('❌ Image load error:', error.nativeEvent.error)}
-              onLoad={() => console.log('✅ Content image loaded:', fullImageUrl)}
+              onError={() => console.warn('Content image load error:', fullImageUrl)}
             />
           </View>
         );
@@ -71,27 +46,42 @@ export default function NewsDetailScreen() {
   if (isLoading) return <Loading />;
   if (!newsItem) return null;
 
+  const coverImageUrl = newsItem.imageUrl ? getImageUrl(newsItem.imageUrl) : '';
+
   return (
-    <ScrollView style={styles.container}>
-      {newsItem.imageUrl && (
-        <Image 
-          source={{ uri: getImageUrl(newsItem.imageUrl) }} 
-          style={[styles.image, { height: screenHeight * 0.3 }]}
-          resizeMode="cover"
-          onError={(error) => console.error('❌ Header image load error:', error.nativeEvent.error)}
-          onLoad={() => console.log('✅ Header image loaded:', newsItem.imageUrl)}
-        />
-      )}
+    <ScrollView 
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {coverImageUrl ? (
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: coverImageUrl }}
+            style={styles.coverImage}
+            resizeMode="cover"
+            onError={() => console.warn('Cover image load error:', coverImageUrl)}
+          />
+          <View style={styles.overlay} />
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{newsItem.category}</Text>
+          </View>
+        </View>
+      ) : null}
       
-      <View style={[styles.content, { padding: screenWidth * 0.04 }]}>
+      <View style={styles.content}>
         <Text style={styles.title}>{newsItem.title}</Text>
-        <Text style={styles.author}>
-          By {`${newsItem.author.firstName} ${newsItem.author.lastName}`}
-        </Text>
-        <Text style={styles.date}>
-          {new Date(newsItem.createdAt).toLocaleDateString()}
-        </Text>
         
+        <View style={styles.authorContainer}>
+          <MaterialIcons name="person" size={20} color={COLORS.primary} />
+          <Text style={styles.author}>
+            {`${newsItem.author.firstName} ${newsItem.author.lastName}`}
+          </Text>
+          <Text style={styles.dot}>•</Text>
+          <Text style={styles.date}>
+            {new Date(newsItem.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
+
         {renderContent(newsItem.content)}
       </View>
     </ScrollView>
@@ -101,45 +91,83 @@ export default function NewsDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.white,
   },
-  image: {
+  imageContainer: {
+    height: 300,
+    position: 'relative',
+  },
+  coverImage: {
     width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  categoryBadge: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  categoryText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    textTransform: 'uppercase',
   },
   content: {
-    backgroundColor: COLORS.white,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
+    marginBottom: 16,
+  },
+  authorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  author: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginLeft: 8,
+  },
+  dot: {
+    marginHorizontal: 8,
+    color: COLORS.gray,
+  },
+  date: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
   },
   contentImageContainer: {
     marginVertical: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   contentImage: {
     width: '100%',
     height: 200,
-    borderRadius: 8,
   },
   contentText: {
     fontSize: 16,
     fontFamily: FONTS.regular,
     color: COLORS.dark,
     lineHeight: 24,
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  author: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-    marginBottom: 16,
+    marginVertical: 8,
   },
 }); 

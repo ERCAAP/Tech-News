@@ -2,99 +2,124 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { NewsItem } from '@/types';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
-const CARD_MARGIN = 16;
+import { useRouter } from 'expo-router';
 
 interface NewsCardProps {
   news: NewsItem;
-  onPress: () => void;
   index?: number;
   isVisible?: boolean;
 }
 
-export function NewsCard({ news, onPress, index = 0, isVisible = false }: NewsCardProps) {
+export function NewsCard({ news, index = 0, isVisible = false }: NewsCardProps) {
+  const router = useRouter();
+  
   if (!news || !news.author) return null;
 
+  const imageUrl = news.imageUrl ? getImageUrl(news.imageUrl) : '';
+
+  // Animasyon stilini useAnimatedStyle ile tanımla
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withSpring(isVisible ? 1 : 0.7),
+      transform: [
+        {
+          translateY: withSpring(0)
+        }
+      ]
+    };
+  });
+
+  const handlePress = () => {
+    router.push(`/news/${news._id}`);
+  };
+
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100).springify()}
-      style={[
-        styles.container,
-        { opacity: isVisible ? 1 : 0.7 }
-      ]}
-    >
-      <TouchableOpacity
-        style={styles.card}
-        onPress={onPress}
-        activeOpacity={0.9}
+    <View style={styles.container}>
+      <Animated.View
+        entering={FadeIn.delay(index * 100)}
+        style={[styles.animatedContainer, animatedStyle]}
       >
-        <View style={styles.coverContainer}>
-          {news.coverImage ? (
-            <Image
-              source={{ uri: getImageUrl(news.coverImage) }}
-              style={styles.coverImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.defaultCover}>
-              <MaterialIcons name="article" size={24} color={COLORS.gray} />
-            </View>
-          )}
-          
-          {/* Category Badge */}
-          {news.category && (
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{news.category}</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>
-            {news.title}
-          </Text>
-
-          <View style={styles.footer}>
-            <Text style={styles.date}>
-              {new Date(news.createdAt).toLocaleDateString()}
-            </Text>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={handlePress}
+          activeOpacity={0.95}
+        >
+          <View style={styles.coverContainer}>
+            {imageUrl ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={styles.coverImage}
+                resizeMode="cover"
+                onError={() => console.warn('Image load error:', imageUrl)}
+              />
+            ) : (
+              <View style={styles.defaultCover}>
+                <MaterialIcons name="article" size={32} color={COLORS.gray} />
+              </View>
+            )}
+            
+            {news.category && (
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryText}>{news.category}</Text>
+              </View>
+            )}
           </View>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
+
+          <View style={styles.content}>
+            <Text style={styles.title} numberOfLines={2}>
+              {news.title}
+            </Text>
+
+            <View style={styles.footer}>
+              <View style={styles.authorInfo}>
+                <MaterialIcons name="person" size={16} color={COLORS.gray} />
+                <Text style={styles.authorText}>
+                  {`${news.author.firstName} ${news.author.lastName}`}
+                </Text>
+              </View>
+              <Text style={styles.date}>
+                {new Date(news.createdAt).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: Dimensions.get('window').width * 0.75,
-    marginHorizontal: 8,
-    height: 250,
+    width: Dimensions.get('window').width * 0.8,
+    height: 300,
+    marginHorizontal: 10,
+  },
+  animatedContainer: {
+    flex: 1,
   },
   card: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: COLORS.dark,
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 3,
+        elevation: 5,
       },
     }),
   },
   coverContainer: {
     width: '100%',
-    height: 150,
+    height: 180,
     backgroundColor: COLORS.border,
     position: 'relative',
   },
@@ -111,31 +136,45 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    top: 16,
+    left: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   categoryText: {
     color: COLORS.white,
     fontSize: 12,
     fontFamily: FONTS.medium,
+    textTransform: 'uppercase',
   },
   content: {
-    padding: 12,
+    padding: 16,
     flex: 1,
     justifyContent: 'space-between',
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
+    marginBottom: 8,
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  authorText: {
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+    marginLeft: 4,
   },
   date: {
     fontSize: 12,

@@ -6,6 +6,15 @@ import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
 
+// Multer request interface'ini düzelt
+interface MulterFile extends Express.Multer.File {}
+
+interface MulterRequest extends Request {
+  files?: {
+    [fieldname: string]: MulterFile[];
+  };
+}
+
 // Tüm haberleri getir
 export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
   const news = await News.find()
@@ -35,112 +44,69 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 // Haber oluştur
 export const createNews = asyncHandler(async (req: Request, res: Response) => {
   try {
-    logger.info('Request body:', req.body);
-
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const { title, content, category, displayTitle } = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
     
-    // Ana görsel URL'i
-    let imageUrl = '';
-    if (files?.coverImage?.[0]) {
-      const filename = files.coverImage[0].filename;
-      imageUrl = `/uploads/${filename}`;
-    }
-
-    // İçerik görselleri
+    let imageUrl = files?.coverImage?.[0] ? `/uploads/${files.coverImage[0].filename}` : '';
     let contentImages: string[] = [];
-    if (files?.contentImage0) {
-      contentImages = files.contentImage0.map(file => `/uploads/${file.filename}`);
-    }
+    let contentWithImages = content;
 
-    // İçeriği düzenle
-    let content = req.body.content;
-    contentImages.forEach((imageUrl, index) => {
-      content = content.replace(
-        `[IMAGE-${index}]`, 
-        `<img src="${imageUrl}" alt="Content image ${index + 1}" />`
-      );
-    });
-
-    // Kategori ismini düzelt (büyük/küçük harf duyarlılığı için)
-    let category = req.body.category;
-    if (category === 'ai' || category === 'Ai' || category === 'aI') {
-      category = 'AI';
-    } else if (category === 'app') {
-      category = 'App';
-    } else if (category === 'technology') {
-      category = 'Technology';
-    }
-
-    const newsData = {
-      title: req.body.title,
-      displayTitle: req.body.displayTitle || req.body.title,
-      content: content,
-      summary: req.body.content.substring(0, 200),
-      category: category,
-      author: req.user._id,
-      imageUrl,
-      contentImages,
-      status: 'published'
-    };
-
-    logger.info('Creating news with data:', newsData);
-
-    const news = await News.create(newsData);
-    await news.populate('author', 'firstName lastName');
-
-    return res.status(201).json({
-      status: 'success',
-      data: { news }
-    });
-
-  } catch (error: any) {
-    logger.error('Create news error details:', {
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
-      code: error.code,
-      body: req.body // Gelen veriyi de görelim
-    });
-
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        status: 'error',
-        message: error.message
+    if (files?.contentImages) {
+      contentImages = files.contentImages.map(file => `/uploads/${file.filename}`);
+      contentImages.forEach(imagePath => {
+        contentWithImages = contentWithImages.replace('[IMAGE]', `[IMAGE:${imagePath}]`);
       });
     }
 
-    return res.status(500).json({
-      status: 'error',
-      message: 'Haber oluşturulurken bir hata oluştu',
-      details: error.message
+    const news = await News.create({
+      title,
+      displayTitle,
+      content: contentWithImages,
+      imageUrl,
+      contentImages,
+      category: category.toUpperCase(),
+      author: req.user._id,
+      summary: content.substring(0, 200)
     });
+
+    res.status(201).json({
+      status: 'success',
+      data: { news }
+    });
+  } catch (error: any) {
+    logger.error('Create news error:', error);
+    throw new AppError(error?.message || 'Failed to create news', 500);
   }
 });
 
 // Haber güncelle
 export const updateNews = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
     let updateData = { ...req.body };
+    let contentImages: string[] = [];
 
-    // Ana görsel güncelleme
-    if (files && files['image'] && files['image'][0]) {
-      updateData.imageUrl = `/uploads/${files['image'][0].filename}`;
+    // Cover image güncelleme
+    if (files?.coverImage?.[0]) {
+      updateData.imageUrl = `/uploads/${files.coverImage[0].filename}`;
     }
 
-    // İçerik görselleri güncelleme
-    if (files && files['contentImages']) {
-      updateData.contentImages = files['contentImages'].map(file => `/uploads/${file.filename}`);
+    // Content images güncelleme
+    if (files?.contentImages) {
+      contentImages = files.contentImages.map(file => `/uploads/${file.filename}`);
+      let contentWithImages = updateData.content;
+      
+      contentImages.forEach(imagePath => {
+        contentWithImages = contentWithImages.replace('[IMAGE]', `[IMAGE:${imagePath}]`);
+      });
+      
+      updateData.content = contentWithImages;
+      updateData.contentImages = contentImages; // Content image URL'lerini güncelle
     }
 
-    // Tags array'ini parse et
-    if (updateData.tags) {
-      updateData.tags = JSON.parse(updateData.tags);
-    }
-
-    // Boolean değerleri düzelt
-    if (updateData.isHighlighted) {
-      updateData.isHighlighted = updateData.isHighlighted === 'true';
+    // Kategoriyi büyük harfe çevir
+    if (updateData.category) {
+      updateData.category = updateData.category.toUpperCase();
     }
 
     const news = await News.findByIdAndUpdate(

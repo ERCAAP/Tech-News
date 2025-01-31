@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, Text, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { Header } from '@/components/common/Header';
 import { Input } from '@/components/common/Input';
@@ -8,15 +8,16 @@ import { useAppSelector } from '@/redux/hooks';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { TextArea } from '@/components/common/TextArea';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function CreateNewsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
+    category: '',
     coverImage: '',
     contentImages: [],
-    category: '',
   });
 
   const handlePickCoverImage = async () => {
@@ -75,27 +76,44 @@ export default function CreateNewsScreen() {
         formDataToSend.append('coverImage', {
           uri: formData.coverImage,
           name: coverImageName,
-          type: 'image/jpeg'
+          type: 'image/jpeg',
         });
       }
 
       formData.contentImages.forEach((imageUri, index) => {
         const imageName = imageUri.split('/').pop();
-        formDataToSend.append(`contentImage${index}`, {
+        formDataToSend.append('contentImages', {
           uri: imageUri,
           name: imageName,
-          type: 'image/jpeg'
+          type: 'image/jpeg',
         });
       });
 
-      // TODO: API call to create news
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/news`, {
+        method: 'POST',
+        body: formDataToSend,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create news');
+      }
+
       Alert.alert('Success', 'News created successfully');
       router.back();
     } catch (error) {
+      console.error('Create news error:', error);
       Alert.alert('Error', 'Failed to create news');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRemoveContentImage = (index: number) => {
+    // Implement the logic to remove the image from the contentImages array
+    console.log(`Removing image at index: ${index}`);
   };
 
   return (
@@ -167,12 +185,19 @@ export default function CreateNewsScreen() {
             icon="image"
           />
           {formData.contentImages.map((uri, index) => (
-            <Image 
-              key={index}
-              source={{ uri }} 
-              style={styles.contentImage}
-              resizeMode="cover"
-            />
+            <View key={index} style={styles.contentImageContainer}>
+              <Image 
+                source={{ uri }} 
+                style={styles.contentImage}
+                resizeMode="cover"
+              />
+              <TouchableOpacity 
+                style={styles.removeImageButton}
+                onPress={() => handleRemoveContentImage(index)}
+              >
+                <MaterialIcons name="close" size={24} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
@@ -230,11 +255,21 @@ const styles = StyleSheet.create({
   imageButton: {
     marginBottom: 8,
   },
+  contentImageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
   contentImage: {
-    width: '100%',
+    width: '80%',
     height: 200,
     borderRadius: 8,
-    marginTop: 8,
+  },
+  removeImageButton: {
+    backgroundColor: COLORS.error,
+    borderRadius: 12,
+    padding: 4,
+    marginLeft: 8,
   },
   publishButton: {
     marginVertical: 24,

@@ -857,3 +857,190 @@
 {"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:23:09.162Z"}
 {"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","contentImages":["/uploads/1738351389065-46936915.png"],"displayTitle":"HARSADASDKA","imageUrl":"/uploads/1738351388942-942490469.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:23:09.163Z","title":"HARKASDASASS"}
 {"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","contentImages":[],"displayTitle":"HARSADASDKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","timestamp":"2025-01-31T19:23:09.163Z","title":"HARKASDASASS"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:33:51.124Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:33:51.124Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:33:51.125Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:33:51.128Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:33:51.253Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:33:51.253Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:33:51.254Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:33:51.256Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:33:51.329Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:33:51.329Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:33:51.330Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:33:51.331Z"}
+{"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738352031257-168144592.png]\nSDF","contentImages":["/uploads/1738352031257-168144592.png"],"displayTitle":"HARSADASDKA","imageUrl":"/uploads/1738352031129-212138986.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:33:51.332Z","title":"HARKASDASASS"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738352031257-168144592.png]\nSDF","contentImages":[],"displayTitle":"HARSADASDKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738352031257-168144592.png]\nSDF","timestamp":"2025-01-31T19:33:51.332Z","title":"HARKASDASASS"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:34:38.726Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:34:38.731Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:37:53.929Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:37:53.934Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:38:18.589Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:38:18.590Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:38:18.594Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:38:18.602Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:38:18.711Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:38:18.711Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:38:18.713Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:38:18.718Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:38:18.820Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:38:18.820Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:38:18.822Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:38:18.824Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:40:00.279Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:40:00.285Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:40:06.484Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:40:06.485Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:40:06.489Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:40:06.506Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:40:06.603Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:40:06.603Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:40:06.605Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:40:06.609Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:40:06.702Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:40:06.703Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:40:06.704Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:40:06.706Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:25.091Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:25.092Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:25.094Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:25.098Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:25.219Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:25.220Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:25.221Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:25.225Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:25.244Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:25.244Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:25.246Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:25.251Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:25.336Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:25.337Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:25.338Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:25.340Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:41:38.020Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:41:38.027Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:43.920Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:43.921Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:43.925Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:43.929Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:44.047Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:44.048Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:44.049Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:44.053Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:44.083Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:44.084Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:44.086Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:44.089Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:41:44.153Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:41:44.153Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:41:44.155Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:41:44.157Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:43:41.590Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:43:41.595Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:43:56.637Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:43:56.638Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:43:56.642Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:43:56.648Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:43:56.784Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:43:56.784Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:43:56.786Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:43:56.789Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:43:56.825Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:43:56.825Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:43:56.827Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:43:56.831Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:43:56.914Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:43:56.914Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:43:56.915Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:43:56.917Z"}
+{"hasFiles":false,"level":"info","message":"Request files:","timestamp":"2025-01-31T19:43:56.918Z"}
+{"level":"warn","message":"No cover image found in request","timestamp":"2025-01-31T19:43:56.919Z"}
+{"category":"AI","contentImagesCount":0,"contentLength":100,"displayTitle":"HARSADASDKA","imageUrl":"","level":"info","message":"Creating news with data:","timestamp":"2025-01-31T19:43:56.919Z","title":"asHARKASDASASS"}
+{"level":"info","message":"News created successfully:","newsId":"679d27fccabb230162d30412","savedContentImages":[],"savedImageUrl":"","timestamp":"2025-01-31T19:43:56.931Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:46:54.741Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:46:54.747Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:47:55.652Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:47:57.025Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:49:26.349Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:49:26.350Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:49:26.353Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:49:26.357Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:49:26.423Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:49:26.423Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:49:26.425Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:49:26.428Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:49:26.457Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:49:26.457Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:49:26.459Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:49:26.461Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:32.512Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:32.512Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:32.514Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:32.516Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:32.543Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:32.543Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:32.545Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:32.547Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:32.661Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:32.661Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:32.663Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:32.665Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:47.241Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:47.241Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:47.242Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:47.245Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:47.374Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:47.374Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:47.376Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:47.379Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:50:47.487Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:50:47.488Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:50:47.489Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:50:47.490Z"}
+{"_message":"News validation failed","errors":{"category":{"kind":"enum","message":"`APP` is not a valid enum value for path `category`.","name":"ValidatorError","path":"category","properties":{"enumValues":["Technology","AI","App"],"message":"`APP` is not a valid enum value for path `category`.","path":"category","type":"enum","value":"APP"},"value":"APP"}},"level":"error","message":"Create news error: News validation failed: category: `APP` is not a valid enum value for path `category`.","stack":"ValidationError: News validation failed: category: `APP` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T19:50:47.494Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:14.087Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:14.087Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:14.088Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:14.090Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:14.165Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:14.165Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:14.166Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:14.169Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:14.254Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:14.254Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:14.256Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:14.258Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:14.370Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:14.370Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:14.371Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:14.374Z"}
+{"_message":"News validation failed","errors":{"category":{"kind":"enum","message":"`APP` is not a valid enum value for path `category`.","name":"ValidatorError","path":"category","properties":{"enumValues":["Technology","AI","App"],"message":"`APP` is not a valid enum value for path `category`.","path":"category","type":"enum","value":"APP"},"value":"APP"}},"level":"error","message":"Create news error: News validation failed: category: `APP` is not a valid enum value for path `category`.","stack":"ValidationError: News validation failed: category: `APP` is not a valid enum value for path `category`.\n    at model.Document.invalidate (C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3219:32)\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\document.js:3012:17\n    at C:\\Projects\\News-Tecno\\tech-news\\Tech-News\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-31T19:51:14.375Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:19.092Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:19.092Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:19.094Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:19.097Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:19.148Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:19.149Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:19.150Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:19.151Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:19.152Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:19.153Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:19.155Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:19.157Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:51:19.359Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:51:19.360Z"}
+{"exp":1740944877,"iat":1738352877,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:51:19.360Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:51:19.362Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T19:54:37.473Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T19:54:37.478Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:59:42.531Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:00:06.385Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:00:08.058Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:04:51.143Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:04:53.324Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:06:26.853Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:06:28.260Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:07:22.364Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:07:23.308Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:08:00.978Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:08:02.959Z"}
