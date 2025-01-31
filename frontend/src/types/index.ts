@@ -27,9 +27,8 @@ export interface NewsItem {
   _id: string;
   title: string;
   content: string;
-  summary?: string;
   imageUrl?: string;
-  contentImages?: string[];
+  coverImage?: string;
   category?: string;
   author: {
     _id: string;

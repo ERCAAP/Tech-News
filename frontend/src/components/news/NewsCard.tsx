@@ -1,93 +1,67 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { NewsItem } from '@/types';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { getImageUrl } from '@/utils/imageHelper';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 const CARD_MARGIN = 16;
-const CARD_WIDTH = width - (CARD_MARGIN * 2);
 
 interface NewsCardProps {
   news: NewsItem;
   onPress: () => void;
   index?: number;
+  isVisible?: boolean;
 }
 
-export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
+export function NewsCard({ news, onPress, index = 0, isVisible = false }: NewsCardProps) {
   if (!news || !news.author) return null;
-
-  // İçerikteki resimleri ve metinleri ayrıştır
-  const renderContent = (content: string) => {
-    return content.split('\n').map((part, index) => {
-      // [IMAGE:/uploads/...] formatındaki resimleri bul
-      const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
-      
-      if (imageMatch) {
-        const imageUrl = imageMatch[1];
-        return (
-          <View key={`image-${index}`} style={styles.contentImageContainer}>
-            <Image
-              source={{ uri: getImageUrl(imageUrl) }}
-              style={styles.contentImage}
-              resizeMode="cover"
-            />
-          </View>
-        );
-      }
-
-      // Normal metin
-      return part.trim() ? (
-        <Text key={`text-${index}`} style={styles.contentText}>
-          {part}
-        </Text>
-      ) : null;
-    });
-  };
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 200).springify()}
-      style={styles.container}
+      entering={FadeInDown.delay(index * 100).springify()}
+      style={[
+        styles.container,
+        { opacity: isVisible ? 1 : 0.7 }
+      ]}
     >
       <TouchableOpacity
         style={styles.card}
         onPress={onPress}
         activeOpacity={0.9}
       >
-        {news.imageUrl && (
-          <View style={styles.coverImageContainer}>
+        <View style={styles.coverContainer}>
+          {news.coverImage ? (
             <Image
-              source={{ uri: getImageUrl(news.imageUrl) }}
+              source={{ uri: getImageUrl(news.coverImage) }}
               style={styles.coverImage}
               resizeMode="cover"
             />
-          </View>
-        )}
-
-        <View style={styles.content}>
-          {news.category && (
-            <View style={styles.categoryContainer}>
-              <Text style={styles.category}>{news.category}</Text>
+          ) : (
+            <View style={styles.defaultCover}>
+              <MaterialIcons name="article" size={24} color={COLORS.gray} />
             </View>
           )}
           
+          {/* Category Badge */}
+          {news.category && (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{news.category}</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.content}>
           <Text style={styles.title} numberOfLines={2}>
             {news.title}
           </Text>
 
-          <View style={styles.authorInfo}>
-            <Text style={styles.authorName}>
-              {news.author.firstName} {news.author.lastName}
-            </Text>
+          <View style={styles.footer}>
             <Text style={styles.date}>
               {new Date(news.createdAt).toLocaleDateString()}
             </Text>
-          </View>
-
-          <View style={styles.contentContainer}>
-            {renderContent(news.content)}
           </View>
         </View>
       </TouchableOpacity>
@@ -97,80 +71,75 @@ export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH,
-    marginHorizontal: CARD_MARGIN,
-    marginBottom: 16,
+    width: Dimensions.get('window').width * 0.75,
+    marginHorizontal: 8,
+    height: 250,
   },
   card: {
+    flex: 1,
     backgroundColor: COLORS.white,
     borderRadius: 12,
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.dark,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
-  coverImageContainer: {
+  coverContainer: {
     width: '100%',
-    height: 200,
+    height: 150,
     backgroundColor: COLORS.border,
+    position: 'relative',
   },
   coverImage: {
     width: '100%',
     height: '100%',
   },
-  content: {
-    padding: 16,
+  defaultCover: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
   },
-  categoryContainer: {
-    backgroundColor: COLORS.primaryLight,
+  categoryBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
   },
-  category: {
-    color: COLORS.primary,
+  categoryText: {
+    color: COLORS.white,
     fontSize: 12,
     fontFamily: FONTS.medium,
   },
+  content: {
+    padding: 12,
+    flex: 1,
+    justifyContent: 'space-between',
+  },
   title: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
-    marginBottom: 8,
   },
-  authorInfo: {
+  footer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  authorName: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: COLORS.dark,
+    justifyContent: 'flex-end',
   },
   date: {
     fontSize: 12,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
-  },
-  contentContainer: {
-    gap: 8,
-  },
-  contentImageContainer: {
-    width: '100%',
-    height: 200,
-    backgroundColor: COLORS.border,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  contentImage: {
-    width: '100%',
-    height: '100%',
-  },
-  contentText: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: COLORS.dark,
-    lineHeight: 24,
   },
 }); 

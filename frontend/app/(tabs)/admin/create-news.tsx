@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
-import { COLORS } from '@/theme';
+import { View, StyleSheet, ScrollView, Alert, Image, Text } from 'react-native';
+import { COLORS, FONTS } from '@/theme';
 import { Header } from '@/components/common/Header';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -14,11 +14,12 @@ export default function CreateNewsScreen() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    image: '',
+    coverImage: '',
+    contentImages: [],
     category: '',
   });
 
-  const handlePickImage = async () => {
+  const handlePickCoverImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -28,17 +29,66 @@ export default function CreateNewsScreen() {
       });
 
       if (!result.canceled) {
-        setFormData(prev => ({ ...prev, image: result.assets[0].uri }));
+        setFormData(prev => ({ ...prev, coverImage: result.assets[0].uri }));
+        console.log('📸 Cover image selected:', result.assets[0].uri);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      Alert.alert('Error', 'Failed to pick cover image');
+    }
+  };
+
+  const handlePickContentImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData(prev => ({
+          ...prev,
+          contentImages: [...prev.contentImages, result.assets[0].uri]
+        }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick content image');
     }
   };
 
   const handleCreateNews = async () => {
     try {
       setIsLoading(true);
-      // TODO: Implement news creation logic
+      
+      if (!formData.title || !formData.content) {
+        Alert.alert('Error', 'Title and content are required');
+        return;
+      }
+
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('content', formData.content);
+      formDataToSend.append('category', formData.category);
+
+      if (formData.coverImage) {
+        const coverImageName = formData.coverImage.split('/').pop();
+        formDataToSend.append('coverImage', {
+          uri: formData.coverImage,
+          name: coverImageName,
+          type: 'image/jpeg'
+        });
+      }
+
+      formData.contentImages.forEach((imageUri, index) => {
+        const imageName = imageUri.split('/').pop();
+        formDataToSend.append(`contentImage${index}`, {
+          uri: imageUri,
+          name: imageName,
+          type: 'image/jpeg'
+        });
+      });
+
+      // TODO: API call to create news
       Alert.alert('Success', 'News created successfully');
       router.back();
     } catch (error) {
@@ -52,45 +102,79 @@ export default function CreateNewsScreen() {
     <View style={styles.container}>
       <Header title="Create News" showBack />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Button
-          title="Add News Image"
-          onPress={handlePickImage}
-          style={styles.imageButton}
-          variant="outline"
-          icon="image"
-        />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cover Image</Text>
+          <View style={styles.coverImageContainer}>
+            {formData.coverImage ? (
+              <>
+                <Image 
+                  source={{ uri: formData.coverImage }} 
+                  style={styles.coverImage}
+                  resizeMode="cover"
+                />
+                <Button
+                  title="Change Cover Image"
+                  onPress={handlePickCoverImage}
+                  style={styles.imageButton}
+                  variant="outline"
+                  icon="image"
+                />
+              </>
+            ) : (
+              <Button
+                title="Add Cover Image"
+                onPress={handlePickCoverImage}
+                style={styles.imageButton}
+                variant="outline"
+                icon="image"
+              />
+            )}
+          </View>
+        </View>
 
-        {formData.image ? (
-          <View style={styles.imagePreview}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>News Details</Text>
+          <Input
+            label="News Title"
+            value={formData.title}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
+            placeholder="Enter an attention-grabbing title"
+          />
+
+          <Input
+            label="News Category"
+            value={formData.category}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
+            placeholder="e.g., Technology, Sports, Politics"
+          />
+          
+          <TextArea
+            label="News Content"
+            value={formData.content}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
+            placeholder="Write your news content here..."
+            numberOfLines={8}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Content Images</Text>
+          <Button
+            title="Add Content Image"
+            onPress={handlePickContentImage}
+            style={styles.imageButton}
+            variant="outline"
+            icon="image"
+          />
+          {formData.contentImages.map((uri, index) => (
             <Image 
-              source={{ uri: formData.image }} 
-              style={styles.image}
+              key={index}
+              source={{ uri }} 
+              style={styles.contentImage}
               resizeMode="cover"
             />
-          </View>
-        ) : null}
-
-        <Input
-          label="News Title"
-          value={formData.title}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-          placeholder="Enter an attention-grabbing title"
-        />
-
-        <Input
-          label="News Category"
-          value={formData.category}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
-          placeholder="e.g., Technology, Sports, Politics"
-        />
-        
-        <TextArea
-          label="News Content"
-          value={formData.content}
-          onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
-          placeholder="Write your news content here..."
-          numberOfLines={8}
-        />
+          ))}
+        </View>
 
         <Button
           title={isLoading ? "Publishing..." : "Publish News"}
@@ -112,19 +196,45 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  imageButton: {
+  section: {
+    marginBottom: 24,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
     marginBottom: 16,
   },
-  imagePreview: {
-    marginBottom: 16,
-    height: 200,
+  coverImageContainer: {
+    width: '100%',
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: COLORS.border,
   },
-  image: {
+  coverImage: {
     width: '100%',
-    height: '100%',
+    height: 200,
+    marginBottom: 8,
+  },
+  imageButton: {
+    marginBottom: 8,
+  },
+  contentImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginTop: 8,
   },
   publishButton: {
     marginVertical: 24,

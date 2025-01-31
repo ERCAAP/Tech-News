@@ -801,3 +801,59 @@
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:09:51.075Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:12:29.360Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T19:12:30.617Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:18:13.176Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:18:13.177Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:18:13.179Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:18:13.181Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:18:13.307Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:18:13.307Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:18:13.309Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:18:13.312Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:18:13.397Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:18:13.398Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:18:13.399Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:18:13.401Z"}
+{"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738351093313-689832699.png]\nSDF","contentImages":["/uploads/1738351093313-689832699.png"],"displayTitle":"HARKA","imageUrl":"/uploads/1738351093183-232949504.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:18:13.402Z","title":"HARKA"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738351093313-689832699.png]\nSDF","contentImages":[],"displayTitle":"HARKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738351093313-689832699.png]\nSDF","timestamp":"2025-01-31T19:18:13.402Z","title":"HARKA"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:20:25.605Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:20:25.605Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:20:25.607Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:20:25.611Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:20:25.742Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:20:25.743Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:20:25.744Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:20:25.746Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:20:25.829Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:20:25.830Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:20:25.831Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:20:25.833Z"}
+{"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738351225747-297616676.png]\nSDF","contentImages":["/uploads/1738351225747-297616676.png"],"displayTitle":"HARKA","imageUrl":"/uploads/1738351225612-365576606.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:20:25.833Z","title":"HARKA"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738351225747-297616676.png]\nSDF","contentImages":[],"displayTitle":"HARKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738351225747-297616676.png]\nSDF","timestamp":"2025-01-31T19:20:25.833Z","title":"HARKA"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:22:53.796Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:22:53.796Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:22:53.797Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:22:53.800Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:22:53.911Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:22:53.912Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:22:53.913Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:22:53.915Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:22:54.040Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:22:54.040Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:22:54.041Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:22:54.043Z"}
+{"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738351373916-610215504.png]\nSDF","contentImages":["/uploads/1738351373916-610215504.png"],"displayTitle":"HARKA","imageUrl":"/uploads/1738351373801-471311260.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:22:54.043Z","title":"HARKASS"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738351373916-610215504.png]\nSDF","contentImages":[],"displayTitle":"HARKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738351373916-610215504.png]\nSDF","timestamp":"2025-01-31T19:22:54.043Z","title":"HARKASS"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:23:08.937Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:23:08.937Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:23:08.939Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:23:08.941Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:23:09.061Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:23:09.062Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:23:09.063Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:23:09.064Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T19:23:09.153Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T19:23:09.158Z"}
+{"exp":1740942750,"iat":1738350750,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T19:23:09.159Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T19:23:09.162Z"}
+{"category":"ai","content":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","contentImages":["/uploads/1738351389065-46936915.png"],"displayTitle":"HARSADASDKA","imageUrl":"/uploads/1738351388942-942490469.png","level":"info","message":"Request body:","timestamp":"2025-01-31T19:23:09.163Z","title":"HARKASDASASS"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","contentImages":[],"displayTitle":"HARSADASDKA","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"SDAD\n[IMAGE:/uploads/1738351389065-46936915.png]\nSDF","timestamp":"2025-01-31T19:23:09.163Z","title":"HARKASDASASS"}
