@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
-import { useResponsive } from '@/hooks/useResponsive';
-import { COLORS, FONTS } from '@/theme';
+import { COLORS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
+import RenderHtml from 'react-native-render-html';
+import { useWindowDimensions } from 'react-native';
 
 export default function NewsDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { wp, hp } = useResponsive();
+  const { width } = useWindowDimensions();
   const { news, isLoading } = useAppSelector(state => state.news);
   
   const newsItem = news.find(item => item._id === id);
@@ -18,20 +19,18 @@ export default function NewsDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {newsItem.imageUrl && (
-        <Image 
-          source={{ uri: newsItem.imageUrl }} 
-          style={[styles.image, { height: hp('30%') }]}
-          resizeMode="cover"
+      <View style={styles.content}>
+        <RenderHtml
+          contentWidth={width}
+          source={{ html: newsItem.content }}
+          tagsStyles={{
+            img: {
+              width: '100%',
+              height: 'auto',
+              marginVertical: 10,
+            }
+          }}
         />
-      )}
-      <View style={[styles.content, { padding: wp('4%') }]}>
-        <Text style={styles.title}>{newsItem.title}</Text>
-        <Text style={styles.author}>By {`${newsItem.author.firstName} ${newsItem.author.lastName}`}</Text>
-        <Text style={styles.date}>
-          {new Date(newsItem.createdAt).toLocaleDateString()}
-        </Text>
-        <Text style={styles.content}>{newsItem.content}</Text>
       </View>
     </ScrollView>
   );
@@ -42,28 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  image: {
-    width: '100%',
-  },
   content: {
-    backgroundColor: COLORS.white,
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: FONTS.bold,
-    color: COLORS.dark,
-    marginBottom: 8,
-  },
-  author: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-    marginBottom: 16,
+    padding: 16,
   },
 }); 
