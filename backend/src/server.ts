@@ -19,14 +19,14 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:19001', 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(helmet());
-app.use(morgan('dev'));
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
+
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -41,8 +41,8 @@ app.use(limiter);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/news', newsRoutes);
 
-// Statik dosya servisi
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Uploads klasörü için statik dosya servisi
+app.use('/uploads', express.static('uploads'));
 
 // Error handling
 app.use(errorHandler);

@@ -1,13 +1,11 @@
 import express from 'express';
-import { protect, restrictTo } from '../middleware/auth';
+import { protect, restrictTo } from '../middleware/authMiddleware';
 import {
   getAllNews,
   getNewsById,
   createNews,
   updateNews,
   deleteNews,
-  likeNews,
-  unlikeNews,
 } from '../controllers/newsController';
 import { upload } from '../utils/upload';
 
@@ -17,16 +15,27 @@ const router = express.Router();
 router.get('/', getAllNews);
 router.get('/:id', getNewsById);
 
-// Protected routes
-router.use(protect);
+// Admin routes
+router.post('/', 
+  protect,
+  restrictTo('admin'),
+  upload.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'contentImage0', maxCount: 10 }
+  ]),
+  createNews
+);
 
-// Admin only routes
-router.post('/', restrictTo('admin'), upload.single('image'), createNews);
-router.put('/:id', restrictTo('admin'), upload.single('image'), updateNews);
-router.delete('/:id', restrictTo('admin'), deleteNews);
+router.put('/:id',
+  protect, 
+  restrictTo('admin'),
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'contentImages', maxCount: 10 }
+  ]),
+  updateNews
+);
 
-// User interaction routes
-router.post('/:id/like', likeNews);
-router.delete('/:id/like', unlikeNews);
+router.delete('/:id', protect, restrictTo('admin'), deleteNews);
 
 export default router; 
