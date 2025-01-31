@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Image } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS } from '@/theme';
-
-const API_URL = Platform.select({
-  android: 'http://10.0.2.2:3000/api/v1',
-  ios: 'http://localhost:3000/api/v1',
-  default: 'http://localhost:3000/api/v1'
-});
 
 export function NewsForm() {
   const dispatch = useAppDispatch();
@@ -60,12 +54,15 @@ export function NewsForm() {
       form.append('category', formData.category);
       
       if (formData.imageUrl) {
-        const filename = `news-${Date.now()}-${Math.random().toString(36).substring(7)}.${formData.imageUrl.split('.').pop()}`;
+        const imageUri = formData.imageUrl;
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename || '');
+        const type = match ? `image/${match[1]}` : 'image';
         
         form.append('image', {
-          uri: formData.imageUrl,
+          uri: imageUri,
           name: filename,
-          type: `image/${formData.imageUrl.split('.').pop()}`,
+          type,
         } as any);
       }
 

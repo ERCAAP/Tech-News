@@ -1,4 +1,4 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
@@ -6,16 +6,15 @@ const api = axios.create({
 });
 
 // Request interceptor
-api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+api.interceptors.request.use(async (config) => {
   try {
     const token = await AsyncStorage.getItem('token');
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // FormData için content-type ayarı
     if (config.data instanceof FormData) {
-      config.headers = config.headers || {};
       config.headers['Content-Type'] = 'multipart/form-data';
     }
     

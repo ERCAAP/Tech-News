@@ -1,64 +1,37 @@
 import React from 'react';
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
-import { Text } from '@/components/common/Text';
+import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
+import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
-import { RenderHTML } from 'react-native-render-html';
-import { useWindowDimensions } from 'react-native';
-import type { NewsItem } from '@/types/news';
+import { Loading } from '@/components/common/Loading';
 
 export default function NewsDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { width } = useWindowDimensions();
-  const { news, isLoading } = useAppSelector(state => ({
-    news: state.news.news.find(n => n._id === id),
-    isLoading: state.news.isLoading
-  }));
+  const { id } = useLocalSearchParams();
+  const { wp, hp } = useResponsive();
+  const { news, isLoading } = useAppSelector(state => state.news);
+  
+  const newsItem = news.find(item => item._id === id);
 
-  if (isLoading) {
-    return <Text>Loading...</Text>;
-  }
-
-  if (!news) {
-    return <Text>News not found</Text>;
-  }
-
-  const renderContent = () => {
-    return (
-      <RenderHTML 
-        source={{ html: news.content }} 
-        contentWidth={width}
-        tagsStyles={{
-          img: {
-            width: '100%',
-            height: 200,
-            resizeMode: 'cover',
-            marginVertical: 10,
-            borderRadius: 8,
-          }
-        }}
-      />
-    );
-  };
+  if (isLoading) return <Loading />;
+  if (!newsItem) return null;
 
   return (
     <ScrollView style={styles.container}>
-      {news.coverImage && (
+      {newsItem.imageUrl && (
         <Image 
-          source={{ uri: news.coverImage }} 
-          style={styles.coverImage}
+          source={{ uri: newsItem.imageUrl }} 
+          style={[styles.image, { height: hp('30%') }]}
           resizeMode="cover"
         />
       )}
-      <View style={styles.content}>
-        <Text style={styles.title}>{news.displayTitle || news.title}</Text>
+      <View style={[styles.content, { padding: wp('4%') }]}>
+        <Text style={styles.title}>{newsItem.title}</Text>
+        <Text style={styles.author}>By {`${newsItem.author.firstName} ${newsItem.author.lastName}`}</Text>
         <Text style={styles.date}>
-          {new Date(news.timestamp).toLocaleDateString()}
+          {new Date(newsItem.createdAt).toLocaleDateString()}
         </Text>
-        <View style={styles.body}>
-          {renderContent()}
-        </View>
+        <Text style={styles.content}>{newsItem.content}</Text>
       </View>
     </ScrollView>
   );
@@ -67,14 +40,13 @@ export default function NewsDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background,
   },
-  coverImage: {
+  image: {
     width: '100%',
-    height: 250,
   },
   content: {
-    padding: 16,
+    backgroundColor: COLORS.white,
   },
   title: {
     fontSize: 24,
@@ -82,13 +54,16 @@ const styles = StyleSheet.create({
     color: COLORS.dark,
     marginBottom: 8,
   },
+  author: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
+    marginBottom: 4,
+  },
   date: {
     fontSize: 14,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.regular,
     color: COLORS.gray,
     marginBottom: 16,
-  },
-  body: {
-    marginTop: 16,
   },
 }); 
