@@ -5,13 +5,16 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
+import { uploadImage } from '../utils/imageUpload';
 
 // Multer request interface'ini düzelt
-interface MulterFile extends Express.Multer.File {}
-
 interface MulterRequest extends Request {
-  files?: {
-    [fieldname: string]: MulterFile[];
+  files: {
+    [key: string]: Express.Multer.File[];
+  };
+  user: {
+    _id: string;
+    role: string;
   };
 }
 
@@ -44,35 +47,67 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 // Haber oluştur
 export const createNews = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { title, content, category, displayTitle } = req.body;
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const { title, displayTitle, content, category, imageUrl } = req.body;
+    const files = (req as MulterRequest).files;
     
-    let imageUrl = files?.coverImage?.[0] ? `/uploads/${files.coverImage[0].filename}` : '';
+    console.log('Request body:', req.body);
+    console.log('Received files:', files);
+
+    // Cover image işleme
+    let coverImagePath = '';
+    if (imageUrl) {
+      coverImagePath = imageUrl;
+      console.log('Using imageUrl as coverImage:', coverImagePath);
+    } else if (files?.coverImage?.[0]) {
+      const coverImageFile = files.coverImage[0];
+      coverImagePath = `/uploads/${coverImageFile.filename}`;
+      console.log('Using uploaded file as coverImage:', coverImagePath);
+    }
+
+    // İçerik resimleri işleme
     let contentImages: string[] = [];
-    let contentWithImages = content;
+    let updatedContent = content;
 
     if (files?.contentImages) {
-      contentImages = files.contentImages.map(file => `/uploads/${file.filename}`);
+      contentImages = files.contentImages.map(file => {
+        const path = `/uploads/${file.filename}`;
+        console.log('Processing content image:', {
+          originalName: file.originalname,
+          filename: file.filename,
+          path: path
+        });
+        return path;
+      });
+
       contentImages.forEach(imagePath => {
-        contentWithImages = contentWithImages.replace('[IMAGE]', `[IMAGE:${imagePath}]`);
+        updatedContent = updatedContent.replace('[IMAGE]', `[IMAGE:${imagePath}]`);
       });
     }
 
-    const news = await News.create({
+    const newsData = {
       title,
-      displayTitle,
-      content: contentWithImages,
-      imageUrl,
-      contentImages,
+      displayTitle: displayTitle || title,
+      content: updatedContent,
       category: category.toUpperCase(),
-      author: req.user._id,
-      summary: content.substring(0, 200)
-    });
+      coverImage: coverImagePath,
+      imageUrl: coverImagePath,
+      contentImages,
+      author: (req as MulterRequest).user._id,
+      summary: content.substring(0, 200),
+      status: 'published'
+    };
+
+    console.log('Creating news with data:', newsData);
+
+    const news = await News.create(newsData);
+    const populatedNews = await News.findById(news._id)
+      .populate('author', 'firstName lastName');
 
     res.status(201).json({
       status: 'success',
-      data: { news }
+      data: { news: populatedNews }
     });
+
   } catch (error: any) {
     logger.error('Create news error:', error);
     throw new AppError(error?.message || 'Failed to create news', 500);

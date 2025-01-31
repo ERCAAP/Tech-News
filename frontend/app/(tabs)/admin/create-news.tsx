@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, Text, TouchableOpacity, TextInput } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { Header } from '@/components/common/Header';
 import { Input } from '@/components/common/Input';
@@ -12,29 +12,24 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 export default function CreateNewsScreen() {
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    category: '',
-    coverImage: '',
-    contentImages: [],
-  });
+  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [displayTitle, setDisplayTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [content, setContent] = useState('');
+  const [contentImages, setContentImages] = useState<string[]>([]);
+  const token = useAppSelector(state => state.auth.token);
 
-  const handlePickCoverImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
+  const handleSelectCoverImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
 
-      if (!result.canceled) {
-        setFormData(prev => ({ ...prev, coverImage: result.assets[0].uri }));
-        console.log('📸 Cover image selected:', result.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick cover image');
+    if (!result.canceled) {
+      setCoverImage(result.assets[0].uri);
     }
   };
 
@@ -47,10 +42,7 @@ export default function CreateNewsScreen() {
       });
 
       if (!result.canceled) {
-        setFormData(prev => ({
-          ...prev,
-          contentImages: [...prev.contentImages, result.assets[0].uri]
-        }));
+        setContentImages([...contentImages, result.assets[0].uri]);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick content image');
@@ -61,44 +53,66 @@ export default function CreateNewsScreen() {
     try {
       setIsLoading(true);
       
-      if (!formData.title || !formData.content) {
+      if (!title || !content) {
         Alert.alert('Error', 'Title and content are required');
         return;
       }
 
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('content', formData.content);
-      formDataToSend.append('category', formData.category);
+      const formData = new FormData();
 
-      if (formData.coverImage) {
-        const coverImageName = formData.coverImage.split('/').pop();
-        formDataToSend.append('coverImage', {
-          uri: formData.coverImage,
-          name: coverImageName,
+      // Ana verileri ekle
+      formData.append('title', title);
+      formData.append('displayTitle', displayTitle);
+      formData.append('category', category);
+      formData.append('content', content);
+
+      // Cover image'i ekle
+      if (coverImage) {
+        const coverImageName = coverImage.split('/').pop() || 'cover.jpg';
+        formData.append('coverImage', {
+          uri: coverImage,
           type: 'image/jpeg',
-        });
+          name: coverImageName,
+        } as any);
+
+        console.log('Adding cover image:', coverImage); // Debug için
       }
 
-      formData.contentImages.forEach((imageUri, index) => {
-        const imageName = imageUri.split('/').pop();
-        formDataToSend.append('contentImages', {
-          uri: imageUri,
-          name: imageName,
-          type: 'image/jpeg',
+      // Content images'ları ekle
+      if (contentImages.length > 0) {
+        contentImages.forEach((imageUri, index) => {
+          const imageName = imageUri.split('/').pop() || `content-${index}.jpg`;
+          formData.append('contentImages', {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: imageName,
+          } as any);
         });
-      });
+
+        console.log('Adding content images:', contentImages); // Debug için
+      }
+
+      // Form verilerini kontrol et
+      console.log('Form data entries:');
+      for (let [key, value] of (formData as any).entries()) {
+        console.log(key, value);
+      }
 
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/news`, {
         method: 'POST',
-        body: formDataToSend,
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`,
         },
+        body: formData,
       });
 
+      const responseData = await response.json();
+      console.log('Server response:', responseData); // Debug için
+
       if (!response.ok) {
-        throw new Error('Failed to create news');
+        throw new Error(responseData.message || 'Failed to create news');
       }
 
       Alert.alert('Success', 'News created successfully');
@@ -120,56 +134,63 @@ export default function CreateNewsScreen() {
     <View style={styles.container}>
       <Header title="Create News" showBack />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
+        <View style={styles.coverImageSection}>
           <Text style={styles.sectionTitle}>Cover Image</Text>
-          <View style={styles.coverImageContainer}>
-            {formData.coverImage ? (
-              <>
-                <Image 
-                  source={{ uri: formData.coverImage }} 
-                  style={styles.coverImage}
-                  resizeMode="cover"
-                />
-                <Button
-                  title="Change Cover Image"
-                  onPress={handlePickCoverImage}
-                  style={styles.imageButton}
-                  variant="outline"
-                  icon="image"
-                />
-              </>
-            ) : (
-              <Button
-                title="Add Cover Image"
-                onPress={handlePickCoverImage}
-                style={styles.imageButton}
-                variant="outline"
-                icon="image"
+          <TouchableOpacity 
+            style={styles.coverImageContainer}
+            onPress={handleSelectCoverImage}
+          >
+            {coverImage ? (
+              <Image 
+                source={{ uri: coverImage }} 
+                style={styles.coverImage}
+                resizeMode="cover"
               />
+            ) : (
+              <View style={styles.addCoverImage}>
+                <MaterialIcons name="add-photo-alternate" size={32} color={COLORS.primary} />
+                <Text style={styles.addCoverText}>Add Cover Image</Text>
+              </View>
             )}
-          </View>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.inputSection}>
+          <Text style={styles.label}>News Title</Text>
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Enter news title"
+          />
+        </View>
+
+        <View style={styles.inputSection}>
+          <Text style={styles.label}>Display Title</Text>
+          <TextInput
+            style={styles.input}
+            value={displayTitle}
+            onChangeText={setDisplayTitle}
+            placeholder="Enter title to display"
+          />
+        </View>
+
+        <View style={styles.inputSection}>
+          <Text style={styles.label}>News Category</Text>
+          <TextInput
+            style={styles.input}
+            value={category}
+            onChangeText={setCategory}
+            placeholder="e.g., Technology, Sports, Politics"
+          />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>News Details</Text>
-          <Input
-            label="News Title"
-            value={formData.title}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-            placeholder="Enter an attention-grabbing title"
-          />
-
-          <Input
-            label="News Category"
-            value={formData.category}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
-            placeholder="e.g., Technology, Sports, Politics"
-          />
-          
           <TextArea
             label="News Content"
-            value={formData.content}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
+            value={content}
+            onChangeText={setContent}
             placeholder="Write your news content here..."
             numberOfLines={8}
           />
@@ -184,7 +205,7 @@ export default function CreateNewsScreen() {
             variant="outline"
             icon="image"
           />
-          {formData.contentImages.map((uri, index) => (
+          {contentImages.map((uri, index) => (
             <View key={index} style={styles.contentImageContainer}>
               <Image 
                 source={{ uri }} 
@@ -221,36 +242,57 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  section: {
-    marginBottom: 24,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  coverImageSection: {
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: FONTS.bold,
+    fontFamily: FONTS.medium,
     color: COLORS.dark,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   coverImageContainer: {
-    width: '100%',
-    borderRadius: 8,
+    height: 200,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: COLORS.border,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
   },
   coverImage: {
     width: '100%',
-    height: 200,
+    height: '100%',
+  },
+  addCoverImage: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addCoverText: {
+    marginTop: 8,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
+  },
+  inputSection: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
     marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
   },
   imageButton: {
     marginBottom: 8,

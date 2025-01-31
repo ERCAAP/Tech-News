@@ -26,9 +26,10 @@ export const isUserAdmin = (user: User | null): boolean => {
 export interface NewsItem {
   _id: string;
   title: string;
+  displayTitle?: string;
+  coverImage?: string;
   content: string;
   imageUrl?: string;
-  coverImage?: string;
   category: string;
   author: {
     _id: string;

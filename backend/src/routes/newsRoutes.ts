@@ -7,7 +7,7 @@ import {
   updateNews,
   deleteNews,
 } from '../controllers/newsController';
-import { upload } from '../utils/upload';
+import { upload, logUploadedFiles } from '../utils/upload';
 import { AppError } from '../utils/AppError';
 
 const router = express.Router();
@@ -20,9 +20,10 @@ router.get('/:id', getNewsById);
 router.post('/', 
   protect,
   restrictTo('admin'),
+  logUploadedFiles,
   upload.fields([
     { name: 'coverImage', maxCount: 1 },
-    { name: 'contentImage0', maxCount: 10 }
+    { name: 'contentImages', maxCount: 10 }
   ]),
   createNews
 );

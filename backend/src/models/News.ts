@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 export interface INews extends mongoose.Document {
   title: string;          // Haber başlığı
   displayTitle: string;   // Görünen başlık
+  coverImage: string;      // Cover image
   content: string;        // İçerik
   summary: string;        // Özet
   author: mongoose.Schema.Types.ObjectId;
@@ -33,6 +34,9 @@ const newsSchema = new mongoose.Schema<INews>({
     default: function(this: INews) {
       return this.title;
     }
+  },
+  coverImage: {
+    type: String
   },
   content: {
     type: String,
