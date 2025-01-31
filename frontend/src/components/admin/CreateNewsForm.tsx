@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Image, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { useAppDispatch } from '@/redux/hooks';
-import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
+import api from '@/api/axios';
+import { useRouter } from 'expo-router';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -31,7 +31,6 @@ interface NewsFormData {
 }
 
 export function CreateNewsForm() {
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<NewsFormData>({
     title: '',
@@ -43,6 +42,7 @@ export function CreateNewsForm() {
     contentWithImages: [],
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const router = useRouter();
 
   const handleCoverImagePick = async () => {
     try {
@@ -187,58 +187,80 @@ export function CreateNewsForm() {
     );
   };
 
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.content || !formData.category || !formData.coverImage) {
-      Alert.alert('Error', 'Please fill all required fields and add a cover image');
-      return;
-    }
-
+  // Resmi sunucuya yükle ve URL al
+  const uploadImage = async (uri: string): Promise<string> => {
     try {
-      setIsLoading(true);
-      const form = new FormData();
-      form.append('title', formData.title);
-      form.append('displayTitle', formData.displayTitle);
-      form.append('content', formData.content);
-      form.append('category', formData.category);
+      const formData = new FormData();
+      const filename = uri.split('/').pop() || 'image.jpg';
       
-      // Add cover image
-      const coverImageUri = formData.coverImage;
-      const coverFilename = coverImageUri.split('/').pop();
-      const coverMatch = /\.(\w+)$/.exec(coverFilename || '');
-      const coverType = coverMatch ? `image/${coverMatch[1]}` : 'image';
-      
-      form.append('coverImage', {
-        uri: coverImageUri,
-        name: coverFilename,
-        type: coverType,
+      formData.append('image', {
+        uri,
+        name: filename,
+        type: 'image/jpeg',
       } as any);
 
-      // Add content images
-      formData.contentImages.forEach((imageUri, index) => {
-        const filename = imageUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename || '');
-        const type = match ? `image/${match[1]}` : 'image';
-        
-        form.append(`contentImage${index}`, {
-          uri: imageUri,
-          name: filename,
-          type,
-        } as any);
+      // Upload endpoint'ini news route'u altına taşıdık
+      const response = await api.post('/news/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      await dispatch(createNews(form)).unwrap();
-      Alert.alert('Success', 'News created successfully');
-      setFormData({
-        title: '',
-        displayTitle: '',
-        content: '',
-        category: '',
-        coverImage: '',
-        contentImages: [],
-        contentWithImages: [],
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw new Error('Failed to upload image');
+    }
+  };
+
+  // Form gönderme işlemini güncelle
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+
+      // Validasyon ekleyelim
+      if (!formData.title || !formData.content || !formData.category) {
+        Alert.alert('Error', 'Please fill all required fields');
+        return;
+      }
+
+      // Kapak resmini yükle
+      let coverImageUrl = '';
+      if (formData.coverImage) {
+        coverImageUrl = await uploadImage(formData.coverImage);
+      }
+
+      // İçerik resimlerini yükle
+      const uploadedContentImages = await Promise.all(
+        formData.contentImages.map(uploadImage)
+      );
+
+      // İçerikteki [IMAGE-X] referanslarını URL'lerle değiştir
+      let processedContent = formData.content;
+      uploadedContentImages.forEach((url, index) => {
+        processedContent = processedContent.replace(
+          `[IMAGE-${index}]`,
+          `[IMAGE:${url}]`
+        );
       });
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create news');
+
+      // Haberi oluştur
+      const newsData = {
+        title: formData.title,
+        displayTitle: formData.displayTitle || formData.title,
+        content: processedContent,
+        category: formData.category,
+        imageUrl: coverImageUrl,
+        contentImages: uploadedContentImages,
+      };
+
+      await api.post('/news', newsData);
+      
+      Alert.alert('Success', 'News created successfully');
+      router.back();
+    } catch (error) {
+      console.error('Error creating news:', error);
+      Alert.alert('Error', 'Failed to create news');
     } finally {
       setIsLoading(false);
     }

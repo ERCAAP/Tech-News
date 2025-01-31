@@ -156,3 +156,71 @@
 {"category":"ai","content":"Sdfsdfsd\n\n[IMAGE-0]\n","contentImage0":{"name":"1738341217769.jpeg","type":"image/jpeg","uri":"file:///data/user/0/com.ercaap55.technews/files/1738341217769.jpeg"},"coverImage":{"name":"1738341197528.jpeg","type":"image/jpeg","uri":"file:///data/user/0/com.ercaap55.technews/files/1738341197528.jpeg"},"displayTitle":"sdfsdfds","level":"info","message":"Request body:","timestamp":"2025-01-31T16:33:40.321Z","title":"dsfdsf"}
 {"level":"info","message":"Request files:","timestamp":"2025-01-31T16:33:40.322Z"}
 {"author":"679aa9a0b51159282c1a947d","category":"AI","content":"Sdfsdfsd\n\n[IMAGE-0]\n","contentImages":[],"displayTitle":"sdfsdfds","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"Sdfsdfsd\n\n[IMAGE-0]\n","timestamp":"2025-01-31T16:33:40.322Z","title":"dsfdsf"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T16:38:29.519Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T16:38:29.524Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:38:44.893Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:39:35.724Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:39:35.724Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:39:35.726Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:39:35.732Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:39:35.820Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:39:35.821Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:39:35.823Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:39:35.826Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:39:35.941Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:39:35.942Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:39:35.943Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:39:35.945Z"}
+{"category":"ai","content":"asdsadsad\n[IMAGE:/uploads/1738341575829-619453252.png]\n","contentImages":["/uploads/1738341575829-619453252.png"],"displayTitle":"asdsad","imageUrl":"/uploads/1738341575738-549755367.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:39:35.946Z","title":"asdasd"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:39:35.946Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"asdsadsad\n[IMAGE:/uploads/1738341575829-619453252.png]\n","contentImages":[],"displayTitle":"asdsad","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"asdsadsad\n[IMAGE:/uploads/1738341575829-619453252.png]\n","timestamp":"2025-01-31T16:39:35.946Z","title":"asdasd"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:09.489Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:09.490Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:09.491Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:09.494Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:09.600Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:09.601Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:09.602Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:09.604Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:09.714Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:09.715Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:09.716Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:09.719Z"}
+{"category":"ai","content":"asdsadsad\n[IMAGE:/uploads/1738341609605-669779707.png]\n","contentImages":["/uploads/1738341609605-669779707.png"],"displayTitle":"asdsad","imageUrl":"/uploads/1738341609495-361802257.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:40:09.719Z","title":"asdasd"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:40:09.719Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"asdsadsad\n[IMAGE:/uploads/1738341609605-669779707.png]\n","contentImages":[],"displayTitle":"asdsad","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"asdsadsad\n[IMAGE:/uploads/1738341609605-669779707.png]\n","timestamp":"2025-01-31T16:40:09.719Z","title":"asdasd"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:25.466Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:25.466Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:25.467Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:25.470Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:25.587Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:25.588Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:25.589Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:25.591Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:25.684Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:25.685Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:25.686Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:25.688Z"}
+{"category":"ai","content":"asdsadsad\n[IMAGE:/uploads/1738341625592-593857993.png]\n","contentImages":["/uploads/1738341625592-593857993.png"],"displayTitle":"asdsad","imageUrl":"/uploads/1738341625471-855223915.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:40:25.688Z","title":"asdasd"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:40:25.688Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"asdsadsad\n[IMAGE:/uploads/1738341625592-593857993.png]\n","contentImages":[],"displayTitle":"asdsad","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"asdsadsad\n[IMAGE:/uploads/1738341625592-593857993.png]\n","timestamp":"2025-01-31T16:40:25.689Z","title":"asdasd"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:47.685Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:47.686Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:47.687Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:47.691Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:47.712Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:47.712Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:47.714Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:47.716Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-01-31T16:40:47.826Z"}
+{"level":"info","message":"Token:","timestamp":"2025-01-31T16:40:47.827Z"}
+{"exp":1740933524,"iat":1738341524,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T16:40:47.828Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-01-31T16:40:47.830Z"}
+{"category":"ai","content":"asdsadsad\n[IMAGE:/uploads/1738341647716-44179662.png]\n","contentImages":["/uploads/1738341647716-44179662.png"],"displayTitle":"asdsad","imageUrl":"/uploads/1738341647691-300843246.jpeg","level":"info","message":"Request body:","timestamp":"2025-01-31T16:40:47.831Z","title":"asdasd"}
+{"level":"info","message":"Request files:","timestamp":"2025-01-31T16:40:47.831Z"}
+{"author":"679aa9a0b51159282c1a947d","category":"AI","content":"asdsadsad\n[IMAGE:/uploads/1738341647716-44179662.png]\n","contentImages":[],"displayTitle":"asdsad","imageUrl":"","level":"info","message":"Creating news with data:","status":"published","summary":"asdsadsad\n[IMAGE:/uploads/1738341647716-44179662.png]\n","timestamp":"2025-01-31T16:40:47.831Z","title":"asdasd"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:41:58.460Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:43:56.927Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:43:58.280Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:49:26.610Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T16:49:27.567Z"}

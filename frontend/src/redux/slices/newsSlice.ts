@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { NewsState, NewsItem } from '@/types';
-import { newsAPI } from '@/services/api';
+import api from '@/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialState: NewsState = {
@@ -10,12 +10,16 @@ const initialState: NewsState = {
   error: null,
 };
 
-// Haberleri getir
-export const fetchNews = createAsyncThunk<NewsItem[]>(
+// Tüm haberleri getir
+export const fetchNews = createAsyncThunk(
   'news/fetchNews',
-  async () => {
-    const response = await newsAPI.getAllNews();
-    return response.data.news;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/news');
+      return response.data.data.news;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch news');
+    }
   }
 );
 
@@ -29,8 +33,8 @@ export const createNews = createAsyncThunk(
         throw new Error('Please log in to access this resource');
       }
 
-      const response = await newsAPI.createNews(newsData);
-      return response.data.news;
+      const response = await api.post('/news', newsData);
+      return response.data.data.news;
     } catch (error: any) {
       console.error('Create News Error:', error);
       return rejectWithValue(
@@ -44,8 +48,8 @@ export const createNews = createAsyncThunk(
 export const toggleLike = createAsyncThunk<NewsItem, string>(
   'news/toggleLike',
   async (newsId) => {
-    const response = await newsAPI.likeNews(newsId);
-    return response.data.news;
+    const response = await api.post('/news/like', { newsId });
+    return response.data.data.news;
   }
 );
 
@@ -53,8 +57,8 @@ export const toggleLike = createAsyncThunk<NewsItem, string>(
 export const getAllNews = createAsyncThunk<NewsItem[]>(
   'news/getAllNews',
   async () => {
-    const response = await newsAPI.getAllNews();
-    return response.data.news;
+    const response = await api.get('/news');
+    return response.data.data.news;
   }
 );
 
@@ -84,11 +88,10 @@ const newsSlice = createSlice({
       .addCase(fetchNews.fulfilled, (state, action) => {
         state.isLoading = false;
         state.news = action.payload;
-        state.error = null;
       })
       .addCase(fetchNews.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || 'Bir hata oluştu';
+        state.error = action.payload as string;
       })
       .addCase(createNews.pending, (state) => {
         state.isLoading = true;

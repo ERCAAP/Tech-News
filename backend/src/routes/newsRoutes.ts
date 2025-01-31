@@ -8,6 +8,7 @@ import {
   deleteNews,
 } from '../controllers/newsController';
 import { upload } from '../utils/upload';
+import { AppError } from '../utils/AppError';
 
 const router = express.Router();
 
@@ -37,5 +38,38 @@ router.put('/:id',
 );
 
 router.delete('/:id', protect, restrictTo('admin'), deleteNews);
+
+// Upload endpoint'i ekle
+router.post('/upload', 
+  protect, 
+  restrictTo('admin'),
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        throw new AppError('No file uploaded', 400);
+      }
+      
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      res.status(200).json({
+        status: 'success',
+        imageUrl
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          status: error.status,
+          message: error.message
+        });
+      } else {
+        res.status(500).json({
+          status: 'error',
+          message: 'An unexpected error occurred'
+        });
+      }
+    }
+  }
+);
 
 export default router; 

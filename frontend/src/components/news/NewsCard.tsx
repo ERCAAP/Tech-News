@@ -21,6 +21,7 @@ interface NewsItem {
   title: string;
   content: string;
   imageUrl?: string;
+  contentImages?: string[];
   category?: string;
   author: Author;
   createdAt: string;
@@ -35,6 +36,32 @@ interface NewsCardProps {
 export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
   if (!news || !news.author) return null;
 
+  // İçerikteki resim URL'lerini bul ve göster
+  const renderContent = (content: string) => {
+    const contentParts = content.split('\n');
+    return contentParts.map((part, idx) => {
+      // [IMAGE:url] formatındaki resimleri bul
+      const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
+      if (imageMatch) {
+        const imageUrl = imageMatch[1];
+        return (
+          <Image
+            key={`image-${idx}`}
+            source={{ uri: `http://10.0.2.2:3000${imageUrl}` }}
+            style={styles.contentImage}
+            resizeMode="cover"
+          />
+        );
+      }
+      // Normal metin
+      return part.trim() ? (
+        <Text key={`text-${idx}`} style={styles.contentText}>
+          {part}
+        </Text>
+      ) : null;
+    });
+  };
+
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 100).springify()}
@@ -45,11 +72,13 @@ export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
         onPress={onPress}
         activeOpacity={0.9}
       >
-        <Image
-          source={{ uri: news.imageUrl || 'https://picsum.photos/800/400' }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+        {news.imageUrl && (
+          <Image
+            source={{ uri: `http://10.0.2.2:3000${news.imageUrl}` }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+        )}
         
         <View style={styles.overlay}>
           <View style={styles.content}>
@@ -89,6 +118,10 @@ export function NewsCard({ news, onPress, index = 0 }: NewsCardProps) {
                 </Text>
               </View>
             </View>
+
+            <View style={styles.contentContainer}>
+              {renderContent(news.content)}
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -117,7 +150,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  image: {
+  coverImage: {
     width: '100%',
     height: 200,
   },
@@ -197,5 +230,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONTS.regular,
     marginLeft: 4,
+  },
+  contentImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  contentContainer: {
+    marginTop: 12,
+  },
+  contentText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: COLORS.dark,
+    marginVertical: 4,
   },
 }); 

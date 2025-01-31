@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Dimensions, Image, Text, TouchableOpacity } from 'react-native';
-import { NewsCard } from './NewsCard';
 import { NewsItem } from '@/types';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { router } from 'expo-router';
