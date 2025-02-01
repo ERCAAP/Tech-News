@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
@@ -16,53 +17,75 @@ const createToken = (id: string): string => {
   });
 };
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
+// Request tipini genişlet
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
+
+export const login = async (req: Request, res: Response) => {
   try {
+    console.log('Login Request Body:', req.body);
+    
     const { email, password } = req.body;
-
-    // Email ve şifre kontrolü
+    
     if (!email || !password) {
-      throw new AppError('Please provide email and password', 400);
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email ve şifre gereklidir'
+      });
     }
 
-    // Kullanıcıyı bul ve şifreyi seç
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      throw new AppError('Invalid email or password', 401);
+    
+    if (!user || !user.password) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Geçersiz email veya şifre'
+      });
     }
 
-    // Şifre kontrolü
-    const isPasswordValid = await user.comparePassword(password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
-      throw new AppError('Invalid email or password', 401);
+      return res.status(401).json({
+        status: 'error',
+        message: 'Geçersiz email veya şifre'
+      });
     }
 
-    // Token oluştur
-    const token = createToken(user._id.toString());
+    const token = jwt.sign(
+      { id: user._id },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
 
-    // Şifreyi response'dan çıkar
-    const userObject = user.toObject();
-    delete userObject.password;
-
-    logger.info(`User logged in successfully: ${user._id}`);
-
-    // Cookie'ye token'ı kaydet
-    res.cookie('jwt', token, {
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 gün
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production'
-    });
+    // Kullanıcı objesini kopyala ve şifreyi çıkar
+    const userResponse = {
+      _id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      favoriteNews: user.favoriteNews
+    };
 
     res.status(200).json({
       status: 'success',
-      token,
-      data: { user: userObject }
+      data: { user: userResponse },
+      token
     });
-  } catch (error) {
-    logger.error('Login error:', error);
-    throw error;
+
+  } catch (error: any) {
+    console.error('Login Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message || 'Giriş işlemi sırasında bir hata oluştu'
+    });
   }
-});
+};
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -86,9 +109,15 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     // Token oluştur
     const token = createToken(user._id.toString());
 
-    // Şifreyi response'dan çıkar
-    const userObject = user.toObject();
-    delete userObject.password;
+    // Şifre hariç kullanıcı bilgilerini gönder
+    const userResponse = {
+      _id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      favoriteNews: user.favoriteNews
+    };
 
     logger.info(`New user registered: ${user._id}`);
 
@@ -102,7 +131,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     res.status(201).json({
       status: 'success',
       token,
-      data: { user: userObject }
+      data: { user: userResponse }
     });
   } catch (error) {
     logger.error('Registration error:', error);
@@ -147,9 +176,12 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Kullanıcı bilgilerini getir
-export const getMe = asyncHandler(async (req: Request, res: Response) => {
+export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('Unauthorized', 401);
+  }
+
   const user = await User.findById(req.user.id).select('-password');
-  
   if (!user) {
     throw new AppError('User not found', 404);
   }
@@ -161,7 +193,11 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Şifre güncelleme
-export const updatePassword = asyncHandler(async (req: Request, res: Response) => {
+export const updatePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('Unauthorized', 401);
+  }
+
   const { currentPassword, newPassword } = req.body;
 
   const user = await User.findById(req.user.id).select('+password');
@@ -169,7 +205,7 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
     throw new AppError('User not found', 404);
   }
 
-  const isPasswordValid = await user.comparePassword(currentPassword);
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
   if (!isPasswordValid) {
     throw new AppError('Current password is incorrect', 401);
   }
@@ -177,7 +213,6 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
   user.password = newPassword;
   await user.save();
 
-  // Generate new token
   const token = createToken(user._id.toString());
 
   res.status(200).json({
@@ -185,4 +220,74 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
     token,
     message: 'Password updated successfully'
   });
-}); 
+});
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Unauthorized'
+      });
+    }
+
+    const userId = req.user.id;
+    const { firstName, lastName, email } = req.body;
+
+    // Mevcut kullanıcıyı bul
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Kullanıcı bulunamadı'
+      });
+    }
+
+    // Email değişiyorsa, duplicate kontrolü yap
+    if (email && email !== currentUser.email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+      if (existingUser) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Bu email adresi başka bir kullanıcı tarafından kullanılıyor'
+        });
+      }
+    }
+
+    // Güncelleme objesini oluştur
+    const updateData: Record<string, string> = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+
+    // Kullanıcıyı güncelle
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: updatedUser
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Update Profile Error:', error);
+    
+    // Duplicate key hatası için özel mesaj
+    if (error.code === 11000) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Bu email adresi başka bir kullanıcı tarafından kullanılıyor'
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: error.message || 'Profil güncellenirken bir hata oluştu'
+    });
+  }
+}; 

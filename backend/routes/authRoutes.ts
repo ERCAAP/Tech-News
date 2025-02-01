@@ -1,5 +1,5 @@
 import express from 'express';
-import * as authController from '../controllers/authController';
+import { login, updateProfile } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -10,10 +10,10 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 });
 
 // Public routes
-router.post('/login', authController.login);
+router.post('/login', login);
 
 // Protected routes
 router.use(protect);
-router.patch('/profile', authController.updateProfile);
+router.patch('/profile', updateProfile);
 
 export default router; 

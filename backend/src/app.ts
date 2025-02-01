@@ -1,40 +1,30 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
-import authRoutes from './routes/auth';
-import newsRoutes from './routes/news';
+import morgan from 'morgan';
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 
 // Middleware
+app.use(morgan('dev'));
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Debug için route'ları logla
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
+// Test route
+app.get('/api/v1/test', (req, res) => {
+  res.json({ message: 'API is working' });
 });
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/news', newsRoutes);
 
-// Route bulunamadığında
-app.use((req, res, next) => {
-  console.log('404 - Route not found:', req.method, req.url);
-  res.status(404).json({
-    status: 'error',
-    message: `Cannot ${req.method} ${req.url}`
-  });
-});
-
-// Error handler
+// Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
     status: 'error',
-    message: err.message
+    message: err.message || 'Internal server error'
   });
 });
 

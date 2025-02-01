@@ -155,23 +155,30 @@ export const authAPI = {
     try {
       console.log('Login Request Payload:', { email, password });
       
+      // İstek öncesi veri kontrolü
+      if (!email || !password) {
+        throw new Error('Email ve şifre gereklidir');
+      }
+
       const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', {
-        email,
-        password
+        email: email.trim(),
+        password: password.trim()
       });
       
+      console.log('Login Response:', response.data);
+
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       }
       
-      console.log('Login Response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Login API Error:', {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
+        data: error.config?.data
       });
       throw error.response?.data || error;
     }
@@ -218,17 +225,23 @@ export const authAPI = {
   },
 
   updateProfile: async (userData: {
-    firstName: string;
-    lastName: string;
-    email: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
   }) => {
     try {
+      // Sadece değişen alanları gönder
+      const updateData: Record<string, string> = {};
+      if (userData.firstName) updateData.firstName = userData.firstName;
+      if (userData.lastName) updateData.lastName = userData.lastName;
+      if (userData.email) updateData.email = userData.email;
+
       console.log('Update Profile Request:', {
         url: `${BASE_URL}/auth/profile`,
-        data: userData
+        data: updateData
       });
 
-      const response = await api.patch<ApiResponse<{ user: User }>>('/auth/profile', userData);
+      const response = await api.patch<ApiResponse<{ user: User }>>('/auth/profile', updateData);
       console.log('Update Profile Response:', response.data);
       return response.data;
     } catch (error: any) {
@@ -237,7 +250,7 @@ export const authAPI = {
         response: error.response?.data,
         status: error.response?.status
       });
-      throw error;
+      throw error.response?.data || error;
     }
   },
 

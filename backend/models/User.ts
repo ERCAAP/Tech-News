@@ -31,23 +31,25 @@ interface IUser extends Document {
 const UserSchema = new Schema({
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email adresi gereklidir'],
     unique: true,
-    trim: true,
-    lowercase: true
+    lowercase: true,
+    trim: true
   },
   password: {
     type: String,
-    required: true
+    required: [true, 'Şifre gereklidir'],
+    minlength: 6,
+    select: false // Varsayılan olarak password'ü getirme
   },
   firstName: {
     type: String,
-    required: true,
+    required: [true, 'Ad gereklidir'],
     trim: true
   },
   lastName: {
     type: String,
-    required: true,
+    required: [true, 'Soyad gereklidir'],
     trim: true
   },
   role: {
@@ -97,5 +99,17 @@ UserSchema.pre('save', async function(next) {
     next(error as Error);
   }
 });
+
+// Şifre karşılaştırma metodu
+UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  try {
+    if (!this.password) return false;
+    const isMatch = await bcrypt.compare(candidatePassword, this.password);
+    return isMatch;
+  } catch (error) {
+    console.error('Password compare error:', error);
+    return false;
+  }
+};
 
 export const User = mongoose.model<IUser>('User', UserSchema); 

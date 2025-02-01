@@ -18,7 +18,8 @@ export default function CustomTabBar() {
     pathname === '/register' || 
     pathname === '/login' || 
     pathname === '/src/components/admin/NewsForm' ||  // Admin write sayfası
-    pathname === '/(tabs)/admin/edit-news'       // Admin edit sayfası
+    pathname === '/(tabs)/admin/edit-news' ||     // Admin edit sayfası
+    pathname === '/(tabs)/profile'                // Profil sayfası ekledik
   ) {
     return null;
   }

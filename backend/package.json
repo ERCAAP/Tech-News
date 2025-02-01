@@ -4,13 +4,11 @@
   "description": "News Portal Backend API",
   "main": "src/server.ts",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
     "build": "tsc",
     "watch-ts": "tsc -w",
-    "lint": "eslint . --ext .ts",
-    "test": "jest",
-    "seed": "ts-node src/config/seeders/index.ts"
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@types/multer": "^1.4.12",
