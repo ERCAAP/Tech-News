@@ -11,18 +11,22 @@ export default function TabsLayout() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: { display: 'none' }, // Custom TabBar kullandığımız için gizliyoruz
-        }}
-      >
+      <Tabs screenOptions={{ headerShown: false }}>
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: 'News',
             tabBarIcon: ({ color }) => (
-              <MaterialIcons name="home" size={24} color={color} />
+              <MaterialIcons name="newspaper" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="search"
+          options={{
+            title: 'Search',
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="search" size={24} color={color} />
             ),
           }}
         />

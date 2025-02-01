@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { ReduxProvider } from '@/providers/ReduxProvider';
 import React, { useEffect } from 'react';
@@ -37,42 +37,18 @@ function RootLayoutContent() {
     }
   };
 
-  // Bottom bar'ı sadece auth dışındaki sayfalarda göster
-  const isAuthScreen = pathname.includes('(auth)');
+  const isAuthScreen = pathname?.startsWith('/(auth)');
   const shouldShowTabBar = token && user && !isAuthScreen;
-
-  useEffect(() => {
-    // Giriş yapıldığında ana sayfaya yönlendir
-    if (token && user && pathname === '/') {
-      router.push('/');
-    }
-  }, [token, user, pathname]);
 
   return (
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false }}>
-        {!token ? (
-          <Stack.Screen 
-            name="(auth)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        ) : (
-          <Stack.Screen 
-            name="(tabs)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        )}
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
       </Stack>
-      {shouldShowTabBar && !isAuthScreen && (
-        <CustomTabBar 
-          state={{ index: 0 }} 
-          navigation={router} 
-        />
-      )}
+      {shouldShowTabBar && !isAuthScreen && <CustomTabBar />}
     </View>
   );
 }

@@ -37,7 +37,10 @@ export default function CreateNewsScreen() {
       });
 
       if (!result.canceled) {
-        setFormData(prev => ({ ...prev, imageUrl: result.assets[0].uri }));
+        setFormData(prev => ({
+          ...prev,
+          imageUrl: result.assets[0].uri
+        }));
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
@@ -52,8 +55,7 @@ export default function CreateNewsScreen() {
       }
 
       setIsLoading(true);
-      const result = await dispatch(createNews(formData)).unwrap();
-      
+      await dispatch(createNews(formData)).unwrap();
       Alert.alert('Success', 'News created successfully');
       router.back();
     } catch (error: any) {

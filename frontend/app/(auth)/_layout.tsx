@@ -14,23 +14,14 @@ export default function AuthLayout() {
         contentStyle: {
           backgroundColor: isDark ? COLORS.darkBackground : COLORS.background,
         },
-        animation: 'fade_from_bottom',
-        animationDuration: 200,
       }}
     >
-      <Stack.Screen 
-        name="login" 
-        options={{
-          gestureEnabled: false,
-        }}
-      />
+      <Stack.Screen name="login" />
       <Stack.Screen 
         name="register"
         options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',
-          gestureEnabled: true,
-          gestureDirection: 'vertical',
         }}
       />
     </Stack>

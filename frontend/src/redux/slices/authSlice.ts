@@ -65,6 +65,15 @@ export const getMe = createAsyncThunk<ApiResponse>(
   }
 );
 
+// Update user profile thunk
+export const updateUserProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (userData: User) => {
+    const response = await authAPI.put('/auth/profile', userData);
+    return response.data;
+  }
+);
+
 // Auth slice
 const authSlice = createSlice({
   name: 'auth',

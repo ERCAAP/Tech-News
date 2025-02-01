@@ -1366,3 +1366,9 @@
 {"exp":1741007228,"iat":1738415228,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T13:16:03.664Z"}
 {"level":"info","message":"User authenticated:","timestamp":"2025-02-01T13:16:03.666Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:16:05.863Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T14:13:43.528Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T14:13:43.533Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:15:32.521Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:30:27.316Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:30:53.660Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:33:34.536Z"}

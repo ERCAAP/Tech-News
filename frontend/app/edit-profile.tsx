@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { COLORS } from '@/theme';
-import { Header } from '@/components/common/Header';
+import { View, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
@@ -9,6 +8,8 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { logout } from '@/redux/slices/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function EditProfileScreen() {
   const { user } = useAppSelector(state => state.auth);
@@ -19,6 +20,14 @@ export default function EditProfileScreen() {
     lastName: user?.lastName || '',
     email: user?.email || '',
   });
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push('/(tabs)/profile');
+    }
+  };
 
   const handleUpdateProfile = async () => {
     try {
@@ -52,20 +61,27 @@ export default function EditProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      setIsLoading(true);
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.clear();
       dispatch(logout());
       router.replace('/(auth)/login');
     } catch (error) {
       Alert.alert('Error', 'Failed to logout');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Header title="Edit Profile" showBack />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={handleBack}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <MaterialIcons name="arrow-back" size={24} color={COLORS.dark} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+      </View>
+
       <View style={styles.content}>
         <Input
           label="First Name"
@@ -90,25 +106,23 @@ export default function EditProfileScreen() {
         <Button
           title="Change Profile Picture"
           onPress={handlePickImage}
-          style={styles.button}
           variant="outline"
+          style={styles.button}
         />
         <Button
           title={isLoading ? "Updating..." : "Update Profile"}
           onPress={handleUpdateProfile}
           disabled={isLoading}
           style={styles.button}
-          isLoading={isLoading}
         />
         <Button
           title="Logout"
           onPress={handleLogout}
-          loading={isLoading}
           variant="secondary"
-          style={styles.button}
+          style={[styles.button, styles.logoutButton]}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -117,10 +131,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    ...shadowStyle,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginLeft: 8,
+  },
   content: {
     padding: 16,
   },
   button: {
     marginTop: 16,
+  },
+  logoutButton: {
+    backgroundColor: COLORS.error,
+    marginTop: 32,
   },
 }); 
