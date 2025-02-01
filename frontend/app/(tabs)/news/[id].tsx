@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -8,6 +8,7 @@ import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { viewNews, toggleFavorite } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Add type guard
 function isValidViews(views: any): views is { total: number; unique: number } {
@@ -79,72 +80,80 @@ export default function NewsDetailScreen() {
   const coverImageUrl = newsItem.imageUrl ? getImageUrl(newsItem.imageUrl) : '';
 
   return (
-    <ScrollView 
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      {coverImageUrl ? (
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: coverImageUrl }}
-            style={styles.coverImage}
-            resizeMode="cover"
-            onError={() => console.warn('Cover image load error:', coverImageUrl)}
-          />
-          <View style={styles.overlay} />
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{newsItem.category}</Text>
-          </View>
-        </View>
-      ) : null}
-      
-      <View style={styles.content}>
-        <Text style={styles.title}>{newsItem.title}</Text>
-        
-        <View style={styles.authorContainer}>
-          <MaterialIcons name="person" size={20} color={COLORS.primary} />
-          <Text style={styles.author}>
-            {`${newsItem.author.firstName} ${newsItem.author.lastName}`}
-          </Text>
-          <Text style={styles.dot}>•</Text>
-          <Text style={styles.date}>
-            {new Date(newsItem.createdAt).toLocaleDateString()}
-          </Text>
-        </View>
-
-        {renderContent(newsItem.content)}
-      </View>
-
-      {/* Add favorite button */}
-      <TouchableOpacity 
-        style={styles.favoriteButton}
-        onPress={handleFavoritePress}
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView 
+        style={styles.container}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        contentContainerStyle={{
+          paddingBottom: 100
+        }}
       >
-        <MaterialIcons 
-          name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
-          size={24} 
-          color={COLORS.primary} 
-        />
-        <Text style={styles.favoriteCount}>
-          {newsItem?.favorites?.count || 0}
-        </Text>
-      </TouchableOpacity>
+        {coverImageUrl ? (
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: coverImageUrl }}
+              style={styles.coverImage}
+              resizeMode="cover"
+              onError={() => console.warn('Cover image load error:', coverImageUrl)}
+            />
+            <View style={styles.overlay} />
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{newsItem.category}</Text>
+            </View>
+          </View>
+        ) : null}
+        
+        <View style={styles.content}>
+          <Text style={styles.title}>{newsItem.title}</Text>
+          
+          <View style={styles.authorContainer}>
+            <MaterialIcons name="person" size={20} color={COLORS.primary} />
+            <Text style={styles.author}>
+              {`${newsItem.author.firstName} ${newsItem.author.lastName}`}
+            </Text>
+            <Text style={styles.dot}>•</Text>
+            <Text style={styles.date}>
+              {new Date(newsItem.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
 
-      {user?.role === 'admin' && newsItem?.views && isValidViews(newsItem.views) && (
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>
-            Views: {newsItem.views.total} (Unique: {newsItem.views.unique})
-          </Text>
+          {renderContent(newsItem.content)}
         </View>
-      )}
-    </ScrollView>
+
+        <TouchableOpacity 
+          style={[styles.favoriteButton, { marginBottom: 16 }]}
+          onPress={handleFavoritePress}
+        >
+          <MaterialIcons 
+            name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
+            size={24} 
+            color={COLORS.primary} 
+          />
+          <Text style={styles.favoriteCount}>
+            {newsItem?.favorites?.count || 0}
+          </Text>
+        </TouchableOpacity>
+
+        {user?.role === 'admin' && newsItem?.views && isValidViews(newsItem.views) && (
+          <View style={[styles.statsContainer, { marginBottom: 16 }]}>
+            <Text style={styles.statsText}>
+              Views: {newsItem.views.total} (Unique: {newsItem.views.unique})
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: COLORS.white,
+  },
+  container: {
+    flex: 1,
   },
   imageContainer: {
     height: 300,
@@ -238,7 +247,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray,
+    borderTopColor: COLORS.border,
   },
   statsText: {
     fontSize: 14,
