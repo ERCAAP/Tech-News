@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -42,9 +42,11 @@ export default function NewsDetailScreen() {
   const id = typeof params.id === 'string' ? params.id : params.id[0];
   
   const dispatch = useAppDispatch();
-  const { news, isLoading } = useAppSelector(state => state.news);
+  const { news } = useAppSelector(state => state.news);
   const { user } = useAppSelector(state => state.auth);
   const newsItem = news.find((item: NewsItem) => item._id === id);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -59,9 +61,23 @@ export default function NewsDetailScreen() {
     }
     
     try {
+      setIsLoading(true);
       await dispatch(toggleFavorite(id)).unwrap();
+      
+      if (!newsItem?.favorites?.users?.includes(user._id)) {
+        ToastAndroid.show('Added to favorites', ToastAndroid.SHORT);
+      } else {
+        ToastAndroid.show('Removed from favorites', ToastAndroid.SHORT);
+      }
+
     } catch (error) {
-      Alert.alert('Error', 'Failed to update favorite status');
+      console.error('Favorite error:', error);
+      Alert.alert(
+        'Error',
+        typeof error === 'string' ? error : 'Failed to update favorite status'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 

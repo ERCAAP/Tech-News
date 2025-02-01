@@ -1,7 +1,71 @@
 const NewsSchema = new Schema({
-  // ... diğer alanlar aynı ...
+  title: { type: String, required: true },
+  slug: { 
+    type: String, 
+    required: true,
+    unique: true,
+    lowercase: true
+  },
+  content: { type: String, required: true },
+  imageUrl: { type: String },
+  category: { type: String, required: true },
+  author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  status: {
+    type: String,
+    enum: ['draft', 'published', 'archived'],
+    default: 'published'
+  },
+  tags: [String],
+  readTime: { type: Number }, // Dakika cinsinden okuma süresi
+  favorites: {
+    users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    count: { type: Number, default: 0 }
+  },
   views: {
     total: { type: Number, default: 0 },
     uniqueUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
+  shareCount: { type: Number, default: 0 },
+  url: { type: String }, // Dış kaynak URL'si (varsa)
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date },
+  publishedAt: { type: Date }
+}, {
+  timestamps: true
+});
+
+// Slug oluşturma middleware'i
+NewsSchema.pre('save', function(next) {
+  if (this.isModified('title')) {
+    this.slug = this.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+  
+  // Okuma süresini hesapla (ortalama 200 kelime/dakika)
+  if (this.isModified('content')) {
+    const wordCount = this.content.split(/\s+/).length;
+    this.readTime = Math.ceil(wordCount / 200);
+  }
+
+  next();
+});
+
+// URL oluşturma için virtual field
+NewsSchema.virtual('fullUrl').get(function() {
+  return `/news/${this.slug}`;
+});
+
+// Popülerlik skoru hesaplama için virtual field
+NewsSchema.virtual('popularityScore').get(function() {
+  const viewWeight = 1;
+  const favoriteWeight = 3;
+  const shareWeight = 2;
+  
+  return (
+    this.views.total * viewWeight +
+    this.favorites.count * favoriteWeight +
+    (this.shareCount || 0) * shareWeight
+  );
 }); 

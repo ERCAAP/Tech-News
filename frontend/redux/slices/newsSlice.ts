@@ -21,16 +21,39 @@ export const fetchNews = createAsyncThunk(
 export const viewNews = createAsyncThunk(
   'news/view',
   async (newsId: string) => {
-    const response = await axios.post(`/news/${newsId}/view`);
-    return response.data;
+    try {
+      const response = await axios.post(`/news/${newsId}/view`);
+      return response.data;
+    } catch (error) {
+      console.error('View news error:', error);
+      throw error;
+    }
   }
 );
 
 export const toggleFavorite = createAsyncThunk(
   'news/toggleFavorite',
-  async (newsId: string) => {
-    const response = await axios.post(`/news/${newsId}/favorite`);
-    return response.data;
+  async (newsId: string, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/news/${newsId}/favorite`);
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Toggle favorite error:', error);
+        return rejectWithValue(
+          (error as any).response?.data?.message || 'Failed to update favorite status'
+        );
+      }
+      return rejectWithValue('Failed to update favorite status');
+    }
+  }
+);
+
+export const fetchUserFavorites = createAsyncThunk(
+  'news/fetchUserFavorites',
+  async () => {
+    const response = await axios.get('/user/favorites');
+    return response.data.favorites;
   }
 );
 
@@ -40,6 +63,30 @@ export const getNewsStats = createAsyncThunk(
     const response = await axios.get('/news/stats', {
       params: { startDate, endDate }
     });
+    return response.data;
+  }
+);
+
+export const getSimilarNews = createAsyncThunk(
+  'news/getSimilar',
+  async (newsId: string) => {
+    const response = await axios.get(`/news/${newsId}/similar`);
+    return response.data.similar;
+  }
+);
+
+export const shareNews = createAsyncThunk(
+  'news/share',
+  async ({ newsId, platform }: { newsId: string; platform: string }) => {
+    const response = await axios.post(`/news/${newsId}/share`, { platform });
+    return response.data;
+  }
+);
+
+export const updateReadingProgress = createAsyncThunk(
+  'news/updateReadingProgress',
+  async ({ newsId, completed }: { newsId: string; completed: boolean }) => {
+    const response = await axios.post(`/news/${newsId}/reading-progress`, { completed });
     return response.data;
   }
 );
@@ -74,6 +121,20 @@ const newsSlice = createSlice({
             : item
         );
         state.news = updatedNews;
+      })
+      .addCase(toggleFavorite.fulfilled, (state, action) => {
+        const updatedNews = state.news.map(item => 
+          item._id === action.payload.newsId 
+            ? { 
+                ...item, 
+                favorites: action.payload.favorites
+              }
+            : item
+        );
+        state.news = updatedNews;
+      })
+      .addCase(fetchUserFavorites.fulfilled, (state, action) => {
+        state.favorites = action.payload;
       });
   }
 });

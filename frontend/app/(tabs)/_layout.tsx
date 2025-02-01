@@ -56,7 +56,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="news"
+          name="news/[slug]"
           options={{
             href: null, // Bu route'u tab bar'da gösterme
           }}

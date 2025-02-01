@@ -1239,3 +1239,20 @@
 {"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:43:09.373Z"}
 {"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:43:15.617Z"}
 {"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:43:15.626Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:47:07.164Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:47:07.170Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:48:53.517Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:48:53.521Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:52:55.547Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:52:55.553Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:53:45.592Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:53:45.597Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T02:54:11.693Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T02:54:11.698Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T02:54:53.107Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:00:13.010Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:00:15.961Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:11:55.859Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:11:58.754Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:17:09.014Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T03:17:11.862Z"}
