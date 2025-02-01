@@ -10,9 +10,31 @@ import { viewNews, toggleFavorite } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Add type guard
-function isValidViews(views: any): views is { total: number; unique: number } {
-  return typeof views === 'object' && 'total' in views && 'unique' in views;
+// Type guard'ı güncelleyelim
+interface NewsViews {
+  total: number;
+  unique: number;
+}
+
+function isValidViews(views: any): views is NewsViews {
+  return typeof views === 'object' && 
+         views !== null && 
+         'total' in views && 
+         'unique' in views &&
+         typeof views.total === 'number' &&
+         typeof views.unique === 'number';
+}
+
+// Görüntülenme sayısını formatlayan yardımcı fonksiyon
+function formatViewCount(views: NewsViews | undefined): string {
+  const count = views?.total || 0;
+  
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  } else if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}K`;
+  }
+  return count.toString();
 }
 
 export default function NewsDetailScreen() {
@@ -81,6 +103,13 @@ export default function NewsDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.viewCountContainer}>
+        <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
+        <Text style={styles.viewCountText}>
+          {isValidViews(newsItem?.views) ? formatViewCount(newsItem.views) : '0'}
+        </Text>
+      </View>
+
       <ScrollView 
         style={styles.container}
         showsVerticalScrollIndicator={true}
@@ -105,7 +134,22 @@ export default function NewsDetailScreen() {
         ) : null}
         
         <View style={styles.content}>
-          <Text style={styles.title}>{newsItem.title}</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>{newsItem.title}</Text>
+            <TouchableOpacity 
+              style={styles.favoriteButton}
+              onPress={handleFavoritePress}
+            >
+              <MaterialIcons 
+                name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
+                size={24} 
+                color={COLORS.primary} 
+              />
+              <Text style={styles.favoriteCount}>
+                {newsItem?.favorites?.count || 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
           
           <View style={styles.authorContainer}>
             <MaterialIcons name="person" size={20} color={COLORS.primary} />
@@ -120,20 +164,6 @@ export default function NewsDetailScreen() {
 
           {renderContent(newsItem.content)}
         </View>
-
-        <TouchableOpacity 
-          style={[styles.favoriteButton, { marginBottom: 16 }]}
-          onPress={handleFavoritePress}
-        >
-          <MaterialIcons 
-            name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
-            size={24} 
-            color={COLORS.primary} 
-          />
-          <Text style={styles.favoriteCount}>
-            {newsItem?.favorites?.count || 0}
-          </Text>
-        </TouchableOpacity>
 
         {user?.role === 'admin' && newsItem?.views && isValidViews(newsItem.views) && (
           <View style={[styles.statsContainer, { marginBottom: 16 }]}>
@@ -185,11 +215,18 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
   title: {
     fontSize: 24,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
-    marginBottom: 16,
+    flex: 1,
+    marginRight: 16,
   },
   authorContainer: {
     flexDirection: 'row',
@@ -235,13 +272,14 @@ const styles = StyleSheet.create({
   favoriteButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   favoriteCount: {
     fontSize: 16,
     fontFamily: FONTS.medium,
     color: COLORS.primary,
-    marginLeft: 8,
+    marginLeft: 4,
   },
   statsContainer: {
     padding: 16,
@@ -253,5 +291,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.dark,
+  },
+  viewCountContainer: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    zIndex: 1000,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  viewCountText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
   },
 }); 

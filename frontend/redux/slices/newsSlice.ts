@@ -60,6 +60,20 @@ const newsSlice = createSlice({
       .addCase(fetchNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || null;
+      })
+      .addCase(viewNews.fulfilled, (state, action) => {
+        const updatedNews = state.news.map(item => 
+          item._id === action.payload.newsId 
+            ? { 
+                ...item, 
+                views: {
+                  total: action.payload.views.total,
+                  unique: action.payload.views.unique
+                }
+              }
+            : item
+        );
+        state.news = updatedNews;
       });
   }
 });
