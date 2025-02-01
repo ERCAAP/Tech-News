@@ -11,9 +11,12 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 
 // Public routes
 router.post('/login', authController.login);
+router.post('/register', authController.register);
 
 // Protected routes
 router.use(protect);
 router.patch('/profile', authController.updateProfile);
+router.get('/me', authController.getMe);
+router.patch('/update-password', authController.updatePassword);
 
 export default router; 

@@ -238,4 +238,20 @@ export const unlikeNews = asyncHandler(async (req: AuthRequest, res: Response) =
     status: 'success',
     data: { news }
   });
+});
+
+// Kullanıcının favori haber sayısını getir
+export const getFavoriteCount = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const count = await News.countDocuments({
+    favorites: req.user.id
+  });
+
+  res.status(200).json({
+    status: 'success',
+    count
+  });
 }); 

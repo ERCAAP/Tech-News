@@ -57,4 +57,6 @@ router.post('/upload',
   }
 );
 
+router.get('/favorites/count', protect, newsController.getFavoriteCount);
+
 export default router; 

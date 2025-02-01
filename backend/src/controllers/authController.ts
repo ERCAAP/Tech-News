@@ -94,7 +94,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     // Email kontrolü
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new AppError('Email already exists', 400);
+      return res.status(400).json({
+        status: 'error',
+        message: 'Bu email adresi zaten kullanılıyor'
+      });
     }
 
     // Yeni kullanıcı oluştur
@@ -107,9 +110,13 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Token oluştur
-    const token = createToken(user._id.toString());
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '30d' }
+    );
 
-    // Şifre hariç kullanıcı bilgilerini gönder
+    // Şifre hariç kullanıcı bilgilerini döndür
     const userResponse = {
       _id: user._id,
       email: user.email,
@@ -119,23 +126,29 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       favoriteNews: user.favoriteNews
     };
 
-    logger.info(`New user registered: ${user._id}`);
-
-    // Cookie'ye token'ı kaydet
-    res.cookie('jwt', token, {
-      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production'
-    });
-
     res.status(201).json({
       status: 'success',
-      token,
-      data: { user: userResponse }
+      data: {
+        user: userResponse
+      },
+      token
     });
-  } catch (error) {
-    logger.error('Registration error:', error);
-    throw error;
+
+  } catch (error: any) {
+    console.error('Register Error:', error);
+    
+    // MongoDB duplicate key hatası
+    if (error.code === 11000) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Bu email adresi zaten kullanılıyor'
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: error.message || 'Kayıt işlemi sırasında bir hata oluştu'
+    });
   }
 });
 

@@ -24,9 +24,31 @@ export function NewsCard({ news }: NewsCardProps) {
   // Görüntüleme sayısı
   const viewCount = news.views?.total || 0;
 
-  // Favori kontrolü
-  const isFavorited = news.favorites?.users?.includes(user?._id);
-  const favoriteCount = news.favorites?.count || 0;
+  // Favori kontrolü - favorites array'ini kontrol et
+  const isFavorited = news.favorites?.includes(user?._id);
+  const favoriteCount = news.favorites?.length || 0;
+
+  const handleFavorite = async (e: any) => {
+    e.stopPropagation(); // Card'a tıklamayı engelle
+    try {
+      const response = await fetch(`${API_URL}/api/v1/news/${news._id}/favorite`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user?.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Frontend state'ini güncelle
+        news.favorites = isFavorited 
+          ? news.favorites?.filter(id => id !== user?._id)
+          : [...(news.favorites || []), user?._id];
+      }
+    } catch (error) {
+      console.error('Favorite error:', error);
+    }
+  };
 
   return (
     <TouchableOpacity 
@@ -66,12 +88,16 @@ export function NewsCard({ news }: NewsCardProps) {
           <View style={styles.stats}>
             <MaterialIcons name="visibility" size={16} color={COLORS.gray} />
             <Text style={styles.statsText}>{viewCount}</Text>
-            <MaterialIcons 
-              name={isFavorited ? "favorite" : "favorite-border"} 
-              size={16} 
-              color={COLORS.gray} 
+            <TouchableOpacity 
+              onPress={handleFavorite}
               style={{ marginLeft: 8 }}
-            />
+            >
+              <MaterialIcons 
+                name={isFavorited ? "favorite" : "favorite-border"} 
+                size={16} 
+                color={isFavorited ? COLORS.primary : COLORS.gray} 
+              />
+            </TouchableOpacity>
             <Text style={styles.statsText}>{favoriteCount}</Text>
           </View>
         </View>
