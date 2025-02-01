@@ -2,11 +2,15 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import { NewsItem as NewsItemType } from '@/types';
-import { COLORS, FONTS } from '@/theme';
+import { COLORS } from '@/theme';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export function NewsItem({ item }: { item: NewsItemType }) {
+interface ExtendedNewsItem extends NewsItemType {
+  slug: string;
+}
+
+export function NewsItem({ item }: { item: ExtendedNewsItem }) {
   return (
     <Link href={`/news/${item.slug}`} asChild>
       <TouchableOpacity style={styles.container}>

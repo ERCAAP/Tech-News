@@ -110,6 +110,36 @@ export const updateReadingProgress = createAsyncThunk(
   }
 );
 
+export const updateNewsAsync = createAsyncThunk(
+  'news/updateNews',
+  async ({ newsId, data }: { newsId: string; data: any }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/news/${newsId}`, data);
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update news');
+      }
+      return rejectWithValue('Failed to update news');
+    }
+  }
+);
+
+export const deleteNews = createAsyncThunk(
+  'news/deleteNews',
+  async (newsId: string, { rejectWithValue }) => {
+    try {
+      await axiosInstance.delete(`/news/${newsId}`);
+      return newsId;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to delete news');
+      }
+      return rejectWithValue('Failed to delete news');
+    }
+  }
+);
+
 const newsSlice = createSlice({
   name: 'news',
   initialState,
@@ -154,8 +184,31 @@ const newsSlice = createSlice({
       })
       .addCase(fetchUserFavorites.fulfilled, (state, action) => {
         state.favorites = action.payload;
+      })
+      .addCase(updateNewsAsync.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateNewsAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.news.findIndex((item: any) => item._id === action.payload._id);
+        if (index !== -1) {
+          state.news[index] = action.payload;
+        }
+      })
+      .addCase(updateNewsAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || null;
+      })
+      .addCase(deleteNews.fulfilled, (state, action) => {
+        state.news = state.news.filter(item => item._id !== action.payload);
       });
   }
 });
 
-export default newsSlice.reducer; 
+export const newsActions = newsSlice.actions;
+export default newsSlice.reducer;
+
+export const newsThunks = {
+  updateNewsAsync,
+  // ... diğer thunk'lar
+}; 

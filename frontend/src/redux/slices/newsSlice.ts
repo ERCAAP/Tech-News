@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { NewsState, NewsItem } from '@/types';
+import { NewsItem } from '@/types';
 import api from '@/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -105,6 +105,19 @@ export const getNewsStats = createAsyncThunk(
   }
 );
 
+// updateNewsAsync thunk'ını ekleyelim
+export const updateNewsAsync = createAsyncThunk(
+  'news/updateNews',
+  async ({ newsId, data }: { newsId: string; data: any }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/news/${newsId}`, data);
+      return response.data.data.news;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update news');
+    }
+  }
+);
+
 const newsSlice = createSlice({
   name: 'news',
   initialState,
@@ -165,7 +178,7 @@ const newsSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(viewNews.fulfilled, (state, action) => {
+      .addCase(viewNews.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
       })
@@ -177,7 +190,7 @@ const newsSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(toggleFavorite.fulfilled, (state, action) => {
+      .addCase(toggleFavorite.fulfilled, (state) => {
         state.isLoading = false;
         state.error = null;
       })
@@ -196,9 +209,37 @@ const newsSlice = createSlice({
       .addCase(getNewsStats.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'İstatistikleri getirme hatası';
+      })
+      .addCase(updateNewsAsync.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateNewsAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.news.findIndex(item => item._id === action.payload._id);
+        if (index !== -1) {
+          state.news[index] = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(updateNewsAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to update news';
       });
   }
 });
 
 export const { setNews, addNews, setLoading, setError } = newsSlice.actions;
-export default newsSlice.reducer; 
+export default newsSlice.reducer;
+
+// newsThunks'ı ekleyelim
+export const newsThunks = {
+  fetchNews,
+  createNews,
+  toggleLike,
+  getAllNews,
+  viewNews,
+  toggleFavorite,
+  getNewsStats,
+  updateNewsAsync,
+}; 

@@ -1,3 +1,30 @@
+import mongoose, { Schema, Document } from 'mongoose';
+
+interface INews extends Document {
+  title: string;
+  slug: string;
+  content: string;
+  imageUrl?: string;
+  category: string;
+  author: mongoose.Types.ObjectId;
+  status: 'draft' | 'published' | 'archived';
+  tags: string[];
+  readTime?: number;
+  favorites: {
+    users: mongoose.Types.ObjectId[];
+    count: number;
+  };
+  views: {
+    total: number;
+    uniqueUsers: mongoose.Types.ObjectId[];
+  };
+  shareCount: number;
+  url?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt?: Date;
+}
+
 const NewsSchema = new Schema({
   title: { type: String, required: true },
   slug: { 
@@ -64,8 +91,10 @@ NewsSchema.virtual('popularityScore').get(function() {
   const shareWeight = 2;
   
   return (
-    this.views.total * viewWeight +
-    this.favorites.count * favoriteWeight +
+    (this.views?.total || 0) * viewWeight +
+    (this.favorites?.count || 0) * favoriteWeight +
     (this.shareCount || 0) * shareWeight
   );
-}); 
+});
+
+export const News = mongoose.model<INews>('News', NewsSchema); 

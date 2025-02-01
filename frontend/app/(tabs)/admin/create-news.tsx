@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, Text, TouchableOpacity, TextInput } from 'react-native';
 import { COLORS, FONTS } from '@/theme';
 import { Header } from '@/components/common/Header';
-import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppSelector } from '@/redux/hooks';
 import { router } from 'expo-router';
@@ -250,6 +249,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.dark,
     marginBottom: 8,
+  },
+  section: {
+    marginBottom: 16,
   },
   coverImageContainer: {
     height: 200,

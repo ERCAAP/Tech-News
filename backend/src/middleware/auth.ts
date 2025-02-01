@@ -4,6 +4,13 @@ import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 
+interface AuthRequest extends Request {
+  user?: {
+    _id: string;
+    role: string;
+  };
+}
+
 interface JwtPayload {
   id: string;
 }
@@ -56,4 +63,36 @@ export const restrictTo = (...roles: string[]) => {
     }
     next();
   };
+};
+
+export const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { _id: string };
+    req.user = { _id: decoded._id, role: 'user' };
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Authentication failed' });
+  }
+};
+
+export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const user = await User.findById(req.user?._id);
+    
+    if (!user || user.role !== 'admin') {
+      res.status(403).json({ message: 'Admin access required' });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Authorization failed' });
+  }
 }; 

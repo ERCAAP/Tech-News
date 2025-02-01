@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
-import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { viewNews, toggleFavorite } from '@/redux/slices/newsSlice';
@@ -43,9 +42,10 @@ export default function NewsDetailScreen() {
   const dispatch = useAppDispatch();
   const { news } = useAppSelector(state => state.news);
   const { user } = useAppSelector(state => state.auth);
-  const newsItem = news.find((item: NewsItem) => item.slug === slug);
-
-  const [isLoading, setIsLoading] = useState(false);
+  const newsItem = news.find((item: NewsItem) => {
+    const newsWithSlug = item as NewsItem & { slug?: string };
+    return newsWithSlug.slug === slug;
+  });
 
   useEffect(() => {
     if (!newsItem) {
@@ -92,7 +92,35 @@ export default function NewsDetailScreen() {
     }
   };
 
-  const renderContent = (content: string) => {
+  const handleEdit = () => {
+    if (!newsItem) return;
+    console.log('Edit functionality to be implemented');
+  };
+
+  const handleDelete = async () => {
+    if (!newsItem) return;
+    Alert.alert(
+      'Delete News',
+      'Are you sure you want to delete this news?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('Delete functionality to be implemented');
+              router.replace('/(tabs)');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete news');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  function renderContent(content: string) {
     if (!content) return null;
 
     return content.split('\n').map((part, index) => {
@@ -120,15 +148,30 @@ export default function NewsDetailScreen() {
         </Text>
       ) : null;
     });
-  };
+  }
 
-  if (isLoading) return <Loading />;
   if (!newsItem) return null;
-
-  const coverImageUrl = newsItem.imageUrl ? getImageUrl(newsItem.imageUrl) : '';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      {/* Admin Kontrolleri */}
+      {user?.role === 'admin' && (
+        <View style={styles.adminControls}>
+          <TouchableOpacity 
+            style={styles.adminButton}
+            onPress={handleEdit}
+          >
+            <MaterialIcons name="edit" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.adminButton}
+            onPress={handleDelete}
+          >
+            <MaterialIcons name="delete" size={24} color={COLORS.error} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {user?.role === 'admin' && (
         <View style={styles.viewCountContainer}>
           <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
@@ -146,7 +189,7 @@ export default function NewsDetailScreen() {
           paddingBottom: 100
         }}
       >
-        {/* ... geri kalan JSX aynı ... */}
+        {renderContent(newsItem.content)}
       </ScrollView>
 
       <TouchableOpacity 
@@ -166,4 +209,85 @@ export default function NewsDetailScreen() {
   );
 }
 
-// ... stiller aynı ... 
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  contentImageContainer: {
+    width: '100%',
+    height: 200,
+    marginVertical: 16,
+  },
+  contentImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  contentText: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
+    marginBottom: 16,
+    lineHeight: 24,
+  },
+  viewCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 8,
+    borderRadius: 20,
+    zIndex: 1000,
+  },
+  viewCountText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+  },
+  favoriteButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    padding: 12,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  favoriteCount: {
+    marginLeft: 4,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
+  },
+  adminControls: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    zIndex: 1000,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 8,
+    padding: 4,
+  },
+  adminButton: {
+    padding: 8,
+    marginHorizontal: 4,
+  },
+}); 

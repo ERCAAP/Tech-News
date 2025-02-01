@@ -1,7 +1,14 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { createNews, getAllNews, getNewsById, updateNews } from '../controllers/newsController';
 import { auth } from '../middleware/auth';
 import { upload } from '../middleware/upload';
+
+interface AuthRequest extends Request {
+  user?: {
+    _id: string;
+    role: string;
+  };
+}
 
 const router = express.Router();
 
@@ -11,7 +18,7 @@ router.post('/',
     { name: 'coverImage', maxCount: 1 },
     { name: 'contentImages', maxCount: 10 }
   ]), 
-  createNews
+  (req: AuthRequest, res: Response, next: NextFunction) => createNews(req, res, next)
 );
 
 router.patch('/:id',
@@ -20,7 +27,7 @@ router.patch('/:id',
     { name: 'coverImage', maxCount: 1 },
     { name: 'contentImages', maxCount: 10 }
   ]),
-  updateNews
+  (req: AuthRequest, res: Response, next: NextFunction) => updateNews(req, res, next)
 );
 
 // Diğer route'lar...

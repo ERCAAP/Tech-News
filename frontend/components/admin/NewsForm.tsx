@@ -1,71 +1,115 @@
+import { useState } from 'react';
+import { Alert, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { manipulateAsync } from 'expo-image-manipulator';
+import { COLORS } from '@/theme';
 
-const handleImagePick = async () => {
-  try {
-    // İzinleri kontrol et
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your photos');
+interface FormData {
+  title: string;
+  content: string;
+  category: string;
+  imageUrl?: string;
+}
+
+interface NewsFormProps {
+  initialData?: FormData;
+  onSubmit: (data: FormData) => void;
+}
+
+export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
+  const [formData, setFormData] = useState<FormData>(initialData || {
+    title: '',
+    content: '',
+    category: '',
+  });
+
+  const handleImagePick = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData((prev: FormData) => ({
+          ...prev,
+          imageUrl: result.assets[0].uri
+        }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Error', 'Camera permission is required');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setFormData((prev: FormData) => ({
+          ...prev,
+          imageUrl: result.assets[0].uri
+        }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.content || !formData.category) {
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
+    onSubmit(formData);
+  };
 
-    // Resim seçme
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.button} onPress={handleImagePick}>
+        <Text>Pick Image</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.button} onPress={handleTakePhoto}>
+        <Text>Take Photo</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Text>Submit</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
-    if (!result.canceled) {
-      // Seçilen resmi işle
-      const manipResult = await manipulateAsync(
-        result.assets[0].uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.8, format: 'jpeg' }
-      );
-
-      setFormData(prev => ({
-        ...prev,
-        imageUrl: manipResult.uri
-      }));
-    }
-  } catch (error) {
-    console.error('Image pick error:', error);
-    Alert.alert('Error', 'Failed to pick image. Please try again.');
-  }
-};
-
-// Kamera ile fotoğraf çekme
-const handleTakePhoto = async () => {
-  try {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission Required', 'Please allow access to your camera');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      const manipResult = await manipulateAsync(
-        result.assets[0].uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.8, format: 'jpeg' }
-      );
-
-      setFormData(prev => ({
-        ...prev,
-        imageUrl: manipResult.uri
-      }));
-    }
-  } catch (error) {
-    console.error('Camera error:', error);
-    Alert.alert('Error', 'Failed to take photo. Please try again.');
-  }
-}; 
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+  button: {
+    padding: 12,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  submitButton: {
+    padding: 12,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+}); 
