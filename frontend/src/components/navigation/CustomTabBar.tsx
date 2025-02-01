@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, FONTS } from '@/theme';
@@ -14,6 +14,14 @@ export default function CustomTabBar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAppSelector(state => state.auth);
+  if (
+    pathname === '/register' || 
+    pathname === '/login' || 
+    pathname === '/src/components/admin/NewsForm' ||  // Admin write sayfası
+    pathname === '/(tabs)/admin/edit-news'       // Admin edit sayfası
+  ) {
+    return null;
+  }
 
   const tabs = [
     { name: '/(tabs)', label: 'News', icon: 'newspaper' },

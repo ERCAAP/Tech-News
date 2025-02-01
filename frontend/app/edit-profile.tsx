@@ -5,8 +5,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { router } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import { logout } from '@/redux/slices/authSlice';
+import { logout, updateUserProfile } from '@/redux/slices/authSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -31,31 +30,45 @@ export default function EditProfileScreen() {
 
   const handleUpdateProfile = async () => {
     try {
+      if (!user) {
+        console.error('No user found in state');
+        return;
+      }
+      
       setIsLoading(true);
-      // TODO: Implement profile update logic
-      Alert.alert('Success', 'Profile updated successfully');
-      router.back();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      
+      // Validate inputs
+      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+        Alert.alert('Error', 'All fields are required');
+        return;
+      }
 
-  const handlePickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
+      console.log('Updating profile with data:', {
+        ...user,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
       });
 
-      if (!result.canceled) {
-        // TODO: Implement avatar update logic
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      const result = await dispatch(updateUserProfile({
+        ...user,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+      })).unwrap();
+
+      console.log('Profile update result:', result);
+
+      Alert.alert('Success', 'Profile updated successfully');
+      router.back();
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to update profile. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,23 +116,19 @@ export default function EditProfileScreen() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        <Button
-          title="Change Profile Picture"
-          onPress={handlePickImage}
-          variant="outline"
-          style={styles.button}
-        />
+
         <Button
           title={isLoading ? "Updating..." : "Update Profile"}
           onPress={handleUpdateProfile}
           disabled={isLoading}
-          style={styles.button}
+          style={styles.updateButton}
         />
+
         <Button
           title="Logout"
           onPress={handleLogout}
           variant="secondary"
-          style={[styles.button, styles.logoutButton]}
+          style={styles.logoutButton}
         />
       </View>
     </SafeAreaView>
@@ -151,11 +160,11 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  button: {
-    marginTop: 16,
+  updateButton: {
+    marginTop: 24,
   },
   logoutButton: {
+    marginTop: 16,
     backgroundColor: COLORS.error,
-    marginTop: 32,
   },
 }); 

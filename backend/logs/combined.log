@@ -1372,3 +1372,20 @@
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:30:27.316Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:30:53.660Z"}
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:33:34.536Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:38:29.312Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:39:16.935Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:40:03.332Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:40:57.975Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:43:05.686Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:43:12.726Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:43:12.856Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:43:59.416Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:43:59.505Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:45:04.324Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:45:15.526Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T14:45:55.689Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T14:45:55.690Z"}
+{"exp":1741013115,"iat":1738421115,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T14:45:55.692Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T14:45:55.695Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:46:15.979Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T14:46:16.072Z"}

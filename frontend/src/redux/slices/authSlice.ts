@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '@/services/api';
 import { AuthState, User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { api } from '@/services/api';
 
 // API Response tipi
 interface ApiResponse {
@@ -68,9 +69,30 @@ export const getMe = createAsyncThunk<ApiResponse>(
 // Update user profile thunk
 export const updateUserProfile = createAsyncThunk(
   'auth/updateProfile',
-  async (userData: User) => {
-    const response = await authAPI.put('/auth/profile', userData);
-    return response.data;
+  async (userData: User, { rejectWithValue }) => {
+    try {
+      console.log('UpdateUserProfile Thunk - Input:', userData);
+      
+      const response = await authAPI.updateProfile({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email
+      });
+      
+      console.log('UpdateUserProfile Thunk - Success:', response);
+      return response;
+    } catch (error: any) {
+      console.error('UpdateUserProfile Thunk - Error:', {
+        message: error.message,
+        response: error.response?.data
+      });
+      
+      return rejectWithValue(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to update profile'
+      );
+    }
   }
 );
 
@@ -135,6 +157,24 @@ const authSlice = createSlice({
       .addCase(getMe.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch user data';
+      });
+
+    // Update Profile
+    builder
+      .addCase(updateUserProfile.pending, (state) => {
+        console.log('UpdateUserProfile - Pending');
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        console.log('UpdateUserProfile - Fulfilled:', action.payload);
+        state.isLoading = false;
+        state.user = action.payload.data.user;
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        console.log('UpdateUserProfile - Rejected:', action.payload);
+        state.isLoading = false;
+        state.error = action.payload as string || 'Failed to update profile';
       });
   }
 });

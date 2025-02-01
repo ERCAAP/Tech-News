@@ -83,7 +83,21 @@ export const newsAPI = {
   unlikeNews: async (id: string) => {
     const response = await api.delete<ApiResponse<{ news: NewsItem }>>(`/news/${id}/like`);
     return response.data;
-  }
+  },
+
+  getStats: async () => {
+    try {
+      const response = await api.get<ApiResponse<{
+        totalViews: number;
+        totalFavorites: number;
+        totalNews: number;
+      }>>('/news/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Get Stats Error:', error);
+      throw error;
+    }
+  },
 };
 
 // Auth API endpoints
@@ -139,5 +153,34 @@ export const authAPI = {
 
   logout: async () => {
     await AsyncStorage.removeItem('token');
-  }
+  },
+
+  updateProfile: async (userData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  }) => {
+    try {
+      console.log('Update Profile Request:', {
+        url: `${BASE_URL}/auth/update-profile`,
+        data: userData,
+      });
+
+      const response = await api.patch('/auth/update-profile', {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email
+      });
+      
+      console.log('Update Profile Response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Update Profile Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  },
 }; 
