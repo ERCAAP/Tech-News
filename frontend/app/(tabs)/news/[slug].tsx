@@ -53,8 +53,10 @@ export default function NewsDetailScreen() {
       return;
     }
 
-    dispatch(viewNews(newsItem._id));
-  }, [newsItem]);
+    if (user) {
+      dispatch(viewNews(newsItem._id));
+    }
+  }, [newsItem?._id]);
 
   const handleFavoritePress = async () => {
     if (!user) {
@@ -62,26 +64,31 @@ export default function NewsDetailScreen() {
       return;
     }
     
-    if (!newsItem) return;
+    if (!newsItem) {
+      console.log('Favorite Press - No news item found');
+      return;
+    }
+
+    console.log('Favorite Press - Attempting to toggle favorite for:', {
+      newsId: newsItem._id,
+      userId: user._id,
+      currentFavorites: newsItem.favorites
+    });
 
     try {
-      setIsLoading(true);
-      await dispatch(toggleFavorite(newsItem._id)).unwrap();
+      const result = await dispatch(toggleFavorite(newsItem._id)).unwrap();
+      console.log('Favorite Press - Toggle result:', result);
       
-      if (!newsItem?.favorites?.users?.includes(user._id)) {
-        ToastAndroid.show('Added to favorites', ToastAndroid.SHORT);
-      } else {
-        ToastAndroid.show('Removed from favorites', ToastAndroid.SHORT);
-      }
+      ToastAndroid.show(
+        newsItem?.favorites?.users?.includes(user._id)
+          ? 'Removed from favorites'
+          : 'Added to favorites',
+        ToastAndroid.SHORT
+      );
 
     } catch (error) {
-      console.error('Favorite error:', error);
-      Alert.alert(
-        'Error',
-        typeof error === 'string' ? error : 'Failed to update favorite status'
-      );
-    } finally {
-      setIsLoading(false);
+      console.error('Favorite Press - Error:', error);
+      Alert.alert('Error', 'Failed to update favorite status');
     }
   };
 
@@ -122,12 +129,14 @@ export default function NewsDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.viewCountContainer}>
-        <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
-        <Text style={styles.viewCountText}>
-          {isValidViews(newsItem?.views) ? formatViewCount(newsItem.views) : '0'}
-        </Text>
-      </View>
+      {user?.role === 'admin' && (
+        <View style={styles.viewCountContainer}>
+          <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
+          <Text style={styles.viewCountText}>
+            {isValidViews(newsItem?.views) ? formatViewCount(newsItem.views) : '0'}
+          </Text>
+        </View>
+      )}
 
       <ScrollView 
         style={styles.container}
@@ -139,6 +148,20 @@ export default function NewsDetailScreen() {
       >
         {/* ... geri kalan JSX aynı ... */}
       </ScrollView>
+
+      <TouchableOpacity 
+        style={styles.favoriteButton}
+        onPress={handleFavoritePress}
+      >
+        <MaterialIcons 
+          name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
+          size={24} 
+          color={COLORS.primary} 
+        />
+        <Text style={styles.favoriteCount}>
+          {newsItem?.favorites?.count || 0}
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

@@ -41,71 +41,61 @@ export const toggleFavorite = async (req: Request, res: Response) => {
     const { id } = req.params;
     const userId = req.user?._id;
 
+    console.log('Toggle Favorite - Request params:', { id, userId });
+
     if (!userId) {
+      console.log('Toggle Favorite - No user ID');
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // Haberin var olup olmadığını kontrol et
     const news = await News.findById(id);
+    console.log('Toggle Favorite - Found news:', news ? 'Yes' : 'No');
+    
     if (!news) {
+      console.log('Toggle Favorite - News not found with id:', id);
       return res.status(404).json({ message: 'News not found' });
     }
 
-    // Kullanıcının var olup olmadığını kontrol et
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
     // Favorilerde olup olmadığını kontrol et
-    const isFavorited = news.favorites?.users?.includes(userId);
+    const isFavorited = news.favorites.users.includes(userId);
+    console.log('Toggle Favorite - Is already favorited:', isFavorited);
     
+    let updatedNews;
     if (isFavorited) {
-      // Favorilerden kaldır
-      await Promise.all([
-        News.findByIdAndUpdate(id, {
+      console.log('Toggle Favorite - Removing from favorites');
+      updatedNews = await News.findByIdAndUpdate(
+        id,
+        {
           $pull: { 'favorites.users': userId },
           $inc: { 'favorites.count': -1 }
-        }),
-        User.findByIdAndUpdate(userId, {
-          $pull: { favorites: { news: id } }
-        })
-      ]);
+        },
+        { new: true }
+      );
     } else {
-      // Favorilere ekle
-      await Promise.all([
-        News.findByIdAndUpdate(id, {
+      console.log('Toggle Favorite - Adding to favorites');
+      updatedNews = await News.findByIdAndUpdate(
+        id,
+        {
           $addToSet: { 'favorites.users': userId },
           $inc: { 'favorites.count': 1 }
-        }),
-        User.findByIdAndUpdate(userId, {
-          $addToSet: { favorites: { news: id } }
-        })
-      ]);
+        },
+        { new: true }
+      );
     }
 
-    // Güncel haber bilgisini döndür
-    const updatedNews = await News.findById(id)
-      .populate('favorites.users', 'firstName lastName');
-
-    if (!updatedNews) {
-      throw new Error('Failed to get updated news');
-    }
+    console.log('Toggle Favorite - Updated news:', updatedNews);
 
     return res.json({
       newsId: id,
       favorites: {
-        users: updatedNews.favorites?.users || [],
-        count: updatedNews.favorites?.count || 0
+        users: updatedNews.favorites.users,
+        count: updatedNews.favorites.count
       }
     });
 
   } catch (error) {
-    console.error('Toggle favorite error:', error);
-    return res.status(500).json({ 
-      message: 'Failed to update favorite status',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    console.error('Toggle Favorite - Error:', error);
+    return res.status(500).json({ message: 'Failed to update favorite status', error });
   }
 };
 

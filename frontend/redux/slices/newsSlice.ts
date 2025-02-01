@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { NewsState } from '../../types';
-import axios from '@/api/axios';
+import axios, { AxiosError } from 'axios';
+import axiosInstance from '@/api/axios';
 
 const initialState: NewsState = {
   news: [],
@@ -20,13 +21,15 @@ export const fetchNews = createAsyncThunk(
 
 export const viewNews = createAsyncThunk(
   'news/view',
-  async (newsId: string) => {
+  async (newsId: string, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/news/${newsId}/view`);
+      const response = await axiosInstance.post(`/news/${newsId}/view`);
       return response.data;
-    } catch (error) {
-      console.error('View news error:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message || 'Failed to update view count');
+      }
+      return rejectWithValue('Failed to update view count');
     }
   }
 );
@@ -35,16 +38,32 @@ export const toggleFavorite = createAsyncThunk(
   'news/toggleFavorite',
   async (newsId: string, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/news/${newsId}/favorite`);
+      console.log('Toggle Favorite - Making request for newsId:', newsId);
+      const response = await axiosInstance.post(`/news/${newsId}/favorite`);
+      console.log('Toggle Favorite - Response:', response.data);
       return response.data;
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Toggle favorite error:', error);
-        return rejectWithValue(
-          (error as any).response?.data?.message || 'Failed to update favorite status'
-        );
+      if (error instanceof AxiosError) {
+        console.error('Toggle Favorite - Error:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            baseURL: error.config?.baseURL
+          }
+        });
+        return rejectWithValue(error.response?.data?.message || 'Failed to update favorite status');
       }
-      return rejectWithValue('Failed to update favorite status');
+      
+      if (error instanceof Error) {
+        console.error('Toggle Favorite - Unknown Error:', error.message);
+        return rejectWithValue(error.message);
+      }
+
+      console.error('Toggle Favorite - Unexpected Error:', error);
+      return rejectWithValue('An unexpected error occurred');
     }
   }
 );
@@ -113,10 +132,7 @@ const newsSlice = createSlice({
           item._id === action.payload.newsId 
             ? { 
                 ...item, 
-                views: {
-                  total: action.payload.views.total,
-                  unique: action.payload.views.unique
-                }
+                views: action.payload.views
               }
             : item
         );
@@ -132,6 +148,9 @@ const newsSlice = createSlice({
             : item
         );
         state.news = updatedNews;
+      })
+      .addCase(toggleFavorite.rejected, (state, action) => {
+        state.error = action.payload as string;
       })
       .addCase(fetchUserFavorites.fulfilled, (state, action) => {
         state.favorites = action.payload;
