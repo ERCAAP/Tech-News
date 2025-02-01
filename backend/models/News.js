@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const newsSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -23,6 +25,10 @@ const newsSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  favoriteCount: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -33,7 +39,28 @@ const newsSchema = new mongoose.Schema({
   }
 });
 
-// Favori sayısını hesapla
-newsSchema.virtual('favoriteCount').get(function() {
-  return this.favorites.length;
-}); 
+// Görüntülenme sayısını artır
+newsSchema.methods.incrementViews = async function() {
+  this.views += 1;
+  return this.save();
+};
+
+// Favorilere ekle
+newsSchema.methods.addToFavorites = async function(userId) {
+  if (!this.favorites.includes(userId)) {
+    this.favorites.push(userId);
+    this.favoriteCount = this.favorites.length;
+    await this.save();
+  }
+  return this;
+};
+
+// Favorilerden çıkar
+newsSchema.methods.removeFromFavorites = async function(userId) {
+  this.favorites = this.favorites.filter(id => !id.equals(userId));
+  this.favoriteCount = this.favorites.length;
+  await this.save();
+  return this;
+};
+
+module.exports = mongoose.model('News', newsSchema); 

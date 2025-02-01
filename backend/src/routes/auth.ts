@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const authController = require('../controllers/auth');
-const authMiddleware = require('../middleware/auth');
+import { Router } from 'express';
+import { authController } from '../controllers/auth';
+import { authMiddleware } from '../middleware/auth';
+
+const router = Router();
 
 // Debug için route'ları logla
 router.use((req, res, next) => {
@@ -19,9 +20,13 @@ router.patch('/profile', authMiddleware, authController.updateProfile);
 router.get('/favorites', authMiddleware, authController.getFavoriteNews);
 
 // Debug - mevcut route'ları göster
-console.log('Auth Routes:', router.stack.map(r => ({
-  path: r.route?.path,
-  methods: r.route?.methods
-})));
+const routes = router.stack
+  .filter((r: any) => r.route)
+  .map((r: any) => ({
+    path: r.route.path,
+    methods: Object.keys(r.route.methods).map(m => m.toUpperCase())
+  }));
 
-module.exports = router; 
+console.log('Available Auth Routes:', JSON.stringify(routes, null, 2));
+
+export default router; 

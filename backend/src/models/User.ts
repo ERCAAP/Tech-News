@@ -1,17 +1,19 @@
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IUser extends Document {
   email: string;
-  password?: string;  // password'ü optional yaptık
+  password: string;
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
   favoriteNews: mongoose.Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema<IUser>({
   firstName: {
     type: String,
     required: [true, 'Please provide your first name']
@@ -38,9 +40,17 @@ const userSchema = new mongoose.Schema({
     default: 'user'
   },
   favoriteNews: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'News'
-  }]
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  }
 }, {
   timestamps: true
 });

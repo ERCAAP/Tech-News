@@ -1,15 +1,30 @@
+const News = require('../models/News');
+const User = require('../models/User');
+
 // Haber görüntüleme sayısını artır
 exports.incrementViews = async (req, res) => {
   try {
     const newsId = req.params.id;
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      { $inc: { views: 1 } },
-      { new: true }
-    );
-    res.json({ status: 'success', data: { views: news.views } });
+    const news = await News.findById(newsId);
+    
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
+
+    await news.incrementViews();
+
+    res.json({
+      status: 'success',
+      data: { views: news.views }
+    });
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message });
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
   }
 };
 
@@ -17,24 +32,27 @@ exports.incrementViews = async (req, res) => {
 exports.addToFavorites = async (req, res) => {
   try {
     const newsId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      { $addToSet: { favorites: userId } },
-      { new: true }
-    );
+    const news = await News.findById(newsId);
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
 
-    await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { favoriteNews: newsId } }
-    );
+    await news.addToFavorites(userId);
 
-    res.json({ 
-      status: 'success', 
-      data: { 
-        favoriteCount: news.favorites.length 
-      } 
+    // Kullanıcının favorilerine de ekle; User modelinde favoriteNews alanı olduğundan emin olun.
+    await User.findByIdAndUpdate(userId, { $addToSet: { favoriteNews: newsId } });
+
+    res.json({
+      status: 'success',
+      data: {
+        favoriteCount: news.favoriteCount,
+        isFavorited: true
+      }
     });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });
@@ -45,24 +63,14 @@ exports.addToFavorites = async (req, res) => {
 exports.removeFromFavorites = async (req, res) => {
   try {
     const newsId = req.params.id;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      { $pull: { favorites: userId } },
-      { new: true }
-    );
+    // Favorilerden çıkarma işlemi
+    await User.findByIdAndUpdate(userId, { $pull: { favoriteNews: newsId } });
 
-    await User.findByIdAndUpdate(
-      userId,
-      { $pull: { favoriteNews: newsId } }
-    );
-
-    res.json({ 
-      status: 'success', 
-      data: { 
-        favoriteCount: news.favorites.length 
-      } 
+    res.json({
+      status: 'success',
+      message: 'Removed from favorites'
     });
   } catch (error) {
     res.status(400).json({ status: 'error', message: error.message });

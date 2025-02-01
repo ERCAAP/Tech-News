@@ -1,35 +1,30 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { createNews, getAllNews, getNewsById, updateNews } from '../controllers/newsController';
-import { auth } from '../middleware/auth';
-import { upload } from '../middleware/upload';
+import { Router } from 'express';
+import { newsController } from '../controllers/news';
+import { authMiddleware } from '../middleware/auth';
 
-interface AuthRequest extends Request {
-  user?: {
-    _id: string;
-    role: string;
-  };
-}
+const router = Router();
 
-const router = express.Router();
+// Public routes
+router.get('/', newsController.getAllNews);
+router.get('/:id', newsController.getNewsById);
 
-router.post('/', 
-  auth, 
-  upload.fields([
-    { name: 'coverImage', maxCount: 1 },
-    { name: 'contentImages', maxCount: 10 }
-  ]), 
-  (req: AuthRequest, res: Response, next: NextFunction) => createNews(req, res, next)
-);
+// Protected routes
+router.post('/:id/favorite', authMiddleware, newsController.addToFavorites);
+router.delete('/:id/favorite', authMiddleware, newsController.removeFromFavorites);
+router.post('/:id/view', authMiddleware, newsController.incrementViews);
 
-router.patch('/:id',
-  auth,
-  upload.fields([
-    { name: 'coverImage', maxCount: 1 },
-    { name: 'contentImages', maxCount: 10 }
-  ]),
-  (req: AuthRequest, res: Response, next: NextFunction) => updateNews(req, res, next)
-);
+// Admin routes
+router.patch('/:id', authMiddleware, newsController.updateNews);
+router.get('/stats', authMiddleware, newsController.getStats);
 
-// Diğer route'lar...
+// Debug - mevcut route'ları göster
+const routes = router.stack
+  .filter((r: any) => r.route)
+  .map((r: any) => ({
+    path: r.route.path,
+    methods: Object.keys(r.route.methods).map(m => m.toUpperCase())
+  }));
+
+console.log('Available News Routes:', JSON.stringify(routes, null, 2));
 
 export default router; 

@@ -98,6 +98,26 @@ export const newsAPI = {
       throw error;
     }
   },
+
+  addToFavorites: async (newsId: string) => {
+    try {
+      const response = await api.post(`/news/${newsId}/favorite`);
+      return response.data;
+    } catch (error) {
+      console.error('Add to Favorites Error:', error);
+      throw error;
+    }
+  },
+
+  removeFromFavorites: async (newsId: string) => {
+    try {
+      const response = await api.delete(`/news/${newsId}/favorite`);
+      return response.data;
+    } catch (error) {
+      console.error('Remove from Favorites Error:', error);
+      throw error;
+    }
+  }
 };
 
 // Auth API endpoints
@@ -162,25 +182,32 @@ export const authAPI = {
   }) => {
     try {
       console.log('Update Profile Request:', {
-        url: `${BASE_URL}/auth/update-profile`,
+        url: `${BASE_URL}/auth/profile`,
         data: userData,
+        headers: api.defaults.headers
       });
 
-      const response = await api.patch('/auth/update-profile', {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email
-      });
-      
+      const response = await api.patch('/auth/profile', userData);
       console.log('Update Profile Response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Update Profile Error:', {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
+        headers: error.config?.headers
       });
       throw error;
     }
   },
+
+  getFavoriteNews: async () => {
+    try {
+      const response = await api.get('/auth/favorites');
+      return response.data;
+    } catch (error) {
+      console.error('Get Favorite News Error:', error);
+      throw error;
+    }
+  }
 }; 

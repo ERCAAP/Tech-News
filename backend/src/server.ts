@@ -14,67 +14,32 @@ import connectDB from './config/database';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import app from './app';
 
 dotenv.config();
 
-const app = express();
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/tech-news';
 
-// Middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  next();
-});
-
-// Uploads klasörünü oluştur
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
-
-// Uploads klasörü için statik dosya servisi
-const uploadsPath = path.join(__dirname, '../uploads');
-app.use('/uploads', express.static(uploadsPath));
-
-// CORS ayarları
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Content-Disposition']
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS),
-  max: Number(process.env.RATE_LIMIT_MAX_REQUESTS)
-});
-app.use(limiter);
-
-// Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/news', newsRoutes);
-
-// Error handling
-app.use(errorHandler);
-
-// Server'ı başlat
-const startServer = async () => {
-  try {
-    await connectDB(); // Önce database'e bağlan
-    
-    app.listen(config.port, () => {
-      logger.info(`Server is running on port ${config.port}`);
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('MongoDB Connected:', mongoose.connection.host);
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      
+      // Tüm route'ları göster
+      const routes = app._router.stack
+        .filter((r: any) => r.route)
+        .map((r: any) => ({
+          path: r.route.path,
+          methods: r.route.methods
+        }));
+      
+      console.log('Available Routes:', routes);
     });
-  } catch (error) {
-    logger.error('Server startup failed:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
 export default app; 

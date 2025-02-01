@@ -7,7 +7,7 @@
     "start": "node dist/server.js",
     "dev": "nodemon",
     "build": "tsc",
-    "watch": "tsc -w",
+    "watch-ts": "tsc -w",
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "seed": "ts-node src/config/seeders/index.ts"
