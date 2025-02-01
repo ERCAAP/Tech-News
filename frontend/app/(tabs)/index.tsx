@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchNews } from '@/redux/slices/newsSlice';
-import { COLORS, FONTS, shadowStyle } from '@/theme';
+import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, FONTS, shadowStyle } from '@/theme';
+import { COLORS, FONTS } from '@/theme';
 import { NewsItem } from '@/types';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';

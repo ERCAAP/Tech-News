@@ -150,6 +150,28 @@ export default function NewsDetailScreen() {
     });
   }
 
+  const renderStats = () => {
+    if (!newsItem) return null;
+
+    return (
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {newsItem.views?.users?.length || 0}
+          </Text>
+          <Text style={styles.statLabel}>Görüntülenme</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {newsItem.views?.count || 0}
+          </Text>
+          <Text style={styles.statLabel}>Toplam Okunma</Text>
+        </View>
+      </View>
+    );
+  };
+
   if (!newsItem) return null;
 
   return (
@@ -206,7 +228,7 @@ export default function NewsDetailScreen() {
         onPress={handleFavoritePress}
       >
         <MaterialIcons 
-          name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
+          name={newsItem?.favorites?.users?.includes(user?._id ?? '') ? 'favorite' : 'favorite-border'} 
           size={24} 
           color={COLORS.primary} 
         />
@@ -214,6 +236,8 @@ export default function NewsDetailScreen() {
           {newsItem?.favorites?.count || 0}
         </Text>
       </TouchableOpacity>
+
+      {renderStats()}
     </SafeAreaView>
   );
 }
@@ -298,5 +322,23 @@ const styles = StyleSheet.create({
   adminButton: {
     padding: 8,
     marginHorizontal: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 18,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  statLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
   },
 }); 

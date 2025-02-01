@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, NewsItem } from '@/types';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api/v1';
 
 console.log('API_URL:', BASE_URL);
 
@@ -15,34 +15,53 @@ interface ApiResponse<T> {
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor'ı düzelt
+// Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+    // Data yapısını kontrol et
+    if (config.data && typeof config.data === 'object') {
+      console.log('Request Data Before:', config.data);
+      // Eğer data içinde data varsa, düzelt
+      if (config.data.data) {
+        config.data = config.data.data;
       }
-      return config;
-    } catch (error) {
-      return config;
+      console.log('Request Data After:', config.data);
     }
+    
+    // Token ekle
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Hata yakalama interceptor'ı
+// Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   (error) => {
-    console.error('API Error Details:', {
-      message: error.message,
+    console.error('API Error:', {
+      url: error.config?.url,
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
+      message: error.message
     });
     return Promise.reject(error);
   }
@@ -101,7 +120,7 @@ export const newsAPI = {
 
   addToFavorites: async (newsId: string) => {
     try {
-      const response = await api.post(`/news/${newsId}/favorite`);
+      const response = await api.post<ApiResponse<{ favoriteCount: number, isFavorited: boolean }>>(`/news/${newsId}/favorite`);
       return response.data;
     } catch (error) {
       console.error('Add to Favorites Error:', error);
@@ -111,10 +130,20 @@ export const newsAPI = {
 
   removeFromFavorites: async (newsId: string) => {
     try {
-      const response = await api.delete(`/news/${newsId}/favorite`);
+      const response = await api.delete<ApiResponse<{ favoriteCount: number, isFavorited: boolean }>>(`/news/${newsId}/favorite`);
       return response.data;
     } catch (error) {
       console.error('Remove from Favorites Error:', error);
+      throw error;
+    }
+  },
+
+  incrementViews: async (newsId: string) => {
+    try {
+      const response = await api.post<ApiResponse<{ views: number }>>(`/news/${newsId}/view`);
+      return response.data;
+    } catch (error) {
+      console.error('Increment Views Error:', error);
       throw error;
     }
   }
@@ -122,21 +151,34 @@ export const newsAPI = {
 
 // Auth API endpoints
 export const authAPI = {
-  login: async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
+  async login(email: string, password: string) {
     try {
-      const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', { 
-        email, 
-        password 
+      console.log('Login Request Payload:', { email, password });
+      
+      const response = await api.post<ApiResponse<{ user: User }>>('/auth/login', {
+        email,
+        password
       });
       
       if (response.data.token) {
         await AsyncStorage.setItem('token', response.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       }
+      
+      console.log('Login Response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Login Error:', error.response?.data);
-      throw error;
+      console.error('Login API Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error.response?.data || error;
     }
+  },
+  
+  setAuthToken(token: string) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   },
   
   register: async (userData: {
@@ -183,19 +225,17 @@ export const authAPI = {
     try {
       console.log('Update Profile Request:', {
         url: `${BASE_URL}/auth/profile`,
-        data: userData,
-        headers: api.defaults.headers
+        data: userData
       });
 
-      const response = await api.patch('/auth/profile', userData);
+      const response = await api.patch<ApiResponse<{ user: User }>>('/auth/profile', userData);
       console.log('Update Profile Response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Update Profile Error:', {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status,
-        headers: error.config?.headers
+        status: error.response?.status
       });
       throw error;
     }
@@ -203,7 +243,7 @@ export const authAPI = {
 
   getFavoriteNews: async () => {
     try {
-      const response = await api.get('/auth/favorites');
+      const response = await api.get<ApiResponse<{ favoriteNews: NewsItem[] }>>('/auth/favorites');
       return response.data;
     } catch (error) {
       console.error('Get Favorite News Error:', error);

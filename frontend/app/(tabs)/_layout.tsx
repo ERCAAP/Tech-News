@@ -6,6 +6,11 @@ import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 
+interface TabIconProps {
+  color: string;
+  size?: number;
+}
+
 export default function TabsLayout() {
   const { user } = useAppSelector(state => state.auth);
 
@@ -16,7 +21,7 @@ export default function TabsLayout() {
           name="index"
           options={{
             title: 'News',
-            tabBarIcon: ({ color }) => (
+            tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="newspaper" size={24} color={color} />
             ),
           }}
@@ -25,7 +30,7 @@ export default function TabsLayout() {
           name="search"
           options={{
             title: 'Search',
-            tabBarIcon: ({ color }) => (
+            tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="search" size={24} color={color} />
             ),
           }}
@@ -34,7 +39,7 @@ export default function TabsLayout() {
           name="favorites"
           options={{
             title: 'Favorites',
-            tabBarIcon: ({ color }) => (
+            tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="favorite" size={24} color={color} />
             ),
           }}
@@ -44,7 +49,7 @@ export default function TabsLayout() {
             name="admin"
             options={{
               title: 'Admin',
-              tabBarIcon: ({ color }) => (
+              tabBarIcon: ({ color }: TabIconProps) => (
                 <MaterialIcons name="admin-panel-settings" size={24} color={color} />
               ),
             }}
@@ -54,7 +59,7 @@ export default function TabsLayout() {
           name="profile"
           options={{
             title: 'Profile',
-            tabBarIcon: ({ color }) => (
+            tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="person" size={24} color={color} />
             ),
           }}
@@ -70,7 +75,7 @@ export default function TabsLayout() {
             name="admin/stats"
             options={{
               title: 'Stats',
-              tabBarIcon: ({ color }) => (
+              tabBarIcon: ({ color }: TabIconProps) => (
                 <MaterialIcons name="analytics" size={24} color={color} />
               ),
             }}

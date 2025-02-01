@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useAppSelector, useAppDispatch } from '@/redux/hooks';
+import { useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { updateUserProfile } from '@/redux/slices/authSlice';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserInitials } from '@/utils/userHelpers';
 
 const menuItems = [
   { icon: 'edit', label: 'Edit Profile', route: '/edit-profile' as const },
@@ -20,7 +22,7 @@ const menuItems = [
 
 export default function ProfileScreen() {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector(state => state.auth);
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleImagePick = async () => {
@@ -60,6 +62,28 @@ export default function ProfileScreen() {
     router.push(route);
   };
 
+  const renderAvatar = () => {
+    if (!user) return null;
+
+    if (user.avatar) {
+      return (
+        <Image
+          source={{ uri: user.avatar }}
+          style={styles.avatar}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    return (
+      <View style={styles.avatarPlaceholder}>
+        <Text style={styles.avatarInitials}>
+          {getUserInitials(user)}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -69,18 +93,7 @@ export default function ProfileScreen() {
             onPress={handleImagePick}
             disabled={isLoading}
           >
-            {user?.avatar ? (
-              <Image 
-                source={{ uri: user.avatar }} 
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>
-                  {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                </Text>
-              </View>
-            )}
+            {renderAvatar()}
           </TouchableOpacity>
 
           <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
@@ -139,14 +152,13 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#e1e1e1',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarText: {
+  avatarInitials: {
     fontSize: 36,
-    fontFamily: FONTS.bold,
-    color: COLORS.white,
+    color: '#666',
   },
   name: {
     fontSize: 24,

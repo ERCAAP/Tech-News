@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '@/services/api';
 import { AuthState, User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api } from '@/services/api';
 
 // API Response tipi
 interface ApiResponse {
@@ -26,12 +25,24 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }) => {
     try {
+      // Önce credentials'ı kontrol edelim
+      if (!credentials.email || !credentials.password) {
+        throw new Error('Email ve şifre gereklidir');
+      }
+
+      // API isteğini yapalım
       const response = await authAPI.login(credentials.email, credentials.password);
+      
+      // Token kontrolü
       if (response.token) {
         await AsyncStorage.setItem('token', response.token);
+        // API için Authorization header'ını ayarlayalım
+        authAPI.setAuthToken(response.token);
       }
+
       return response;
     } catch (error: any) {
+      console.error('Login Error:', error.response?.data || error.message);
       throw error.response?.data || { message: 'Giriş yapılamadı' };
     }
   }

@@ -1,9 +1,10 @@
 export interface User {
   _id: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
   role: 'user' | 'admin';
+  favoriteNews: string[];
   avatar?: string;
   createdAt: string;
   updatedAt: string;
@@ -27,36 +28,56 @@ export interface ViewsData {
   total: number;
   unique: number;
   last24Hours: number;
-  history: Array<{
-    userId: string;
+  users: Array<{
+    _id: string;
     timestamp: string;
   }>;
+  count: number;
 }
 
 export interface NewsItem {
   _id: string;
   title: string;
-  displayTitle?: string;
-  coverImage?: string;
+  displayTitle: string;
   content: string;
-  imageUrl?: string;
-  category: string;
+  summary: string;
   author: {
     _id: string;
     firstName: string;
     lastName: string;
-    email?: string;
   };
-  views?: ViewsData;
-  favorites: any;
+  category: string;
+  subCategory?: string;
+  tags: string[];
+  imageUrl?: string;
+  contentImages: string[];
+  videoUrl?: string;
+  status: 'draft' | 'published' | 'archived';
+  viewCount: number;
+  views: {
+    total: number;
+    unique: number;
+    last24Hours: number;
+    users: Array<{
+      _id: string;
+      timestamp: string;
+    }>;
+    count: number;
+  };
+  likes: string[];
+  favorites: {
+    users: string[];
+    count: number;
+  };
+  favoriteCount: number;
   createdAt: string;
-  updatedAt?: string;
-  likes?: string[];
-  comments?: Comment[];
-  status?: 'draft' | 'published' | 'archived';
+  updatedAt: string;
+  publishedAt?: string;
+  isHighlighted: boolean;
+  readTime: number;
 }
 
-interface Comment {
+export interface Comment {
   _id: string;
   content: string;
   author: {

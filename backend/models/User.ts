@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 interface IUser extends Document {
   role: string;
@@ -20,10 +21,44 @@ interface IUser extends Document {
     };
     theme: 'light' | 'dark' | 'system';
   };
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  favoriteNews: Array<mongoose.Types.ObjectId>;
 }
 
 const UserSchema = new Schema({
-  // ... diğer alanlar ...
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+  favoriteNews: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'News'
+  }],
   favorites: [{
     news: { type: Schema.Types.ObjectId, ref: 'News' },
     addedAt: { type: Date, default: Date.now }
@@ -45,6 +80,21 @@ const UserSchema = new Schema({
       enum: ['light', 'dark', 'system'],
       default: 'system'
     }
+  }
+}, {
+  timestamps: true
+});
+
+// Şifre hash'leme middleware
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error as Error);
   }
 });
 

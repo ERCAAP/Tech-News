@@ -112,6 +112,35 @@ export default function NewsDetailScreen() {
     });
   };
 
+  const renderStats = () => {
+    if (!newsItem) return null;
+
+    return (
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {newsItem.views?.users?.length || 0}
+          </Text>
+          <Text style={styles.statLabel}>Görüntülenme</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {newsItem.views?.count || 0}
+          </Text>
+          <Text style={styles.statLabel}>Toplam Okunma</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {newsItem.views?.total || 0}
+          </Text>
+          <Text style={styles.statLabel}>Tekil Okunma</Text>
+        </View>
+      </View>
+    );
+  };
+
   if (isLoading) return <Loading />;
   if (!newsItem) return null;
 
@@ -157,7 +186,7 @@ export default function NewsDetailScreen() {
               onPress={handleFavoritePress}
             >
               <MaterialIcons 
-                name={newsItem?.favorites?.users?.includes(user?._id) ? 'favorite' : 'favorite-border'} 
+                name={newsItem?.favorites?.users?.includes(user?._id ?? '') ? 'favorite' : 'favorite-border'} 
                 size={24} 
                 color={COLORS.primary} 
               />
@@ -181,13 +210,7 @@ export default function NewsDetailScreen() {
           {renderContent(newsItem.content)}
         </View>
 
-        {user?.role === 'admin' && newsItem?.views && isValidViews(newsItem.views) && (
-          <View style={[styles.statsContainer, { marginBottom: 16 }]}>
-            <Text style={styles.statsText}>
-              Views: {newsItem.views.total} (Unique: {newsItem.views.unique})
-            </Text>
-          </View>
-        )}
+        {renderStats()}
       </ScrollView>
     </SafeAreaView>
   );
@@ -303,10 +326,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-  statsText: {
+  statItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  statLabel: {
     fontSize: 14,
     fontFamily: FONTS.regular,
-    color: COLORS.dark,
+    color: COLORS.gray,
   },
   viewCountContainer: {
     position: 'absolute',
