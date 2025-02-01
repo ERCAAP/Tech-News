@@ -1346,3 +1346,23 @@
 {"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T12:55:10.673Z"}
 {"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-02-01T12:55:20.826Z"}
 {"level":"info","message":"Server is running on port 3000","timestamp":"2025-02-01T12:55:20.831Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:02:19.754Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:05:52.049Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:05:52.140Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:06:55.534Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:06:55.614Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:07:08.605Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:07:08.676Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T13:15:48.471Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T13:15:48.471Z"}
+{"exp":1741007228,"iat":1738415228,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T13:15:48.473Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T13:15:48.478Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T13:16:02.997Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T13:16:02.997Z"}
+{"exp":1741007228,"iat":1738415228,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T13:16:02.999Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T13:16:03.001Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T13:16:03.662Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T13:16:03.663Z"}
+{"exp":1741007228,"iat":1738415228,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T13:16:03.664Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T13:16:03.666Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T13:16:05.863Z"}

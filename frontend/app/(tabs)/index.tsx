@@ -1,14 +1,19 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchNews } from '@/redux/slices/newsSlice';
-import { COLORS, FONTS } from '@/theme';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { Loading } from '@/components/common/Loading';
-import { NewsFeed } from '@/components/news/NewsFeed';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { NewsCard } from '@/components/news/NewsCard';
+import Animated from 'react-native-reanimated';
 import { NewsItem } from '@/types';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+const CATEGORY_CARD_WIDTH = width * 0.75;
+const SPACING = 20;
 
 interface Category {
   id: string;
@@ -69,38 +74,59 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
       {/* Trending Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Trending Now</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.trendingSection}>
+        <View style={styles.trendingHeader}>
+          <MaterialIcons name="trending-up" size={24} color={COLORS.white} />
+          <Text style={styles.trendingTitle}>Trending Now</Text>
+        </View>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.trendingContent}
+          snapToInterval={CARD_WIDTH + SPACING}
+          decelerationRate="fast"
+          style={styles.trendingScroll}
+        >
           {trendingNews.map((item) => (
-            <View key={item._id} style={styles.trendingCard}>
+            <Animated.View key={item._id} style={styles.trendingCard}>
               <NewsCard news={item} />
-            </View>
+            </Animated.View>
           ))}
         </ScrollView>
       </View>
 
-      {/* Category Sections */}
+      {/* Categories with News */}
       {CATEGORIES.map(category => (
-        <View key={category.id} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.titleContainer}>
+        <View key={category.id} style={styles.categorySection}>
+          <View style={styles.categoryHeader}>
+            <View style={styles.categoryTitleContainer}>
               <MaterialIcons name={category.icon} size={24} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>{category.title}</Text>
+              <Text style={styles.categoryTitle}>{category.title}</Text>
             </View>
             <TouchableOpacity 
-              style={styles.viewAllButton}
+              style={styles.moreButton}
               onPress={() => handleViewAllCategory(category.id)}
             >
-              <MaterialIcons name="add-circle-outline" size={24} color={COLORS.gray} />
+              <Text style={styles.moreText}>More</Text>
+              <MaterialIcons name="arrow-forward" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryContent}
+            style={styles.categoryScroll}
+          >
             {newsByCategory[category.id]?.length > 0 ? (
               newsByCategory[category.id].map((item) => (
-                <View key={item._id} style={styles.categoryCard}>
+                <View key={item._id} style={styles.categoryNewsCard}>
                   <NewsCard news={item} />
                 </View>
               ))
@@ -110,12 +136,7 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       ))}
-
-      {/* Recent News Feed */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Latest News</Text>
-        <NewsFeed news={news.slice(0, 30)} />
-      </View>
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 }
@@ -125,42 +146,136 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  section: {
-    marginVertical: 12,
+  scrollContent: {
+    paddingBottom: Platform.OS === 'ios' ? 100 : 80,
   },
-  sectionHeader: {
+  trendingSection: {
+    marginTop: 16,
+    marginBottom: 32,
+  },
+  trendingScroll: {
+    marginTop: 8,
+  },
+  trendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    backgroundColor: COLORS.primary,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  trendingTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    color: 'white',
+    marginLeft: 8,
+  },
+  trendingContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  trendingCard: {
+    width: CARD_WIDTH,
+    marginRight: SPACING,
+    borderRadius: 16,
+    backgroundColor: COLORS.cardBackground,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.07,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  categorySection: {
+    marginBottom: 32,
+    paddingTop: 8,
+  },
+  categoryScroll: {
+    marginTop: 12,
+  },
+  categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 12,
+    backgroundColor: COLORS.cardBackground,
+    padding: 12,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  titleContainer: {
+  categoryTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  sectionTitle: {
+  categoryTitle: {
     fontSize: 18,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
     marginLeft: 8,
   },
-  viewAllButton: {
+  moreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primary + '10',
     padding: 8,
-    opacity: 0.6,
+    borderRadius: 8,
   },
-  trendingCard: {
-    width: 300,
-    marginHorizontal: 8,
+  moreText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
+    marginRight: 4,
   },
-  categoryCard: {
-    width: 250,
-    marginHorizontal: 8,
+  categoryContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  categoryNewsCard: {
+    width: CATEGORY_CARD_WIDTH,
+    marginRight: SPACING,
+    backgroundColor: 'transparent',
+    marginVertical: 8,
   },
   emptyText: {
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
+    width: CATEGORY_CARD_WIDTH,
     fontSize: 14,
-    marginLeft: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+    textAlign: 'center',
+    backgroundColor: COLORS.cardBackground,
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    shadowColor: COLORS.dark,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  bottomPadding: {
+    height: Platform.OS === 'ios' ? 100 : 80,
   },
 });

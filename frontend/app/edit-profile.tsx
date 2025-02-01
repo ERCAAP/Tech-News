@@ -4,13 +4,16 @@ import { COLORS } from '@/theme';
 import { Header } from '@/components/common/Header';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { logout } from '@/redux/slices/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EditProfileScreen() {
   const { user } = useAppSelector(state => state.auth);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -44,6 +47,19 @@ export default function EditProfileScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await AsyncStorage.removeItem('token');
+      dispatch(logout());
+      router.replace('/(auth)/login');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to logout');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,6 +99,13 @@ export default function EditProfileScreen() {
           disabled={isLoading}
           style={styles.button}
           isLoading={isLoading}
+        />
+        <Button
+          title="Logout"
+          onPress={handleLogout}
+          loading={isLoading}
+          variant="secondary"
+          style={styles.button}
         />
       </View>
     </View>

@@ -19,12 +19,15 @@ export const COLORS = {
   danger: '#DC3545',
   border: '#E5E7EB',
   black: '#000000',
+  cardBackground: '#FFFFFF',
+  cardBackgroundDark: '#F5F5F5',
 };
 
 export const FONTS = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  bold: 'Inter_700Bold',
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semibold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
   sizes: {
     xs: 12,
     sm: 14,
@@ -44,16 +47,16 @@ export const SIZES = {
   extraLarge: 24,
 };
 
-// Basit gölge stilleri
+// Gölge stilini güncelleyelim
 export const shadowStyle = {
-  shadowColor: '#000',
+  shadowColor: COLORS.dark,
   shadowOffset: {
     width: 0,
-    height: 2,
+    height: 1, // Daha az yükseklik
   },
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  elevation: 5,
+  shadowOpacity: 0.08, // Daha hafif opaklık
+  shadowRadius: 4,
+  elevation: 2, // Android için daha hafif gölge
 };
 
 export const theme = {
