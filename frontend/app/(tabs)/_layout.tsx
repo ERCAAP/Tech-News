@@ -1,93 +1,69 @@
 import { Tabs } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useAppSelector } from '@/redux/hooks';
-import { isUserAdmin } from '@/types';
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
-
-interface TabIconProps {
-  color: string;
-  size?: number;
-}
+import { StyleSheet, View } from 'react-native';
+import CustomTabBar from '../../components/navigation/CustomTabBar';
+import { COLORS } from '@/theme';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 export default function TabsLayout() {
-  const { user } = useAppSelector(state => state.auth);
-
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <Tabs screenOptions={{ headerShown: false }}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Haberler',
-            tabBarIcon: ({ color }: TabIconProps) => (
-              <MaterialIcons name="newspaper" size={24} color={color} />
-            ),
+    <View style={styles.container}>
+      <GestureHandlerRootView style={styles.content}>
+        <Tabs 
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: {
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 100,
+              backgroundColor: 'transparent',
+              borderTopWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
           }}
-        />
-        <Tabs.Screen
-          name="search"
-          options={{
-            title: 'Search',
-            tabBarIcon: ({ color }: TabIconProps) => (
-              <MaterialIcons name="search" size={24} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="favorites"
-          options={{
-            title: 'Favoriler',
-            tabBarIcon: ({ color }: TabIconProps) => (
-              <MaterialIcons name="favorite" size={24} color={color} />
-            ),
-          }}
-        />
-        {isUserAdmin(user) && (
+          tabBar={(props: BottomTabBarProps) => <CustomTabBar {...props} />}
+        >
           <Tabs.Screen
-            name="admin"
+            name="index"
             options={{
-              title: 'Admin',
-              tabBarIcon: ({ color }: TabIconProps) => (
-                <MaterialIcons name="admin-panel-settings" size={24} color={color} />
-              ),
+              title: 'News',
+              href: '/news',
             }}
           />
-        )}
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color }: TabIconProps) => (
-              <MaterialIcons name="person" size={24} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="news/[slug]"
-          options={{
-            href: null, // Bu route'u tab bar'da gösterme
-          }}
-        />
-        {user?.role === 'admin' && (
           <Tabs.Screen
-            name="admin/stats"
+            name="search"
             options={{
-              title: 'Stats',
-              tabBarIcon: ({ color }: TabIconProps) => (
-                <MaterialIcons name="analytics" size={24} color={color} />
-              ),
+              title: 'Search',
             }}
           />
-        )}
-      </Tabs>
-    </GestureHandlerRootView>
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: 'Profile',
+            }}
+          />
+          <Tabs.Screen
+            name="news/[slug]"
+            options={{
+              href: null,
+            }}
+          />
+        </Tabs>
+      </GestureHandlerRootView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  content: {
     flex: 1,
   },
 }); 

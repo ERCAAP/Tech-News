@@ -1,60 +1,131 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { usePathname, router } from 'expo-router';
+import { View, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/theme';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
+import Animated, { 
+  useAnimatedStyle, 
+  withSpring, 
+  withTiming,
+  interpolateColor,
+  useSharedValue,
+  withSequence,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-// Icon tiplerini tanımla
-type IconName = 'newspaper' | 'favorite' | 'search' | 'person';
+type TabIconName = 'article' | 'search' | 'person';
 
 interface TabItem {
-  name: string;
+  route: string;
+  icon: TabIconName;
   label: string;
-  icon: IconName;
 }
 
-export default function CustomTabBar() {
-  const pathname = usePathname();
-  const { favorites } = useSelector((state: RootState) => state.news);
-  const favoriteCount = favorites.length;
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-  const tabs: TabItem[] = [
-    { name: '/(tabs)', label: 'News', icon: 'newspaper' },
-    { name: '/(tabs)/favorites', label: 'Favorites', icon: 'favorite' },
-    { name: '/(tabs)/search', label: 'Search', icon: 'search' },
-    { name: '/(tabs)/profile', label: 'Profile', icon: 'person' },
-  ];
+const tabs: TabItem[] = [
+  { route: 'index', icon: 'article', label: 'News' },
+  { route: 'search', icon: 'search', label: 'Search' },
+  { route: 'profile', icon: 'person', label: 'Profile' }
+];
+
+export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+
+  const bottomPadding = Platform.select({
+    ios: Math.max(insets.bottom - 10, 0),
+    android: 0,
+  });
+
+  const pressAnimations = React.useRef(tabs.map(() => useSharedValue(1))).current;
 
   return (
-    <View style={styles.container}>
-      {tabs.map((tab) => {
-        const isActive = pathname?.startsWith(tab.name);
-        const isFavoriteTab = tab.name === '/(tabs)/favorites';
-        
-        return (
-          <TouchableOpacity
-            key={tab.name}
-            style={[styles.tab, isActive && styles.activeTab]}
-            onPress={() => router.push(tab.name)}
-          >
-            <MaterialIcons
-              name={tab.icon}
-              size={24}
-              color={isActive ? COLORS.primary : COLORS.gray}
-            />
-            {isFavoriteTab && favoriteCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{favoriteCount}</Text>
-              </View>
-            )}
-            <Text style={[styles.label, isActive && styles.activeLabel]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
+      <View style={styles.background}>
+        {tabs.map((tab, index) => {
+          const isActive = state.index === index;
+          
+          const animatedIconStyle = useAnimatedStyle(() => {
+            const scale = pressAnimations[index].value;
+            return {
+              transform: [
+                {
+                  scale: withSpring(isActive ? 1.15 : scale, {
+                    damping: 12,
+                    stiffness: 200,
+                  })
+                }
+              ],
+              backgroundColor: withTiming(
+                isActive ? `${COLORS.primary}20` : 'transparent',
+                { duration: 150 }
+              ),
+            };
+          });
+
+          const animatedTextStyle = useAnimatedStyle(() => {
+            return {
+              transform: [
+                {
+                  translateY: withSpring(isActive ? -2 : 0, {
+                    damping: 12,
+                    stiffness: 200,
+                  })
+                }
+              ],
+              opacity: withTiming(isActive ? 1 : 0.7, { duration: 150 }),
+              color: withTiming(
+                isActive ? COLORS.primary : COLORS.gray,
+                { duration: 150 }
+              ),
+            };
+          });
+
+          return (
+            <AnimatedTouchable
+              key={tab.route}
+              style={[styles.tab]}
+              onPress={() => {
+                const event = navigation.emit({
+                  type: 'tabPress',
+                  target: tab.route,
+                  canPreventDefault: true,
+                });
+
+                pressAnimations[index].value = withSequence(
+                  withTiming(0.9, { duration: 50 }),
+                  withTiming(1, { duration: 100 })
+                );
+
+                if (!isActive && !event.defaultPrevented) {
+                  navigation.navigate(tab.route);
+                }
+              }}
+              activeOpacity={1}
+            >
+              <Animated.View
+                style={[
+                  styles.iconContainer,
+                  animatedIconStyle,
+                ]}
+              >
+                <MaterialIcons
+                  name={tab.icon}
+                  size={24}
+                  color={isActive ? COLORS.primary : COLORS.gray}
+                />
+              </Animated.View>
+              <Animated.Text style={[
+                styles.label,
+                animatedTextStyle
+              ]}>
+                {tab.label}
+              </Animated.Text>
+            </AnimatedTouchable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -65,53 +136,49 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-  },
-  blur: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  content: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    backgroundColor: 'transparent',
+  },
+  background: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    paddingTop: 12,
+    paddingBottom: Platform.select({
+      ios: 12,
+      android: 16,
+    }),
+    paddingHorizontal: 12,
+    width: '100%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.dark,
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   tab: {
     flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+    height: 52,
+    position: 'relative',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  activeIconContainer: {
-    backgroundColor: COLORS.primary,
+    padding: 10,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
   },
   label: {
-    marginTop: 4,
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  activeLabel: {
-    color: COLORS.primary,
-  },
-  badge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    padding: 2,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: COLORS.white,
+    marginTop: 4,
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 }); 
