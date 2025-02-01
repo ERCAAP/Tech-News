@@ -160,7 +160,10 @@ export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Respons
 
   const updatedNews = await News.findByIdAndUpdate(
     req.params.id,
-    update,
+    {
+      ...update,
+      $inc: { favoriteCount: isFavorited ? -1 : 1 }
+    },
     { new: true }
   );
 
@@ -168,7 +171,8 @@ export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Respons
     status: 'success',
     data: {
       isFavorited: !isFavorited,
-      favorites: updatedNews?.favorites || []
+      favorites: updatedNews?.favorites || [],
+      favoriteCount: updatedNews?.favoriteCount || 0
     }
   });
 });
