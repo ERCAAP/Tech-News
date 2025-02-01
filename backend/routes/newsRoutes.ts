@@ -34,18 +34,18 @@ router.use((req: AuthRequest, res: Response, next: NextFunction) => {
 });
 
 // Route handlers
-router.get('/', (req: AuthRequest, res: Response, next: NextFunction) => getAllNews(req, res, next));
-router.post('/', auth, (req: AuthRequest, res: Response, next: NextFunction) => createNews(req, res, next));
+router.get('/', getAllNews);
+router.post('/', auth, createNews);
 
 // Admin routeları - sadece admin erişebilir
-router.put('/:id', auth, isAdmin, (req: AuthRequest, res: Response, next: NextFunction) => updateNews(req, res, next));
-router.delete('/:id', auth, isAdmin, (req: AuthRequest, res: Response) => deleteNews(req, res));
+router.put('/:id', auth, isAdmin, updateNews);
+router.delete('/:id', auth, isAdmin, deleteNews);
 
 // Favori routeları
-router.post('/:id/favorite', auth, (req: AuthRequest, res: Response, next: NextFunction) => toggleFavorite(req, res, next));
-router.get('/user/favorites', auth, (req: AuthRequest, res: Response) => getUserFavorites(req, res));
+router.post('/:id/favorite', auth, toggleFavorite);
+router.get('/user/favorites', auth, getUserFavorites);
 
 // Görüntülenme routeı
-router.post('/:id/view', auth, (req: AuthRequest, res: Response, next: NextFunction) => viewNews(req, res, next));
+router.post('/:id/view', auth, viewNews);
 
 export default router; 

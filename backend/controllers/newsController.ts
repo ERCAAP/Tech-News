@@ -95,7 +95,7 @@ export async function viewNews(req: AuthRequest, res: Response, next: NextFuncti
   }
 }
 
-export async function toggleFavorite(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+export async function toggleFavorite(req: AuthRequest, res: Response): Promise<void> {
   try {
     if (!req.user?._id) {
       res.status(401).json({ message: 'Authentication required' });
@@ -107,10 +107,10 @@ export async function toggleFavorite(req: AuthRequest, res: Response, next: Next
       res.status(404).json({ message: 'News not found' });
       return;
     }
-    
+
     const userId = toObjectId(req.user._id);
     const userIndex = news.favorites.users.findIndex(id => id.equals(userId));
-    
+
     if (userIndex === -1) {
       news.favorites.users.push(userId);
       news.favorites.count += 1;
@@ -118,22 +118,39 @@ export async function toggleFavorite(req: AuthRequest, res: Response, next: Next
       news.favorites.users.splice(userIndex, 1);
       news.favorites.count -= 1;
     }
-    
+
     await news.save();
-    res.json(news);
+    res.json({
+      newsId: news._id,
+      favorites: {
+        users: news.favorites.users,
+        count: news.favorites.count
+      }
+    });
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: 'Failed to update favorite status' });
   }
 }
 
 export async function getUserFavorites(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const news = await News.find({
-      'favorites.users': req.user?._id
-    });
-    res.json(news);
+    if (!req.user?._id) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+
+    const user = await User.findById(req.user._id)
+      .populate({
+        path: 'favorites.news',
+        populate: {
+          path: 'author',
+          select: 'firstName lastName'
+        }
+      });
+
+    res.json({ favorites: user?.favorites || [] });
   } catch (error) {
-    res.status(400).json({ message: 'Error fetching favorites' });
+    res.status(500).json({ message: 'Failed to get favorites' });
   }
 }
 

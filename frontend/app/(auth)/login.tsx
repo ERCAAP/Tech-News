@@ -46,6 +46,17 @@ export default function LoginScreen() {
     }
   };
 
+  const autoLogin = async (email: string, password: string) => {
+    try {
+      const result = await dispatch(login({ email, password })).unwrap();
+      if (result) {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      console.log('Auto login failed, user needs to login manually');
+    }
+  };
+
   const loadSavedCredentials = async () => {
     try {
       const savedRememberMe = await AsyncStorage.getItem('rememberMe');
@@ -59,6 +70,8 @@ export default function LoginScreen() {
           email: savedEmail,
           password: savedPassword
         }));
+        
+        await autoLogin(savedEmail, savedPassword);
       } else {
         setRememberMe(false);
         setFormData({ email: '', password: '' });

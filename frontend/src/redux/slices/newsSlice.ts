@@ -118,6 +118,19 @@ export const updateNewsAsync = createAsyncThunk(
   }
 );
 
+// deleteNews thunk'ını ekle
+export const deleteNews = createAsyncThunk(
+  'news/deleteNews',
+  async (newsId: string, { rejectWithValue }) => {
+    try {
+      await api.delete(`/news/${newsId}`);
+      return newsId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete news');
+    }
+  }
+);
+
 const newsSlice = createSlice({
   name: 'news',
   initialState,
@@ -225,6 +238,19 @@ const newsSlice = createSlice({
       .addCase(updateNewsAsync.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to update news';
+      })
+      .addCase(deleteNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.news = state.news.filter(item => item._id !== action.payload);
+        state.error = null;
+      })
+      .addCase(deleteNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Haber silme hatası';
       });
   }
 });
@@ -232,7 +258,7 @@ const newsSlice = createSlice({
 export const { setNews, addNews, setLoading, setError } = newsSlice.actions;
 export default newsSlice.reducer;
 
-// newsThunks'ı ekleyelim
+// newsThunks objesine deleteNews'u ekle
 export const newsThunks = {
   fetchNews,
   createNews,
@@ -242,4 +268,5 @@ export const newsThunks = {
   toggleFavorite,
   getNewsStats,
   updateNewsAsync,
+  deleteNews,
 }; 

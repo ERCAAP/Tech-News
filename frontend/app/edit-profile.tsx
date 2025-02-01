@@ -4,13 +4,12 @@ import { COLORS } from '@/theme';
 import { Header } from '@/components/common/Header';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { useAppSelector, useAppDispatch } from '@/redux/hooks';
+import { useAppSelector } from '@/redux/hooks';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function EditProfileScreen() {
   const { user } = useAppSelector(state => state.auth);
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',

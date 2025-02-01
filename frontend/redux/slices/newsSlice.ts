@@ -38,32 +38,13 @@ export const toggleFavorite = createAsyncThunk(
   'news/toggleFavorite',
   async (newsId: string, { rejectWithValue }) => {
     try {
-      console.log('Toggle Favorite - Making request for newsId:', newsId);
       const response = await axiosInstance.post(`/news/${newsId}/favorite`);
-      console.log('Toggle Favorite - Response:', response.data);
       return response.data;
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        console.error('Toggle Favorite - Error:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            baseURL: error.config?.baseURL
-          }
-        });
         return rejectWithValue(error.response?.data?.message || 'Failed to update favorite status');
       }
-      
-      if (error instanceof Error) {
-        console.error('Toggle Favorite - Unknown Error:', error.message);
-        return rejectWithValue(error.message);
-      }
-
-      console.error('Toggle Favorite - Unexpected Error:', error);
-      return rejectWithValue('An unexpected error occurred');
+      return rejectWithValue('Failed to update favorite status');
     }
   }
 );
@@ -210,5 +191,6 @@ export default newsSlice.reducer;
 
 export const newsThunks = {
   updateNewsAsync,
+  deleteNews,
   // ... diğer thunk'lar
 }; 

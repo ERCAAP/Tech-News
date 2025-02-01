@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews, toggleFavorite } from '@/redux/slices/newsSlice';
+import { viewNews, toggleFavorite, deleteNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { EditNewsModal } from 'components/admin/EditNewsModal';
 
 interface NewsViews {
   total: number;
@@ -46,6 +47,8 @@ export default function NewsDetailScreen() {
     const newsWithSlug = item as NewsItem & { slug?: string };
     return newsWithSlug.slug === slug;
   });
+
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   useEffect(() => {
     if (!newsItem) {
@@ -92,13 +95,9 @@ export default function NewsDetailScreen() {
     }
   };
 
-  const handleEdit = () => {
-    if (!newsItem) return;
-    console.log('Edit functionality to be implemented');
-  };
-
   const handleDelete = async () => {
     if (!newsItem) return;
+    
     Alert.alert(
       'Delete News',
       'Are you sure you want to delete this news?',
@@ -109,7 +108,8 @@ export default function NewsDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('Delete functionality to be implemented');
+              await dispatch(deleteNews(newsItem._id)).unwrap();
+              ToastAndroid.show('News deleted successfully', ToastAndroid.SHORT);
               router.replace('/(tabs)');
             } catch (error) {
               Alert.alert('Error', 'Failed to delete news');
@@ -159,7 +159,7 @@ export default function NewsDetailScreen() {
         <View style={styles.adminControls}>
           <TouchableOpacity 
             style={styles.adminButton}
-            onPress={handleEdit}
+            onPress={() => setIsEditModalVisible(true)}
           >
             <MaterialIcons name="edit" size={24} color={COLORS.primary} />
           </TouchableOpacity>
@@ -170,6 +170,15 @@ export default function NewsDetailScreen() {
             <MaterialIcons name="delete" size={24} color={COLORS.error} />
           </TouchableOpacity>
         </View>
+      )}
+
+      {/* Edit Modal */}
+      {newsItem && (
+        <EditNewsModal
+          visible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          news={newsItem}
+        />
       )}
 
       {user?.role === 'admin' && (
