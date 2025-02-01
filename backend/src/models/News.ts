@@ -33,7 +33,7 @@ export interface INews extends Document {
 const newsSchema = new Schema<INews>({
   title: {
     type: String,
-    required: [true, 'Başlık zorunludur'],
+    required: [true, 'Haber başlığı gereklidir'],
     trim: true
   },
   displayTitle: {
@@ -47,23 +47,26 @@ const newsSchema = new Schema<INews>({
   },
   content: {
     type: String,
-    required: [true, 'İçerik zorunludur']
+    required: [true, 'Haber içeriği gereklidir']
   },
   summary: {
     type: String,
-    required: true,
-    maxlength: 200
+    required: [true, 'Haber özeti gereklidir'],
+    maxlength: [200, 'Özet en fazla 200 karakter olabilir']
   },
   author: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: [true, 'Yazar bilgisi gereklidir']
   },
   category: {
     type: String,
-    required: true,
-    enum: ['TECHNOLOGY', 'AI', 'APP'],
-    message: 'Geçersiz kategori seçimi'
+    required: [true, 'Kategori gereklidir'],
+    enum: {
+      values: ['TECHNOLOGY', 'AI', 'APP_DEVELOPMENT', 'CYBER_SECURITY', 'GENERAL'],
+      message: '{VALUE} geçerli bir kategori değildir'
+    },
+    uppercase: true
   },
   subCategory: {
     type: String,
@@ -73,19 +76,13 @@ const newsSchema = new Schema<INews>({
     type: String,
     trim: true
   }],
-  imageUrl: {
-    type: String,
-    get: function(v: any) {
-      if (!v) return '';
-      return v;
-    }
-  },
+  imageUrl: String,
   contentImages: [String],
   videoUrl: String,
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
-    default: 'published'
+    default: 'draft'
   },
   viewCount: {
     type: Number,
@@ -122,8 +119,8 @@ const newsSchema = new Schema<INews>({
   updatedAt: { type: Date, default: Date.now }
 }, {
   timestamps: true,
-  toJSON: { getters: true },
-  toObject: { getters: true }
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Okuma süresini hesapla (ortalama 200 kelime/dakika)
@@ -145,6 +142,7 @@ newsSchema.pre('save', function(next) {
 // İndeksler
 newsSchema.index({ title: 'text', content: 'text', summary: 'text' });
 newsSchema.index({ category: 1, status: 1 });
+newsSchema.index({ author: 1 });
 newsSchema.index({ publishedAt: -1 });
 newsSchema.index({ viewCount: -1 });
 

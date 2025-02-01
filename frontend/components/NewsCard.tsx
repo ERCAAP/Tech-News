@@ -5,7 +5,7 @@ import { NewsItem } from '@/types';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
-import { getImageUrl } from '@/utils/imageHelper';
+import { getImageUrl } from '../utils/api';
 
 interface NewsCardProps {
   news: NewsItem;

@@ -1,44 +1,28 @@
 import express from 'express';
 import { protect, restrictTo } from '../middleware/authMiddleware';
-import {
-  getAllNews,
-  getNewsById,
-  createNews,
-  updateNews,
-  deleteNews,
-} from '../controllers/newsController';
+import * as newsController from '../controllers/newsController';
 import { upload, logUploadedFiles } from '../utils/upload';
 import { AppError } from '../utils/AppError';
 
 const router = express.Router();
 
 // Public routes
-router.get('/', getAllNews);
-router.get('/:id', getNewsById);
+router.get('/', newsController.getAllNews);
+router.get('/:id', newsController.getNewsById);
 
-// Admin routes
-router.post('/', 
-  protect,
-  restrictTo('admin'),
-  logUploadedFiles,
-  upload.fields([
-    { name: 'coverImage', maxCount: 1 },
-    { name: 'contentImages', maxCount: 10 }
-  ]),
-  createNews
-);
+// Protected routes
+router.use(protect);
 
-router.put('/:id',
-  protect, 
-  restrictTo('admin'),
-  upload.fields([
-    { name: 'image', maxCount: 1 },
-    { name: 'contentImages', maxCount: 10 }
-  ]),
-  updateNews
-);
+// User routes
+router.post('/:id/view', newsController.viewNews);
+router.post('/:id/favorite', newsController.toggleFavorite);
 
-router.delete('/:id', protect, restrictTo('admin'), deleteNews);
+// Admin only routes
+router.use(restrictTo('admin'));
+router.post('/', newsController.createNews);
+router.patch('/:id', newsController.updateNews);
+router.delete('/:id', newsController.deleteNews);
+router.get('/stats', newsController.getNewsStats);
 
 // Upload endpoint'i ekle
 router.post('/upload', 
