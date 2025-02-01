@@ -81,14 +81,32 @@ export async function viewNews(req: AuthRequest, res: Response, next: NextFuncti
       res.status(404).json({ message: 'News not found' });
       return;
     }
-    
+
     const userId = toObjectId(req.user._id);
-    if (!news.views.uniqueUsers.includes(userId)) {
-      news.views.uniqueUsers.push(userId);
+    
+    // Kullanıcının daha önce görüntüleyip görüntülemediğini kontrol et
+    const hasViewed = news.views.history.some(view => 
+      view.userId.toString() === userId.toString()
+    );
+
+    if (!hasViewed) {
+      // Yeni görüntüleme ekle
       news.views.total += 1;
+      news.views.unique += 1;
+      news.views.history.push({
+        userId,
+        timestamp: new Date()
+      });
+
+      // Son 24 saat içindeki görüntülenmeleri hesapla
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      news.views.last24Hours = news.views.history.filter(
+        view => view.timestamp > oneDayAgo
+      ).length;
+
       await news.save();
     }
-    
+
     res.json(news);
   } catch (error) {
     next(error);

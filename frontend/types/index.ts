@@ -1,3 +1,13 @@
+export interface ViewsData {
+  total: number;
+  unique: number;
+  last24Hours: number;
+  history: Array<{
+    userId: string;
+    timestamp: string;
+  }>;
+}
+
 export interface NewsItem {
   _id: string;
   title: string;
@@ -11,10 +21,7 @@ export interface NewsItem {
   contentImages?: string[];
   createdAt: string;
   updatedAt: string;
-  views?: {
-    total: number;
-    unique: number;
-  };
+  views?: ViewsData;
   favorites?: {
     count: number;
     users: string[];

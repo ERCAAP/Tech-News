@@ -23,6 +23,16 @@ export const isUserAdmin = (user: User | null): boolean => {
   return user?.role === 'admin';
 };
 
+export interface ViewsData {
+  total: number;
+  unique: number;
+  last24Hours: number;
+  history: Array<{
+    userId: string;
+    timestamp: string;
+  }>;
+}
+
 export interface NewsItem {
   _id: string;
   title: string;
@@ -37,6 +47,8 @@ export interface NewsItem {
     lastName: string;
     email?: string;
   };
+  views?: ViewsData;
+  favorites: any;
   createdAt: string;
   updatedAt?: string;
   likes?: string[];

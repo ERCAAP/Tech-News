@@ -16,7 +16,12 @@ interface INews extends Document {
   };
   views: {
     total: number;
-    uniqueUsers: mongoose.Types.ObjectId[];
+    unique: number;
+    last24Hours: number;
+    history: {
+      userId: mongoose.Types.ObjectId;
+      timestamp: Date;
+    }[];
   };
   shareCount: number;
   url?: string;
@@ -50,7 +55,12 @@ const NewsSchema = new Schema({
   },
   views: {
     total: { type: Number, default: 0 },
-    uniqueUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    unique: { type: Number, default: 0 },
+    last24Hours: { type: Number, default: 0 },
+    history: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      timestamp: { type: Date, default: Date.now }
+    }]
   },
   shareCount: { type: Number, default: 0 },
   url: { type: String }, // Dış kaynak URL'si (varsa)
