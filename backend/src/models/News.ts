@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface INews extends Document {
   title: string;          // Haber başlığı
@@ -22,7 +22,7 @@ export interface INews extends Document {
   isHighlighted: boolean; // Öne çıkan haber mi?
   readTime: number;       // Okuma süresi (dakika)
   views: number;
-  favorites: mongoose.Types.ObjectId[];
+  favorites: Types.ObjectId[];
   favoriteCount: number;
   // Model metodları
   addToFavorites(userId: mongoose.Types.ObjectId): Promise<INews>;
@@ -134,6 +134,10 @@ newsSchema.pre('save', function(next) {
   
   if (this.isModified()) {
     this.updatedAt = new Date();
+  }
+  
+  if (this.isModified('favorites')) {
+    this.favoriteCount = this.favorites.length;
   }
   
   next();

@@ -4,6 +4,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
+  token?: string;
   favoriteNews: string[];
   avatar?: string;
   createdAt: string;

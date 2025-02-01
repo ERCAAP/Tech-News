@@ -131,6 +131,23 @@ export const deleteNews = createAsyncThunk(
   }
 );
 
+// Add getFavoriteNews thunk
+export const getFavoriteNews = createAsyncThunk(
+  'news/getFavoriteNews',
+  async (token: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/news/favorites', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data.news;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch favorite news');
+    }
+  }
+);
+
 const newsSlice = createSlice({
   name: 'news',
   initialState,
@@ -251,6 +268,19 @@ const newsSlice = createSlice({
       .addCase(deleteNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Haber silme hatası';
+      })
+      .addCase(getFavoriteNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getFavoriteNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.favorites = action.payload;
+        state.error = null;
+      })
+      .addCase(getFavoriteNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   }
 });
@@ -269,4 +299,5 @@ export const newsThunks = {
   getNewsStats,
   updateNewsAsync,
   deleteNews,
+  getFavoriteNews,
 }; 

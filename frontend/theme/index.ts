@@ -13,6 +13,7 @@ export const COLORS = {
   white: '#FFFFFF',
   darkBackground: '#000000',
   darkSecondary: '#2C2C2E',
+  danger: '#dc3545',
 };
 
 export const FONTS = {

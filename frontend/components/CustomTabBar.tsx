@@ -3,12 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { usePathname, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '@/theme';
-import { useAuth } from '@/hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 import { API_URL } from '@/utils/api';
 
 export function CustomTabBar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [favoriteCount, setFavoriteCount] = useState(0);
 
   // Favori sayısını getir
@@ -58,7 +59,21 @@ export function CustomTabBar() {
 }
 
 const styles = StyleSheet.create({
-  // ... diğer stiller ...
+  container: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  tab: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    padding: 10,
+  },
   badge: {
     position: 'absolute',
     top: -5,

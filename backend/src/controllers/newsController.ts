@@ -6,6 +6,7 @@ import { Types } from 'mongoose';
 import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
 import { uploadImage } from '../utils/imageUpload';
+import { User } from '../models/User';
 
 // Request tipini genişlet
 interface AuthRequest extends Request {
@@ -143,29 +144,38 @@ export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Respons
     throw new AppError('Unauthorized', 401);
   }
 
-  const news = await News.findById(req.params.id);
+  const newsId = req.params.id;
+  const userId = new Types.ObjectId(req.user.id);
+
+  const news = await News.findById(newsId);
   if (!news) {
     throw new AppError('News not found', 404);
   }
 
-  // ObjectId'ye çevir
-  const userId = new Types.ObjectId(req.user.id);
-  
-  // favorites array'inde ObjectId olarak ara
-  const isFavorited = news.favorites.some(id => id.equals(userId));
-  
-  const update = isFavorited
-    ? { $pull: { favorites: userId } }
-    : { $addToSet: { favorites: userId } };
+  // Favori durumunu kontrol et
+  const user = await User.findById(userId);
+  const isFavorited = user?.favoriteNews.includes(news._id);
 
-  const updatedNews = await News.findByIdAndUpdate(
-    req.params.id,
+  // User modelini güncelle
+  await User.findByIdAndUpdate(
+    userId,
     {
-      ...update,
+      [isFavorited ? '$pull' : '$addToSet']: { favoriteNews: news._id }
+    },
+    { new: true }
+  );
+
+  // News modelini güncelle
+  const updatedNews = await News.findByIdAndUpdate(
+    newsId,
+    {
+      [isFavorited ? '$pull' : '$addToSet']: { favorites: userId },
       $inc: { favoriteCount: isFavorited ? -1 : 1 }
     },
     { new: true }
   );
+
+  console.log('Toggle favorite result:', { isFavorited, userId, newsId }); // Debug için log
 
   res.status(200).json({
     status: 'success',
@@ -175,6 +185,39 @@ export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Respons
       favoriteCount: updatedNews?.favoriteCount || 0
     }
   });
+});
+
+// Kullanıcının favori haberlerini getir
+export const getFavoriteNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    console.log('User favorite news IDs:', user.favoriteNews); // Debug için
+
+    const news = await News.find({
+      '_id': { $in: user.favoriteNews }
+    }).populate('author', 'firstName lastName');
+
+    console.log('Found favorite news:', news); // Debug için
+
+    res.status(200).json({
+      status: 'success',
+      results: news.length,
+      data: {
+        news
+      }
+    });
+  } catch (error) {
+    console.error('Get Favorite News Error:', error);
+    throw new AppError('Failed to get favorite news', 500);
+  }
 });
 
 // İstatistikleri getir
@@ -257,5 +300,29 @@ export const getFavoriteCount = asyncHandler(async (req: AuthRequest, res: Respo
   res.status(200).json({
     status: 'success',
     count
+  });
+});
+
+// Favori durumunu kontrol et
+export const checkFavoriteStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const newsId = req.params.id;
+  const userId = new Types.ObjectId(req.user.id);
+
+  const news = await News.findById(newsId);
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  const isFavorited = news.favorites.some(id => id.equals(userId));
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      isFavorited
+    }
   });
 }); 

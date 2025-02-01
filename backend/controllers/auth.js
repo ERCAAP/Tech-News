@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const News = require('../models/News');
 
 exports.login = async (req, res) => {
   try {
@@ -77,18 +78,39 @@ exports.updateProfile = async (req, res) => {
 exports.getFavoriteNews = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId)
-      .populate('favoriteNews')
-      .select('favoriteNews');
+    console.log('Getting favorites for user:', userId);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    console.log('User favorite news IDs:', user.favoriteNews);
+
+    const favoriteNews = await News.find({
+      _id: { $in: user.favoriteNews }
+    }).populate({
+      path: 'author',
+      select: 'firstName lastName'
+    });
+
+    console.log('Found favorites:', {
+      count: favoriteNews.length,
+      news: favoriteNews
+    });
 
     res.json({
       status: 'success',
       data: {
-        favoriteNews: user.favoriteNews
+        news: favoriteNews
       }
     });
   } catch (error) {
-    res.status(400).json({
+    console.error('GetFavoriteNews Error:', error);
+    res.status(500).json({
       status: 'error',
       message: error.message
     });

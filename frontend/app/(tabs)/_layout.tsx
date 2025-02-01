@@ -20,7 +20,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'News',
+            title: 'Haberler',
             tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="newspaper" size={24} color={color} />
             ),
@@ -38,7 +38,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="favorites"
           options={{
-            title: 'Favorites',
+            title: 'Favoriler',
             tabBarIcon: ({ color }: TabIconProps) => (
               <MaterialIcons name="favorite" size={24} color={color} />
             ),

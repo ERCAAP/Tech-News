@@ -107,6 +107,34 @@ export const updateUserProfile = createAsyncThunk(
   }
 );
 
+// Add this after other thunks and before the authSlice definition
+export const restoreUserSession = createAsyncThunk(
+  'auth/restoreSession',
+  async (_, { dispatch }) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      // Set the token in API client
+      authAPI.setAuthToken(token);
+      
+      // Set token in state
+      dispatch(setToken(token));
+      
+      // Fetch user data
+      const response = await dispatch(getMe()).unwrap();
+      return response;
+    } catch (error) {
+      // Clear any invalid tokens
+      await AsyncStorage.removeItem('token');
+      throw error;
+    }
+  }
+);
+
 // Auth slice
 const authSlice = createSlice({
   name: 'auth',
@@ -186,6 +214,22 @@ const authSlice = createSlice({
         console.log('UpdateUserProfile - Rejected:', action.payload);
         state.isLoading = false;
         state.error = action.payload as string || 'Failed to update profile';
+      });
+
+    // Restore Session
+    builder
+      .addCase(restoreUserSession.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(restoreUserSession.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.data.user;
+      })
+      .addCase(restoreUserSession.rejected, (state) => {
+        state.isLoading = false;
+        state.user = null;
+        state.token = null;
       });
   }
 });

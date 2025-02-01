@@ -73,6 +73,8 @@ export default function HomeScreen() {
     return <Loading />;
   }
 
+  console.log('News added to favorites, checking favorites page...');
+
   return (
     <ScrollView 
       style={styles.container}

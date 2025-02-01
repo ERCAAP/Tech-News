@@ -1,100 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, usePathname } from 'expo-router';
-import { useAuth } from '@/hooks/useAuth';
+import { usePathname, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Animated } from 'react-native';
-import { BlurView } from 'react-native-blur';
 import { COLORS } from '@/theme';
-import { API_URL } from '../utils/api';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+
+// Icon tiplerini tanımla
+type IconName = 'newspaper' | 'favorite' | 'search' | 'person';
+
+interface TabItem {
+  name: string;
+  label: string;
+  icon: IconName;
+}
 
 export default function CustomTabBar() {
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
-  const [favoriteCount, setFavoriteCount] = useState(0);
+  const { favorites } = useSelector((state: RootState) => state.news);
+  const favoriteCount = favorites.length;
 
-  // Favori sayısını getir
-  useEffect(() => {
-    if (user?._id) {
-      fetchFavoriteCount();
-    }
-  }, [user?._id, pathname]);
-
-  const fetchFavoriteCount = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/news/favorites/count`, {
-        headers: {
-          'Authorization': `Bearer ${user?.token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setFavoriteCount(data.count);
-      }
-    } catch (error) {
-      console.error('Error fetching favorite count:', error);
-    }
-  };
-
-  const handlePress = (tab) => {
-    router.push(tab.name);
-  };
-
-  const isActive = (name) => {
-    return pathname === name;
-  };
-
-  const tabs = [
-    { name: '/(tabs)/home', label: 'Home', icon: 'home' },
+  const tabs: TabItem[] = [
+    { name: '/(tabs)', label: 'News', icon: 'newspaper' },
     { name: '/(tabs)/favorites', label: 'Favorites', icon: 'favorite' },
+    { name: '/(tabs)/search', label: 'Search', icon: 'search' },
     { name: '/(tabs)/profile', label: 'Profile', icon: 'person' },
   ];
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      <BlurView intensity={80} tint="light" style={styles.blur}>
-        <View style={styles.content}>
-          {tabs.map((tab) => {
-            const isSelected = isActive(tab.name);
-            
-            // Favorites tab için badge göster
-            const showBadge = tab.name === '/(tabs)/favorites' && favoriteCount > 0;
-            
-            return (
-              <TouchableOpacity
-                key={tab.name}
-                style={[styles.tab, isSelected && styles.activeTab]}
-                onPress={() => handlePress(tab)}
-              >
-                <Animated.View style={[
-                  styles.iconContainer,
-                  isSelected && styles.activeIconContainer,
-                ]}>
-                  <MaterialIcons
-                    name={tab.icon as any}
-                    size={24}
-                    color={isSelected ? COLORS.white : COLORS.gray}
-                  />
-                  {showBadge && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{favoriteCount}</Text>
-                    </View>
-                  )}
-                </Animated.View>
-                <Text style={[
-                  styles.label,
-                  isSelected && styles.activeLabel
-                ]}>
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </BlurView>
+    <View style={styles.container}>
+      {tabs.map((tab) => {
+        const isActive = pathname?.startsWith(tab.name);
+        const isFavoriteTab = tab.name === '/(tabs)/favorites';
+        
+        return (
+          <TouchableOpacity
+            key={tab.name}
+            style={[styles.tab, isActive && styles.activeTab]}
+            onPress={() => router.push(tab.name)}
+          >
+            <MaterialIcons
+              name={tab.icon}
+              size={24}
+              color={isActive ? COLORS.primary : COLORS.gray}
+            />
+            {isFavoriteTab && favoriteCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{favoriteCount}</Text>
+              </View>
+            )}
+            <Text style={[styles.label, isActive && styles.activeLabel]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }

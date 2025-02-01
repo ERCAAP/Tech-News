@@ -12,21 +12,21 @@ export interface NewsItem {
   _id: string;
   title: string;
   content: string;
+  summary: string;
   author: {
+    _id: string;
     firstName: string;
     lastName: string;
   };
   category: string;
   imageUrl?: string;
-  contentImages?: string[];
+  views?: {
+    total: number;
+  };
+  likes?: string[];
+  favorites?: string[];
   createdAt: string;
   updatedAt: string;
-  views?: ViewsData;
-  favorites?: {
-    count: number;
-    users: string[];
-  };
-  status: 'draft' | 'published' | 'archived';
 }
 
 export interface NewsState {
@@ -34,7 +34,7 @@ export interface NewsState {
   favorites: NewsItem[];
   isLoading: boolean;
   error: string | null;
-  stats: any;
+  stats: any | null;
 }
 
 export interface User {

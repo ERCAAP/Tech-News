@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { NewsState } from '../../types';
 import axios, { AxiosError } from 'axios';
 import axiosInstance from '@/api/axios';
+import { API_URL } from '@/utils/api';
+import { api } from '@/services/api';
 
 const initialState: NewsState = {
   news: [],
@@ -36,16 +38,20 @@ export const viewNews = createAsyncThunk(
 
 export const toggleFavorite = createAsyncThunk(
   'news/toggleFavorite',
-  async (newsId: string, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.post(`/news/${newsId}/favorite`);
-      return response.data;
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to update favorite status');
+  async ({ newsId, token }: { newsId: string; token: string }) => {
+    const response = await fetch(`${API_URL}/api/v1/news/${newsId}/favorite`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-      return rejectWithValue('Failed to update favorite status');
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to toggle favorite');
     }
+    
+    const data = await response.json();
+    return { newsId, isFavorited: data.data.isFavorited };
   }
 );
 
@@ -121,10 +127,85 @@ export const deleteNews = createAsyncThunk(
   }
 );
 
+export const fetchFavoriteNews = createAsyncThunk(
+  'news/fetchFavoriteNews',
+  async (token: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/news/user/favorites`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch favorite news');
+      }
+      
+      const data = await response.json();
+      return data.data.news;
+    } catch (error) {
+      console.error('Fetch favorites error:', error);
+      throw error;
+    }
+  }
+);
+
+export const getFavoriteNews = createAsyncThunk(
+  'news/getFavorites',
+  async (token: string) => {
+    try {
+      const response = await api.get('/news/favorites', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+      throw error;
+    }
+  }
+);
+
+export const createNews = createAsyncThunk(
+  'news/createNews',
+  async (newsData: any, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/news', newsData);
+      return response.data;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(error.response?.data?.message || 'Haber oluşturulamadı');
+      }
+      return rejectWithValue('Haber oluşturulamadı');
+    }
+  }
+);
+
+export const toggleLike = createAsyncThunk(
+  'news/toggleLike',
+  async ({ newsId, token }: { newsId: string; token: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/news/${newsId}/like`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Beğeni işlemi başarısız oldu');
+    }
+  }
+);
+
 const newsSlice = createSlice({
   name: 'news',
   initialState,
-  reducers: {},
+  reducers: {
+    clearFavorites: (state) => {
+      state.favorites = [];
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchNews.pending, (state) => {
@@ -150,15 +231,18 @@ const newsSlice = createSlice({
         state.news = updatedNews;
       })
       .addCase(toggleFavorite.fulfilled, (state, action) => {
-        const updatedNews = state.news.map(item => 
-          item._id === action.payload.newsId 
-            ? { 
-                ...item, 
-                favorites: action.payload.favorites
-              }
-            : item
-        );
-        state.news = updatedNews;
+        if (action.payload.isFavorited) {
+          // Haberi favorilere ekle
+          const newsToAdd = state.news.find(n => n._id === action.payload.newsId);
+          if (newsToAdd) {
+            state.favorites.push(newsToAdd);
+          }
+        } else {
+          // Haberi favorilerden çıkar
+          state.favorites = state.favorites.filter(
+            n => n._id !== action.payload.newsId
+          );
+        }
       })
       .addCase(toggleFavorite.rejected, (state, action) => {
         state.error = action.payload as string;
@@ -182,15 +266,40 @@ const newsSlice = createSlice({
       })
       .addCase(deleteNews.fulfilled, (state, action) => {
         state.news = state.news.filter(item => item._id !== action.payload);
+      })
+      .addCase(fetchFavoriteNews.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchFavoriteNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.favorites = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchFavoriteNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to fetch favorites';
+      })
+      .addCase(createNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.news.push(action.payload);
+        state.error = null;
+      })
+      .addCase(createNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(toggleLike.fulfilled, (state, action) => {
+        const index = state.news.findIndex(item => item._id === action.payload.newsId);
+        if (index !== -1) {
+          state.news[index].likes = action.payload.likes;
+        }
       });
   }
 });
 
-export const newsActions = newsSlice.actions;
-export default newsSlice.reducer;
-
-export const newsThunks = {
-  updateNewsAsync,
-  deleteNews,
-  // ... diğer thunk'lar
-}; 
+export const { clearFavorites } = newsSlice.actions;
+export default newsSlice.reducer; 

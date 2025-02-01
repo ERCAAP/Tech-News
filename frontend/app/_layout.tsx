@@ -8,6 +8,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CustomTabBar from '@/components/navigation/CustomTabBar';
 import { View } from 'react-native';
 import { usePathname } from 'expo-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { store } from '@/redux/store';
+
+const queryClient = new QueryClient();
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
@@ -55,10 +60,14 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <ReduxProvider>
-        <RootLayoutContent />
-      </ReduxProvider>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <ReduxProvider>
+            <RootLayoutContent />
+          </ReduxProvider>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </Provider>
   );
 } 

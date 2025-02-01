@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { register } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
@@ -186,11 +186,10 @@ export default function RegisterScreen() {
             darkMode={isDark}
           />
 
-          <Link 
-            href="/(auth)/login" 
-            style={[styles.link, isDark && styles.linkDark]}
-          >
-            Already have an account? Login
+          <Link href="/(auth)/login">
+            <Text style={[styles.link, isDark && styles.linkDark]}>
+              Already have an account? Login
+            </Text>
           </Link>
         </View>
       </Animated.ScrollView>

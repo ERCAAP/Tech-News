@@ -12,7 +12,7 @@ interface ApiResponse<T> {
   token?: string;
 }
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Accept': 'application/json',

@@ -14,8 +14,11 @@ router.get('/:id', newsController.getNewsById);
 router.use(protect);
 
 // User routes
+router.get('/user/favorites', newsController.getFavoriteNews);
 router.post('/:id/view', newsController.viewNews);
 router.post('/:id/favorite', newsController.toggleFavorite);
+router.get('/:id/favorite-status', newsController.checkFavoriteStatus);
+router.get('/favorites/count', newsController.getFavoriteCount);
 
 // Admin only routes
 router.use(restrictTo('admin'));
@@ -56,7 +59,5 @@ router.post('/upload',
     }
   }
 );
-
-router.get('/favorites/count', protect, newsController.getFavoriteCount);
 
 export default router; 

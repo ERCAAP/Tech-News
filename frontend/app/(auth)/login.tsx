@@ -241,11 +241,10 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <Link 
-            href="/(auth)/register" 
-            style={[styles.link, isDark && styles.linkDark]}
-          >
-            Don't have an account? Register
+          <Link href="/(auth)/register">
+            <Text style={[styles.link, isDark && styles.linkDark]}>
+              Don't have an account? Register
+            </Text>
           </Link>
         </View>
       </Animated.View>

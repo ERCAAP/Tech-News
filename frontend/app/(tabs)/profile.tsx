@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView, ToastAndroid, Modal, TextInput } from 'react-native';
-import { useAppDispatch } from '@/redux/hooks';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { updateUserProfile } from '@/redux/slices/authSlice';
-import { useAuth } from '@/contexts/AuthContext';
+import { updateUserProfile, logout } from '@/redux/slices/authSlice';
 import { getUserInitials } from '@/utils/userHelpers';
 import { User } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppDispatch } from '@/redux/store';
 
 const menuItems = [
   { icon: 'edit', label: 'Edit Profile', action: 'edit' },
@@ -22,8 +24,8 @@ const menuItems = [
 ] as const;
 
 export default function ProfileScreen() {
-  const dispatch = useAppDispatch();
-  const { user } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -47,7 +49,7 @@ export default function ProfileScreen() {
             ...user,
             avatar: result.assets[0].uri
           };
-          await dispatch(updateUserProfile(updatedUser)).unwrap();
+          await dispatch(updateUserProfile(updatedUser));
           Alert.alert('Success', 'Profile photo updated successfully');
         } catch (error) {
           Alert.alert('Error', 'Failed to update profile photo');
@@ -93,7 +95,6 @@ export default function ProfileScreen() {
     try {
       setIsLoading(true);
       
-      // Sadece değişen alanları gönder
       const updateData: Partial<User> = {};
       if (editForm.firstName !== user?.firstName) {
         updateData.firstName = editForm.firstName;
@@ -102,19 +103,17 @@ export default function ProfileScreen() {
         updateData.lastName = editForm.lastName;
       }
 
-      // Eğer hiçbir değişiklik yoksa güncelleme yapma
       if (Object.keys(updateData).length === 0) {
         setIsEditModalVisible(false);
         return;
       }
 
-      // Mevcut kullanıcı bilgileriyle birleştir
       const updatedUser = {
         ...user!,
         ...updateData
       };
 
-      await dispatch(updateUserProfile(updatedUser)).unwrap();
+      await dispatch(updateUserProfile(updatedUser));
       ToastAndroid.show('Profil başarıyla güncellendi', ToastAndroid.SHORT);
       setIsEditModalVisible(false);
       
@@ -127,6 +126,31 @@ export default function ProfileScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Çıkış Yap",
+      "Çıkış yapmak istediğinize emin misiniz?",
+      [
+        {
+          text: "İptal",
+          style: "cancel"
+        },
+        {
+          text: "Çıkış Yap",
+          style: "destructive",
+          onPress: async () => {
+            await AsyncStorage.removeItem('userToken');
+            await AsyncStorage.removeItem('userEmail');
+            await AsyncStorage.removeItem('userPassword');
+            await AsyncStorage.removeItem('rememberMe');
+            dispatch(logout());
+            router.replace('/(auth)/login');
+          }
+        }
+      ]
+    );
   };
 
   const renderAvatar = () => {
@@ -246,6 +270,14 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <MaterialIcons name="logout" size={24} color={COLORS.white} />
+          <Text style={styles.logoutText}>Çıkış Yap</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -404,4 +436,19 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
+  logoutButton: {
+    backgroundColor: COLORS.danger,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 'auto'
+  },
+  logoutText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10
+  }
 }); 

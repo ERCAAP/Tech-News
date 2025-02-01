@@ -7,7 +7,7 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   role: 'user' | 'admin';
-  favoriteNews: mongoose.Types.ObjectId[];
+  favoriteNews: Array<mongoose.Types.ObjectId>;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -41,7 +41,8 @@ const userSchema = new Schema<IUser>({
   },
   favoriteNews: [{
     type: Schema.Types.ObjectId,
-    ref: 'News'
+    ref: 'News',
+    default: []
   }],
   createdAt: {
     type: Date,
@@ -67,5 +68,12 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password!);
 };
+
+// Favori haberleri getirmek için virtual populate ekleyelim
+userSchema.virtual('favorites', {
+  ref: 'News',
+  localField: 'favoriteNews',
+  foreignField: '_id'
+});
 
 export const User = mongoose.model<IUser>('User', userSchema); 

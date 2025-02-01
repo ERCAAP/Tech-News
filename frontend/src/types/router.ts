@@ -1,6 +1,17 @@
 declare module "expo-router" {
   import type { ComponentProps } from 'react';
-  import type { LinkProps as OriginalLinkProps } from '@react-navigation/native';
+  import type { LinkProps as OriginalLinkProps, NavigatorScreenParams } from '@react-navigation/native';
+
+  // Define MainTabParamList
+  export type MainTabParamList = {
+    Home: undefined;
+    Profile: undefined;
+  };
+
+  export type RootParamList = {
+    Login: undefined;
+    Main: NavigatorScreenParams<MainTabParamList>;
+  };
 
   export type PathList = {
     "/": undefined;
@@ -18,7 +29,7 @@ declare module "expo-router" {
     "/(tabs)/news/[slug]": { slug: string };
     "/(auth)/login": undefined;
     "/(auth)/register": undefined;
-  };
+  } & RootParamList;
 
   export type PathConfig = PathList;
 
@@ -43,7 +54,14 @@ declare module "expo-router" {
   export const Stack: Stack;
   export const Tabs: Tabs;
   export const Redirect: Redirect;
-  export const Link: React.FC<OriginalLinkProps & { href: string }>;
+
+  // Update Link type to accept children and asChild
+  export interface CustomLinkProps extends Omit<OriginalLinkProps<PathConfig>, 'to'> {
+    href: string;
+    children?: React.ReactNode;
+    asChild?: boolean;
+  }
+  export const Link: React.FC<CustomLinkProps>;
 
   // Router instance
   export const router: ReturnType<typeof useRouter>;
