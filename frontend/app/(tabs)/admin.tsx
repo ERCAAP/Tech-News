@@ -1,6 +1,5 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Header } from '@/components/common/Header';
 import { CreateNewsForm } from '@/components/admin/CreateNewsForm';
 import { useAppSelector } from '@/redux/hooks';
 import { isUserAdmin } from '@/types';

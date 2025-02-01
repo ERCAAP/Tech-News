@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, StyleSheet, useWindowDimensions } from '
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
-import { Loading } from '@/components/common/Loading';
+import { Loading } from '../../components/common/Loading';
 import { NewsItem, NewsState } from '@/types';
 import { getImageUrl } from '@/utils/imageHelper';
 

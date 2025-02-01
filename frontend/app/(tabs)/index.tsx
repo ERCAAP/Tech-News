@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, RefreshControl, ScrollView } from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchNews } from '@/redux/slices/newsSlice';
@@ -6,57 +6,65 @@ import { COLORS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { NewsFeed } from '@/components/news/NewsFeed';
 import { CategoryCard } from '@/components/categories/CategoryCard';
+import { MaterialIcons } from '@expo/vector-icons';
 
-const CATEGORIES = [
-  { id: 'AI', title: 'Artificial Intelligence', icon: 'psychology' as const },
-  { id: 'TECHNOLOGY', title: 'Technology', icon: 'devices' as const },
-  { id: 'APP', title: 'Applications', icon: 'apps' as const }
+interface Category {
+  id: string;
+  title: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+}
+
+const CATEGORIES: Category[] = [
+  { id: 'AI', title: 'Artificial Intelligence', icon: 'psychology' },
+  { id: 'TECHNOLOGY', title: 'Technology', icon: 'devices' },
+  { id: 'APP', title: 'Applications', icon: 'apps' },
 ];
 
 export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const { news, isLoading } = useAppSelector(state => state.news);
 
+  const loadNews = useCallback(() => {
+    dispatch(fetchNews());
+  }, [dispatch]);
+
   useEffect(() => {
     loadNews();
-  }, []);
+  }, [loadNews]);
 
-  const loadNews = () => {
-    dispatch(fetchNews());
-  };
+  const newsCountByCategory = useMemo(() => {
+    return CATEGORIES.reduce((acc, category) => {
+      acc[category.id] = news.filter((item: { category: string; }) => item.category === category.id).length;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [news]);
 
-  const getNewsCountByCategory = (categoryId: string) => {
-    return news.filter(item => item.category === categoryId).length;
-  };
-
-  if (isLoading && !news.length) {
+  if (isLoading && news.length === 0) {
     return <Loading />;
   }
 
   return (
     <View style={styles.container}>
-      {/* Kategori Listesi */}
       <View style={styles.categoriesSection}>
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
         >
-          {CATEGORIES.map((category) => (
+          {CATEGORIES.map(category => (
             <CategoryCard
               key={category.id}
               title={category.title}
               icon={category.icon}
-              newsCount={getNewsCountByCategory(category.id)}
+              newsCount={newsCountByCategory[category.id] || 0}
             />
           ))}
         </ScrollView>
       </View>
 
-      {/* Haber Listesi */}
       <View style={styles.newsSection}>
-        <NewsFeed 
-          news={news} 
+        <NewsFeed
+          news={news}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -78,6 +86,7 @@ const styles = StyleSheet.create({
   categoriesSection: {
     paddingVertical: 16,
     backgroundColor: COLORS.white,
+    // Gölge ayarları iOS ve Android uyumlu olacak şekilde ayarlandı
     shadowColor: COLORS.dark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -91,4 +100,4 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 16,
   },
-}); 
+});

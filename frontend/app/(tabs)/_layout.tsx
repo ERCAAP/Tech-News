@@ -59,6 +59,17 @@ export default function TabsLayout() {
           href: null, // Bu route'u tab bar'da gösterme
         }}
       />
+      {user?.role === 'admin' && (
+        <Tabs.Screen
+          name="admin/stats"
+          options={{
+            title: 'Stats',
+            tabBarIcon: ({ color }) => (
+              <MaterialIcons name="analytics" size={24} color={color} />
+            ),
+          }}
+        />
+      )}
     </Tabs>
   );
 } 

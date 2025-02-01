@@ -1201,3 +1201,32 @@
 {"level":"info","message":"Token:","timestamp":"2025-01-31T20:27:33.220Z"}
 {"exp":1740946082,"iat":1738354082,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-01-31T20:27:33.221Z"}
 {"level":"info","message":"User authenticated:","timestamp":"2025-01-31T20:27:33.224Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T20:34:03.307Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T20:34:03.314Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T20:34:28.344Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T20:34:28.352Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:34:53.868Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T20:34:56.017Z"}
+{"level":"info","message":"MongoDB Connected: 127.0.0.1","timestamp":"2025-01-31T20:35:31.604Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-31T20:35:31.609Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T22:47:45.710Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-01-31T22:47:47.661Z"}
+{"level":"info","message":"User logged in successfully: 679a90b55e5a14bc033bf56c","timestamp":"2025-02-01T01:47:16.013Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T01:48:40.580Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T01:53:04.618Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T01:54:09.560Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T02:05:17.230Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T02:05:17.231Z"}
+{"exp":1740966849,"iat":1738374849,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T02:05:17.235Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T02:05:17.240Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T02:05:17.278Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T02:05:17.279Z"}
+{"exp":1740966849,"iat":1738374849,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T02:05:17.280Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T02:05:17.283Z"}
+{"level":"info","message":"Auth Header:","timestamp":"2025-02-01T02:05:17.416Z"}
+{"level":"info","message":"Token:","timestamp":"2025-02-01T02:05:17.416Z"}
+{"exp":1740966849,"iat":1738374849,"id":"679aa9a0b51159282c1a947d","level":"info","message":"Decoded token:","timestamp":"2025-02-01T02:05:17.417Z"}
+{"level":"info","message":"User authenticated:","timestamp":"2025-02-01T02:05:17.419Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T02:27:00.883Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T02:34:15.182Z"}
+{"level":"info","message":"User logged in successfully: 679aa9a0b51159282c1a947d","timestamp":"2025-02-01T02:34:16.464Z"}

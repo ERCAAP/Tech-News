@@ -48,7 +48,7 @@ export function NewsForm() {
     }
   };
 
-  const handleCategorySelect = (categoryId: string) => {
+  const handleCategorySelect = (categoryId: typeof CATEGORIES[number]['id']) => {
     setFormData(prev => ({ ...prev, category: categoryId }));
     setShowCategoryPicker(false);
   };

@@ -3,11 +3,26 @@ import { NewsState, NewsItem } from '@/types';
 import api from '@/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+interface NewsState {
+  news: NewsItem[];
+  favorites: NewsItem[];
+  isLoading: boolean;
+  error: string | null;
+  stats: {
+    views: {
+      total: number;
+      unique: number;
+    };
+    favorites: number;
+  } | null;
+}
+
 const initialState: NewsState = {
   news: [],
   favorites: [],
   isLoading: false,
   error: null,
+  stats: null
 };
 
 // Tüm haberleri getir
@@ -61,6 +76,32 @@ export const getAllNews = createAsyncThunk<NewsItem[]>(
   async () => {
     const response = await api.get('/news');
     return response.data.data.news;
+  }
+);
+
+export const viewNews = createAsyncThunk(
+  'news/view',
+  async (newsId: string) => {
+    const response = await api.post(`/news/${newsId}/view`);
+    return response.data;
+  }
+);
+
+export const toggleFavorite = createAsyncThunk(
+  'news/toggleFavorite',
+  async (newsId: string) => {
+    const response = await api.post(`/news/${newsId}/favorite`);
+    return response.data;
+  }
+);
+
+export const getNewsStats = createAsyncThunk(
+  'news/getStats',
+  async ({ startDate, endDate }: { startDate?: string; endDate?: string }) => {
+    const response = await api.get('/news/stats', {
+      params: { startDate, endDate }
+    });
+    return response.data;
   }
 );
 
@@ -119,6 +160,42 @@ const newsSlice = createSlice({
       .addCase(getAllNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || null;
+      })
+      .addCase(viewNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(viewNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(viewNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Haber görüntüleme hatası';
+      })
+      .addCase(toggleFavorite.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(toggleFavorite.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(toggleFavorite.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Favorilere ekleme hatası';
+      })
+      .addCase(getNewsStats.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getNewsStats.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.stats = action.payload;
+      })
+      .addCase(getNewsStats.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'İstatistikleri getirme hatası';
       });
   }
 });
