@@ -161,7 +161,9 @@ export function CreateNewsForm() {
           // URL'yi urls array'ine ekle
           setFormData(prev => ({
             ...prev,
-            urls: [...prev.urls, { url, title, imageUrl }]
+            urls: [...prev.urls, { url, title, imageUrl }],
+            // Eğer cover image boşsa ve URL'nin resmi varsa, onu cover image olarak kullan
+            coverImage: !prev.coverImage && imageUrl ? imageUrl : prev.coverImage
           }));
         } catch (error) {
           console.log('Error fetching URL metadata:', error);
@@ -387,7 +389,35 @@ export function CreateNewsForm() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Basic Info Section */}
+          {/* Cover Image Section - Artık en üstte */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Cover Image</Text>
+            {formData.coverImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image 
+                  source={{ uri: formData.coverImage }} 
+                  style={styles.coverImagePreview} 
+                  resizeMode="cover"
+                />
+                <Button
+                  title="Change Cover Image"
+                  variant="outline"
+                  onPress={handleCoverImagePick}
+                  style={styles.imageButton}
+                />
+              </View>
+            ) : (
+              <Button
+                title="Add Cover Image"
+                variant="outline"
+                onPress={handleCoverImagePick}
+                style={styles.imageButton}
+                icon="image"
+              />
+            )}
+          </View>
+
+          {/* Basic Info Section - Artık ikinci sırada */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Basic Info</Text>
             <Input
@@ -422,34 +452,6 @@ export function CreateNewsForm() {
             </View>
           </View>
 
-          {/* Cover Image Section */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Cover Image</Text>
-            {formData.coverImage ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image 
-                  source={{ uri: formData.coverImage }} 
-                  style={styles.coverImagePreview} 
-                  resizeMode="cover"
-                />
-                <Button
-                  title="Change Cover Image"
-                  variant="outline"
-                  onPress={handleCoverImagePick}
-                  style={styles.imageButton}
-                />
-              </View>
-            ) : (
-              <Button
-                title="Add Cover Image"
-                variant="outline"
-                onPress={handleCoverImagePick}
-                style={styles.imageButton}
-                icon="image"
-              />
-            )}
-          </View>
-
           {/* News Content Section */}
           <View style={styles.formSection}>
             <View style={styles.contentHeader}>
@@ -464,13 +466,6 @@ export function CreateNewsForm() {
             
             {/* Content Toolbar */}
             <View style={styles.contentToolbar}>
-              <TouchableOpacity 
-                style={styles.toolbarButton}
-                onPress={handleInsertUrl}
-              >
-                <Text style={styles.toolbarButtonText}>Insert URL</Text>
-              </TouchableOpacity>
-              
               <TouchableOpacity 
                 style={styles.toolbarButton}
                 onPress={handleContentImagePick}
@@ -735,7 +730,6 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   toolbarButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -744,6 +738,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
+    minWidth: 120,
   },
   toolbarButtonText: {
     color: COLORS.dark,
