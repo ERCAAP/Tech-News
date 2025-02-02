@@ -130,8 +130,8 @@ export default function LoginScreen() {
     Alert.alert('Info', 'Google login will be implemented soon');
   };
 
-  const handleAppleLogin = () => {
-    Alert.alert('Info', 'Apple login will be implemented soon');
+  const handleFacebookLogin = () => {
+    Alert.alert('Info', 'Facebook login will be implemented soon');
   };
 
   const isDark = colorScheme === 'dark';
@@ -234,10 +234,10 @@ export default function LoginScreen() {
 
             <TouchableOpacity 
               style={[styles.socialButton, isDark && styles.socialButtonDark]} 
-              onPress={handleAppleLogin}
+              onPress={handleFacebookLogin}
             >
-              <FontAwesome name="apple" size={20} color={isDark ? COLORS.white : COLORS.dark} />
-              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Apple</Text>
+              <FontAwesome name="facebook" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Facebook</Text>
             </TouchableOpacity>
           </View>
 
