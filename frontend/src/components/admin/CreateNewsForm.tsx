@@ -5,7 +5,6 @@ import { Button } from '@/components/common/Button';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
-import { MaterialIcons } from '@expo/vector-icons';
 import api from '@/api/axios';
 import { useRouter } from 'expo-router';
 
@@ -111,54 +110,6 @@ export function CreateNewsForm() {
     });
   };
 
-  const handleContentImagePick = async () => {
-    try {
-      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (mediaStatus !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant media library permissions to upload images');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-        exif: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const { uri } = result.assets[0];
-        
-        // Geçici dosya oluştur
-        const fileExtension = uri.split('.').pop();
-        const fileName = `${Date.now()}.${fileExtension}`;
-        const newUri = FileSystem.documentDirectory + fileName;
-        
-        try {
-          // Dosyayı kopyala
-          await FileSystem.copyAsync({
-            from: uri,
-            to: newUri
-          });
-          
-          // Yeni resmi ekle
-          const newIndex = formData.contentImages.length;
-          setFormData(prev => ({
-            ...prev,
-            contentImages: [...prev.contentImages, newUri],
-            content: prev.content + `\n[IMAGE-${newIndex}]\n`
-          }));
-        } catch (error) {
-          console.error('Error copying file:', error);
-          Alert.alert('Error', 'Failed to process image');
-        }
-      }
-    } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
 
   // Content değiştiğinde URL kontrolü yap
   const handleContentChange = (text: string) => {
@@ -232,11 +183,10 @@ ${imageUrl}
         const [, url, title, imageUrl] = part.split('\n');
         
         return (
-          <TouchableOpacity 
-            key={index}
-            style={styles.urlPreviewBox}
-            onPress={() => handleUrlClick(url)}
-          >
+          <View key={index} style={styles.urlPreviewBox}>
+            <Text style={styles.urlPreviewTitle} numberOfLines={2}>
+              {title}
+            </Text>
             {imageUrl && (
               <Image 
                 source={{ uri: imageUrl }} 
@@ -244,15 +194,15 @@ ${imageUrl}
                 resizeMode="cover"
               />
             )}
-            <View style={styles.urlPreviewContent}>
-              <Text style={styles.urlPreviewTitle} numberOfLines={2}>
-                {title}
-              </Text>
+            <TouchableOpacity 
+              onPress={() => handleUrlClick(url)}
+              style={styles.urlLinkContainer}
+            >
               <Text style={styles.urlPreviewLink} numberOfLines={1}>
                 {url}
               </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         );
       }
       return (
@@ -413,7 +363,7 @@ ${imageUrl}
             )}
           </View>
 
-          {/* News Content Section - URL özelliği burada */}
+          {/* News Content Section */}
           <View style={styles.formSection}>
             <View style={styles.contentHeader}>
               <Text style={styles.sectionTitle}>News Content</Text>
@@ -425,20 +375,7 @@ ${imageUrl}
               />
             </View>
             
-            <View style={styles.contentToolbar}>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                onPress={handleContentImagePick}
-              >
-                <MaterialIcons name="image" size={20} color={COLORS.primary} />
-                <Text style={styles.toolbarButtonText}>Insert Image</Text>
-              </TouchableOpacity>
-            </View>
-
             <View style={styles.contentInputWrapper}>
-              <ScrollView style={styles.contentScrollView}>
-                {renderContent()}
-              </ScrollView>
               <TextInput
                 value={formData.content}
                 onChangeText={handleContentChange}
@@ -447,6 +384,10 @@ ${imageUrl}
                 style={styles.contentInput}
                 placeholderTextColor={COLORS.gray}
               />
+              
+              <ScrollView style={styles.contentScrollView}>
+                {renderContent()}
+              </ScrollView>
             </View>
           </View>
 
@@ -744,19 +685,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
+  urlPreviewTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
+    padding: 12,
+  },
   urlPreviewImage: {
     width: '100%',
     height: 200,
     backgroundColor: COLORS.lightGray,
   },
-  urlPreviewContent: {
+  urlLinkContainer: {
     padding: 12,
-  },
-  urlPreviewTitle: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.dark,
-    marginBottom: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#FFFFFF',
   },
   urlPreviewLink: {
     fontSize: 14,
