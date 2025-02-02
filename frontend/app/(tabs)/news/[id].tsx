@@ -1,63 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews, toggleFavorite } from '@/redux/slices/newsSlice';
+import { viewNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function NewsDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const id = typeof params.id === 'string' ? params.id : '';
   const dispatch = useAppDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === 'admin';
   
   const { news } = useAppSelector(state => state.news);
   const newsItem = news.find((item: NewsItem) => item._id === id);
-  const [isLoading, setIsLoading] = useState(false);
+  const [] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (id && typeof id === 'string') {
       dispatch(viewNews(id));
     }
   }, [id, dispatch]);
-
-  const handleFavoritePress = async () => {
-    if (!user) {
-      Alert.alert('Error', 'Please login to favorite news');
-      return;
-    }
-    
-    if (!id || typeof id !== 'string') {
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      await dispatch(toggleFavorite(id)).unwrap();
-      
-      if (!newsItem?.favorites?.users?.includes(user._id)) {
-        ToastAndroid.show('Added to favorites', ToastAndroid.SHORT);
-      } else {
-        ToastAndroid.show('Removed from favorites', ToastAndroid.SHORT);
-      }
-
-    } catch (error) {
-      console.error('Favorite error:', error);
-      Alert.alert(
-        'Error',
-        typeof error === 'string' ? error : 'Failed to update favorite status'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const renderContent = (content: string) => {
     if (!content) return null;
@@ -112,7 +84,7 @@ export default function NewsDetailScreen() {
         showsVerticalScrollIndicator={true}
         bounces={true}
         contentContainerStyle={{
-          paddingBottom: 100
+          paddingBottom: insets?.bottom || 0
         }}
       >
         {coverImageUrl ? (
@@ -131,23 +103,7 @@ export default function NewsDetailScreen() {
         ) : null}
         
         <View style={styles.content}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>{newsItem.title}</Text>
-            <TouchableOpacity 
-              style={styles.favoriteButton}
-              onPress={handleFavoritePress}
-              disabled={isLoading}
-            >
-              <MaterialIcons 
-                name={newsItem?.favorites?.users?.includes(user?._id ?? '') ? 'favorite' : 'favorite-border'} 
-                size={24} 
-                color={COLORS.primary} 
-              />
-              <Text style={styles.favoriteCount}>
-                {newsItem?.favorites?.count || 0}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.title}>{newsItem.title}</Text>
           
           <View style={styles.authorContainer}>
             <MaterialIcons name="person" size={20} color={COLORS.primary} />
@@ -162,23 +118,6 @@ export default function NewsDetailScreen() {
 
           {renderContent(newsItem.content)}
         </View>
-
-        {isAdmin && (
-          <View style={styles.stats}>
-            <View style={styles.statItem}>
-              <MaterialIcons name="visibility" size={16} color={COLORS.gray} />
-              <Text style={styles.statText}>
-                {typeof newsItem.views === 'number' ? `${newsItem.views} görüntülenme` : '0 görüntülenme'}
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <MaterialIcons name="favorite" size={16} color={COLORS.gray} />
-              <Text style={styles.statText}>
-                {`${newsItem.favorites?.count || 0} favori`}
-              </Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -191,6 +130,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    backgroundColor: COLORS.white,
   },
   imageContainer: {
     height: 300,
@@ -221,12 +161,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
   },
   title: {
     fontSize: 24,
@@ -276,40 +210,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginVertical: 8,
   },
-  favoriteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  favoriteCount: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  statsContainer: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  statItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.dark,
-  },
-  statLabel: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: COLORS.gray,
-  },
   viewCountContainer: {
     position: 'absolute',
     top: 16,
@@ -331,6 +231,28 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     fontFamily: FONTS.medium,
+    color: COLORS.gray,
+  },
+  statsContainer: {
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  statItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  statLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
     color: COLORS.gray,
   },
   stats: {

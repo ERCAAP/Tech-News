@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView, ToastAndroid, Modal, TextInput } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView, ToastAndroid, Modal, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
@@ -35,6 +35,18 @@ export default function ProfileScreen() {
 
   const handleImagePick = async () => {
     try {
+      // İzinleri kontrol et
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert(
+          "İzin Gerekli",
+          "Fotoğraf seçmek için galeri iznine ihtiyacımız var.",
+          [{ text: "Tamam" }]
+        );
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -42,23 +54,64 @@ export default function ProfileScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled && user) {
+      if (!result.canceled && result.assets && result.assets[0] && user) {
         setIsLoading(true);
+        
         try {
-          const updatedUser = {
-            ...user,
-            avatar: result.assets[0].uri
+          const imageUri = result.assets[0].uri;
+          
+          // Önce resmi base64'e çevir
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          
+          reader.onload = async () => {
+            try {
+              const base64data = reader.result?.toString().split(',')[1];
+              
+              const updatedUser = {
+                ...user,
+                avatar: `data:image/jpeg;base64,${base64data}`
+              };
+
+              await dispatch(updateUserProfile(updatedUser)).unwrap();
+              ToastAndroid.show('Profil fotoğrafı güncellendi', ToastAndroid.SHORT);
+            } catch (error) {
+              console.error('Base64 conversion error:', error);
+              Alert.alert(
+                'Hata',
+                'Fotoğraf yüklenirken bir hata oluştu'
+              );
+            } finally {
+              setIsLoading(false);
+            }
           };
-          await dispatch(updateUserProfile(updatedUser));
-          Alert.alert('Success', 'Profile photo updated successfully');
-        } catch (error) {
-          Alert.alert('Error', 'Failed to update profile photo');
-        } finally {
+
+          reader.onerror = () => {
+            setIsLoading(false);
+            Alert.alert(
+              'Hata',
+              'Fotoğraf okunamadı'
+            );
+          };
+
+          reader.readAsDataURL(blob);
+        } catch (error: any) {
+          console.error('Profile photo update error:', error);
+          Alert.alert(
+            'Hata',
+            error.message || 'Profil fotoğrafı güncellenirken bir hata oluştu'
+          );
           setIsLoading(false);
         }
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      console.error('Image picker error:', error);
+      Alert.alert(
+        'Hata',
+        'Fotoğraf seçilirken bir hata oluştu. Lütfen tekrar deneyin.'
+      );
+      setIsLoading(false);
     }
   };
 
@@ -82,7 +135,7 @@ export default function ProfileScreen() {
   };
 
   const handleEditPress = () => {
-    if (user) {
+    if (user && !isEditModalVisible) {
       setEditForm({
         firstName: user.firstName,
         lastName: user.lastName,
@@ -156,129 +209,156 @@ export default function ProfileScreen() {
   const renderAvatar = () => {
     if (!user) return null;
 
-    if (user.avatar) {
-      return (
-        <Image
-          source={{ uri: user.avatar }}
-          style={styles.avatar}
-          resizeMode="cover"
-        />
-      );
-    }
-
     return (
-      <View style={styles.avatarPlaceholder}>
-        <Text style={styles.avatarInitials}>
-          {getUserInitials(user)}
-        </Text>
+      <View style={styles.avatarWrapper}>
+        {user.avatar ? (
+          <Image
+            source={{ uri: user.avatar }}
+            style={styles.avatar}
+            resizeMode="cover"
+            onError={() => {
+              console.error('Avatar yükleme hatası');
+              // Hata durumunda placeholder göster
+              Alert.alert(
+                'Hata',
+                'Profil fotoğrafı yüklenemedi'
+              );
+            }}
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Text style={styles.avatarInitials}>
+              {getUserInitials(user)}
+            </Text>
+          </View>
+        )}
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="small" color={COLORS.white} />
+          </View>
+        )}
       </View>
     );
   };
 
-  // Edit Modal Component
-  const EditProfileModal = () => (
-    <Modal
-      visible={isEditModalVisible}
-      transparent
-      animationType="slide"
-      onRequestClose={() => setIsEditModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Profili Düzenle</Text>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Ad</Text>
-            <TextInput
-              style={styles.input}
-              value={editForm.firstName}
-              onChangeText={(text) => setEditForm(prev => ({ ...prev, firstName: text }))}
-              placeholder="Adınız"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Soyad</Text>
-            <TextInput
-              style={styles.input}
-              value={editForm.lastName}
-              onChangeText={(text) => setEditForm(prev => ({ ...prev, lastName: text }))}
-              placeholder="Soyadınız"
-            />
-          </View>
-
-          <View style={styles.modalButtons}>
-            <TouchableOpacity 
-              style={[styles.modalButton, styles.cancelButton]}
-              onPress={() => setIsEditModalVisible(false)}
-            >
-              <Text style={styles.buttonText}>İptal</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.modalButton, styles.saveButton]}
-              onPress={handleUpdateProfile}
-              disabled={isLoading}
-            >
-              <Text style={styles.buttonText}>
-                {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
-      <EditProfileModal />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.profileCard}>
-          <TouchableOpacity 
-            style={styles.avatarContainer}
-            onPress={handleImagePick}
-            disabled={isLoading}
-          >
-            {renderAvatar()}
-          </TouchableOpacity>
-
-          <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
-          {user?.role === 'admin' && (
-            <View style={styles.adminBadge}>
-              <Text style={styles.adminText}>Admin</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[
-                styles.menuItem,
-                index !== menuItems.length - 1 && styles.menuItemBorder
-              ]}
-              onPress={() => handleMenuPress(item.action)}
+      <ScrollView style={styles.scrollView}>
+        {/* Üst profil bölümü */}
+        <View style={styles.headerSection}>
+          <View style={styles.profileHeader}>
+            <TouchableOpacity 
+              style={styles.avatarContainer}
+              onPress={handleImagePick}
+              disabled={isLoading}
             >
-              <View style={styles.menuIconContainer}>
-                <MaterialIcons name={item.icon as any} size={24} color={COLORS.gray} />
-              </View>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-              <MaterialIcons name="chevron-right" size={24} color={COLORS.gray} />
+              {renderAvatar()}
             </TouchableOpacity>
-          ))}
+            
+            <View style={styles.userInfo}>
+              <View style={styles.nameContainer}>
+                <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
+                <TouchableOpacity 
+                  style={styles.editProfileButton} 
+                  onPress={handleEditPress}
+                >
+                  <MaterialIcons name="edit" size={20} color={COLORS.primary} />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.email}>{user?.email}</Text>
+              {user?.role === 'admin' && (
+                <View style={styles.adminBadge}>
+                  <Text style={styles.adminText}>Admin</Text>
+                </View>
+              )}
+            </View>
+          </View>
         </View>
 
+        {/* Menu Items - Edit Profile'ı menüden kaldır */}
+        <View style={styles.menuContainer}>
+          {menuItems
+            .filter(item => item.action !== 'edit')
+            .map((item, index, filteredArray) => (
+              <TouchableOpacity
+                key={item.label}
+                style={[
+                  styles.menuItem,
+                  index !== filteredArray.length - 1 && styles.menuItemBorder
+                ]}
+                onPress={() => handleMenuPress(item.action)}
+              >
+                <View style={styles.menuIconContainer}>
+                  <MaterialIcons name={item.icon as any} size={22} color={COLORS.gray} />
+                </View>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+                <MaterialIcons name="chevron-right" size={22} color={COLORS.gray} />
+              </TouchableOpacity>
+            ))}
+        </View>
+
+        {/* Logout Button */}
         <TouchableOpacity 
           style={styles.logoutButton}
           onPress={handleLogout}
         >
-          <MaterialIcons name="logout" size={24} color={COLORS.white} />
+          <MaterialIcons name="logout" size={22} color={COLORS.white} />
           <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modal'ı ScrollView dışına taşı */}
+      <Modal
+        visible={isEditModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Profili Düzenle</Text>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Ad</Text>
+              <TextInput
+                style={styles.input}
+                value={editForm.firstName}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, firstName: text }))}
+                placeholder="Adınız"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Soyad</Text>
+              <TextInput
+                style={styles.input}
+                value={editForm.lastName}
+                onChangeText={(text) => setEditForm(prev => ({ ...prev, lastName: text }))}
+                placeholder="Soyadınız"
+              />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setIsEditModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>İptal</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleUpdateProfile}
+                disabled={isLoading}
+              >
+                <Text style={styles.buttonText}>
+                  {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -288,76 +368,101 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  profileCard: {
+  scrollView: {
+    flex: 1,
+  },
+  headerSection: {
     backgroundColor: COLORS.white,
-    padding: 24,
-    alignItems: 'center',
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
   avatarContainer: {
-    marginBottom: 16,
+    position: 'relative',
+    marginRight: 16,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: COLORS.background,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
   },
   avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#e1e1e1',
+    width: '100%',
+    height: '100%',
+    borderRadius: 40,
+    backgroundColor: COLORS.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarInitials: {
-    fontSize: 36,
-    color: '#666',
+    fontSize: 28,
+    color: COLORS.primary,
+    fontFamily: FONTS.bold,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
   },
   name: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
-    marginBottom: 4,
   },
   email: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   adminBadge: {
     backgroundColor: COLORS.primary + '20',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   adminText: {
     color: COLORS.primary,
     fontFamily: FONTS.medium,
-    fontSize: 14,
+    fontSize: 12,
   },
   menuContainer: {
     backgroundColor: COLORS.white,
     marginTop: 16,
-    borderRadius: 12,
     marginHorizontal: 16,
+    borderRadius: 12,
     ...shadowStyle,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 14,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
@@ -365,16 +470,30 @@ const styles = StyleSheet.create({
   },
   menuLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONTS.regular,
     color: COLORS.dark,
   },
-  scrollView: {
-    flex: 1,
-    marginBottom: 80, // Bottom bar için alan bırak
+  logoutButton: {
+    backgroundColor: COLORS.danger,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 10,
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 30,
   },
-  scrollContent: {
-    paddingBottom: 16,
+  logoutText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontFamily: FONTS.medium,
+    marginLeft: 8,
+  },
+  editProfileButton: {
+    marginLeft: 8,
+    padding: 4,
   },
   modalOverlay: {
     flex: 1,
@@ -386,7 +505,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 20,
-    ...shadowStyle,
+    ...Platform.select({
+      ios: {
+        shadowColor: COLORS.dark,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   modalTitle: {
     fontSize: 20,
@@ -436,19 +565,14 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
-  logoutButton: {
-    backgroundColor: COLORS.danger,
-    flexDirection: 'row',
-    alignItems: 'center',
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 'auto'
+    alignItems: 'center',
   },
-  logoutText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 10
-  }
 }); 

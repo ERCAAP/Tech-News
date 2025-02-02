@@ -9,6 +9,17 @@ import { store } from '@/redux/store';
 
 const queryClient = new QueryClient();
 
+function LayoutContent() {
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="privacy" />
+      <Stack.Screen name="terms" />
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -16,12 +27,7 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <ReduxProvider>
             <View style={{ flex: 1 }}>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="privacy" />
-                <Stack.Screen name="terms" />
-              </Stack>
+              <LayoutContent />
             </View>
           </ReduxProvider>
         </SafeAreaProvider>

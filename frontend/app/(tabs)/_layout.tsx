@@ -14,15 +14,7 @@ export default function TabsLayout() {
           screenOptions={{
             headerShown: false,
             tabBarStyle: {
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 100,
-              backgroundColor: 'transparent',
-              borderTopWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
+              display: 'none',
             },
           }}
           tabBar={(props: BottomTabBarProps) => <CustomTabBar {...props} />}
@@ -38,6 +30,13 @@ export default function TabsLayout() {
             name="search"
             options={{
               title: 'Search',
+            }}
+          />
+          <Tabs.Screen
+            name="admin"
+            options={{
+              title: 'Write',
+              href: null,
             }}
           />
           <Tabs.Screen

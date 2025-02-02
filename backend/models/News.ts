@@ -10,10 +10,6 @@ interface INews extends Document {
   status: 'draft' | 'published' | 'archived';
   tags: string[];
   readTime?: number;
-  favorites: {
-    users: mongoose.Types.ObjectId[];
-    count: number;
-  };
   views: {
     total: number;
     unique: number;
@@ -49,10 +45,6 @@ const NewsSchema = new Schema({
   },
   tags: [String],
   readTime: { type: Number }, // Dakika cinsinden okuma süresi
-  favorites: {
-    users: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    count: { type: Number, default: 0 }
-  },
   views: {
     total: { type: Number, default: 0 },
     unique: { type: Number, default: 0 },
@@ -97,12 +89,10 @@ NewsSchema.virtual('fullUrl').get(function() {
 // Popülerlik skoru hesaplama için virtual field
 NewsSchema.virtual('popularityScore').get(function() {
   const viewWeight = 1;
-  const favoriteWeight = 3;
   const shareWeight = 2;
   
   return (
     (this.views?.total || 0) * viewWeight +
-    (this.favorites?.count || 0) * favoriteWeight +
     (this.shareCount || 0) * shareWeight
   );
 });

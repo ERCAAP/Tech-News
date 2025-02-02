@@ -58,8 +58,7 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
-      favoriteNews: user.favoriteNews
+      role: user.role
     };
 
     res.status(200).json({

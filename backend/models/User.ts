@@ -3,10 +3,6 @@ import bcrypt from 'bcryptjs';
 
 interface IUser extends Document {
   role: string;
-  favorites: Array<{
-    news: mongoose.Types.ObjectId;
-    addedAt: Date;
-  }>;
   readingHistory: Array<{
     news: mongoose.Types.ObjectId;
     readAt: Date;
@@ -16,7 +12,6 @@ interface IUser extends Document {
     categories: string[];
     notificationSettings: {
       newArticles: boolean;
-      favorites: boolean;
       newsletter: boolean;
     };
     theme: 'light' | 'dark' | 'system';
@@ -25,7 +20,6 @@ interface IUser extends Document {
   password: string;
   firstName: string;
   lastName: string;
-  favoriteNews: Array<mongoose.Types.ObjectId>;
 }
 
 const UserSchema = new Schema({
@@ -40,7 +34,7 @@ const UserSchema = new Schema({
     type: String,
     required: [true, 'Şifre gereklidir'],
     minlength: 6,
-    select: false // Varsayılan olarak password'ü getirme
+    select: false
   },
   firstName: {
     type: String,
@@ -57,14 +51,6 @@ const UserSchema = new Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
-  favoriteNews: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'News'
-  }],
-  favorites: [{
-    news: { type: Schema.Types.ObjectId, ref: 'News' },
-    addedAt: { type: Date, default: Date.now }
-  }],
   readingHistory: [{
     news: { type: Schema.Types.ObjectId, ref: 'News' },
     readAt: { type: Date, default: Date.now },
@@ -74,7 +60,6 @@ const UserSchema = new Schema({
     categories: [String],
     notificationSettings: {
       newArticles: { type: Boolean, default: true },
-      favorites: { type: Boolean, default: true },
       newsletter: { type: Boolean, default: true }
     },
     theme: {

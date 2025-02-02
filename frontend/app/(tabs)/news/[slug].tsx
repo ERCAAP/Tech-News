@@ -5,10 +5,11 @@ import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews, toggleFavorite, deleteNews } from '@/redux/slices/newsSlice';
+import { viewNews, deleteNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EditNewsModal } from 'components/admin/EditNewsModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface NewsViews {
   total: number;
@@ -39,6 +40,7 @@ export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const slug = typeof params.slug === 'string' ? params.slug : params.slug[0];
+  const insets = useSafeAreaInsets();
   
   const dispatch = useAppDispatch();
   const { news } = useAppSelector(state => state.news);
@@ -60,40 +62,6 @@ export default function NewsDetailScreen() {
       dispatch(viewNews(newsItem._id));
     }
   }, [newsItem?._id]);
-
-  const handleFavoritePress = async () => {
-    if (!user) {
-      Alert.alert('Error', 'Please login to favorite news');
-      return;
-    }
-    
-    if (!newsItem) {
-      console.log('Favorite Press - No news item found');
-      return;
-    }
-
-    console.log('Favorite Press - Attempting to toggle favorite for:', {
-      newsId: newsItem._id,
-      userId: user._id,
-      currentFavorites: newsItem.favorites
-    });
-
-    try {
-      const result = await dispatch(toggleFavorite(newsItem._id)).unwrap();
-      console.log('Favorite Press - Toggle result:', result);
-      
-      ToastAndroid.show(
-        newsItem?.favorites?.users?.includes(user._id)
-          ? 'Removed from favorites'
-          : 'Added to favorites',
-        ToastAndroid.SHORT
-      );
-
-    } catch (error) {
-      console.error('Favorite Press - Error:', error);
-      Alert.alert('Error', 'Failed to update favorite status');
-    }
-  };
 
   const handleDelete = async () => {
     if (!newsItem) return;
@@ -217,25 +185,11 @@ export default function NewsDetailScreen() {
         showsVerticalScrollIndicator={true}
         bounces={true}
         contentContainerStyle={{
-          paddingBottom: 100
+          paddingBottom: insets.bottom + 100
         }}
       >
         {renderContent(newsItem.content)}
       </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.favoriteButton}
-        onPress={handleFavoritePress}
-      >
-        <MaterialIcons 
-          name={newsItem?.favorites?.users?.includes(user?._id ?? '') ? 'favorite' : 'favorite-border'} 
-          size={24} 
-          color={COLORS.primary} 
-        />
-        <Text style={styles.favoriteCount}>
-          {newsItem?.favorites?.count || 0}
-        </Text>
-      </TouchableOpacity>
 
       {renderStats()}
     </SafeAreaView>
@@ -284,30 +238,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: COLORS.gray,
-  },
-  favoriteButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    padding: 12,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  favoriteCount: {
-    marginLeft: 4,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: COLORS.primary,
   },
   adminControls: {
     position: 'absolute',

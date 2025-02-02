@@ -84,21 +84,25 @@ export async function viewNews(req: AuthRequest, res: Response, next: NextFuncti
 
     const userId = toObjectId(req.user._id);
     
-    // Kullanıcının daha önce görüntüleyip görüntülemediğini kontrol et
-    const hasViewed = news.views.history.some(view => 
-      view.userId.toString() === userId.toString()
+    // Son 24 saat içinde aynı kullanıcıdan görüntüleme var mı kontrol et
+    const lastView = news.views.history.find(view => 
+      view.userId.toString() === userId.toString() && 
+      new Date(view.timestamp).getTime() > Date.now() - 24 * 60 * 60 * 1000
     );
 
-    if (!hasViewed) {
+    if (!lastView) {
       // Yeni görüntüleme ekle
       news.views.total += 1;
-      news.views.unique += 1;
       news.views.history.push({
         userId,
         timestamp: new Date()
       });
 
-      // Son 24 saat içindeki görüntülenmeleri hesapla
+      // Tekil görüntüleme sayısını güncelle
+      const uniqueUserIds = new Set(news.views.history.map(v => v.userId.toString()));
+      news.views.unique = uniqueUserIds.size;
+
+      // Son 24 saatteki görüntülenmeleri hesapla
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       news.views.last24Hours = news.views.history.filter(
         view => view.timestamp > oneDayAgo
@@ -107,68 +111,12 @@ export async function viewNews(req: AuthRequest, res: Response, next: NextFuncti
       await news.save();
     }
 
-    res.json(news);
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function toggleFavorite(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    if (!req.user?._id) {
-      res.status(401).json({ message: 'Authentication required' });
-      return;
-    }
-
-    const news = await News.findById(req.params.id);
-    if (!news) {
-      res.status(404).json({ message: 'News not found' });
-      return;
-    }
-
-    const userId = toObjectId(req.user._id);
-    const userIndex = news.favorites.users.findIndex(id => id.equals(userId));
-
-    if (userIndex === -1) {
-      news.favorites.users.push(userId);
-      news.favorites.count += 1;
-    } else {
-      news.favorites.users.splice(userIndex, 1);
-      news.favorites.count -= 1;
-    }
-
-    await news.save();
     res.json({
-      newsId: news._id,
-      favorites: {
-        users: news.favorites.users,
-        count: news.favorites.count
-      }
+      status: 'success',
+      data: { views: news.views }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update favorite status' });
-  }
-}
-
-export async function getUserFavorites(req: AuthRequest, res: Response): Promise<void> {
-  try {
-    if (!req.user?._id) {
-      res.status(401).json({ message: 'Authentication required' });
-      return;
-    }
-
-    const user = await User.findById(req.user._id)
-      .populate({
-        path: 'favorites.news',
-        populate: {
-          path: 'author',
-          select: 'firstName lastName'
-        }
-      });
-
-    res.json({ favorites: user?.favorites || [] });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to get favorites' });
+    next(error);
   }
 }
 
