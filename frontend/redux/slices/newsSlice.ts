@@ -4,6 +4,7 @@ import axios, { AxiosError } from 'axios';
 import axiosInstance from '@/api/axios';
 import { API_URL } from '@/utils/api';
 import { api } from '@/services/api';
+import * as Notifications from 'expo-notifications';
 
 const initialState: NewsState = {
   news: [],
@@ -15,9 +16,25 @@ const initialState: NewsState = {
 
 export const fetchNews = createAsyncThunk(
   'news/fetchNews',
-  async () => {
-    const response = await axios.get('/news');
-    return response.data.data.news;
+  async (_, { dispatch }) => {
+    try {
+      const response = await axios.get('/news');
+      
+      // Yeni haber varsa bildirim gönder
+      if (response.data.data.news.length > 0) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'New Articles Available',
+            body: 'Check out the latest tech news!',
+          },
+          trigger: null,
+        });
+      }
+      
+      return response.data.data.news;
+    } catch (error) {
+      throw error;
+    }
   }
 );
 
