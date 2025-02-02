@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Platform, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Platform, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { login } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
@@ -12,8 +12,6 @@ import { useColorScheme } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from '@/components/common/Checkbox';
-import { useGoogleAuth } from '../../hooks/useGoogleAuth';
-import { useAppleAuth } from '../../hooks/useAppleAuth';
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
@@ -26,9 +24,6 @@ export default function LoginScreen() {
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const googleAuth = useGoogleAuth();
-  const { signIn: googleSignIn, isLoading: isGoogleLoading } = googleAuth;
-  const { signIn: appleSignIn, isLoading: isAppleLoading } = useAppleAuth();
 
   useEffect(() => {
     loadThemePreference();
@@ -131,12 +126,12 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    await googleSignIn();
+  const handleGoogleLogin = () => {
+    Alert.alert('Info', 'Google login will be implemented soon');
   };
 
-  const handleAppleLogin = async () => {
-    await appleSignIn();
+  const handleAppleLogin = () => {
+    Alert.alert('Info', 'Apple login will be implemented soon');
   };
 
   const isDark = colorScheme === 'dark';
@@ -230,45 +225,19 @@ export default function LoginScreen() {
 
           <View style={styles.socialButtonsContainer}>
             <TouchableOpacity 
-              style={[
-                styles.socialButton, 
-                isDark && styles.socialButtonDark,
-                isGoogleLoading && styles.disabledButton
-              ]} 
+              style={[styles.socialButton, isDark && styles.socialButtonDark]} 
               onPress={handleGoogleLogin}
-              disabled={isGoogleLoading || isAppleLoading}
             >
-              {isGoogleLoading ? (
-                <ActivityIndicator color={isDark ? COLORS.white : COLORS.dark} />
-              ) : (
-                <>
-                  <FontAwesome name="google" size={20} color={isDark ? COLORS.white : COLORS.dark} />
-                  <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>
-                    Google
-                  </Text>
-                </>
-              )}
+              <FontAwesome name="google" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Google</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[
-                styles.socialButton, 
-                isDark && styles.socialButtonDark,
-                isAppleLoading && styles.disabledButton
-              ]} 
+              style={[styles.socialButton, isDark && styles.socialButtonDark]} 
               onPress={handleAppleLogin}
-              disabled={isGoogleLoading || isAppleLoading}
             >
-              {isAppleLoading ? (
-                <ActivityIndicator color={isDark ? COLORS.white : COLORS.dark} />
-              ) : (
-                <>
-                  <FontAwesome name="apple" size={20} color={isDark ? COLORS.white : COLORS.dark} />
-                  <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>
-                    Apple
-                  </Text>
-                </>
-              )}
+              <FontAwesome name="apple" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Apple</Text>
             </TouchableOpacity>
           </View>
 
@@ -409,8 +378,5 @@ const styles = StyleSheet.create({
   },
   socialButtonTextDark: {
     color: COLORS.white,
-  },
-  disabledButton: {
-    backgroundColor: COLORS.gray,
   },
 }); 

@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SocialLoginPayload } from '@/types';
 
 interface AuthState {
   user: {
@@ -68,18 +67,6 @@ const restoreUserSession = createAsyncThunk(
   }
 );
 
-const socialLogin = createAsyncThunk(
-  'auth/socialLogin',
-  async (payload: SocialLoginPayload, { rejectWithValue }) => {
-    try {
-      const response = await api.post('/auth/social-login', payload);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || 'Social login failed');
-    }
-  }
-);
-
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -107,9 +94,6 @@ const authSlice = createSlice({
       })
       .addCase(restoreUserSession.fulfilled, (state, action) => {
         state.user = action.payload;
-      })
-      .addCase(socialLogin.fulfilled, (state, action) => {
-        state.user = action.payload;
       });
   }
 });
@@ -119,8 +103,7 @@ const { logout } = authSlice.actions;
 export {
   login,
   restoreUserSession,
-  logout,
-  socialLogin
+  logout
 };
 
 export default authSlice.reducer; 

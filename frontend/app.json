@@ -5,27 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "technews",
+    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.ercaap55.technews",
-      "usesAppleSignIn": true,
-      "config": {
-        "googleSignIn": {
-          "reservedClientId": "com.googleusercontent.apps.525452151140-hioo013keiekvusk0f83plm0qd5p2g90"
-        }
-      },
-      "infoPlist": {
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "com.googleusercontent.apps.525452151140-hioo013keiekvusk0f83plm0qd5p2g90"
-            ]
-          }
-        ]
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -38,8 +22,7 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "MEDIA_LIBRARY"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -63,9 +46,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      "@react-native-google-signin/google-signin",
-      "expo-apple-authentication"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

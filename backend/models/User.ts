@@ -20,9 +20,6 @@ interface IUser extends Document {
   password: string;
   firstName: string;
   lastName: string;
-  provider: string;
-  providerId: string;
-  isEmailVerified: boolean;
 }
 
 const UserSchema = new Schema({
@@ -70,19 +67,6 @@ const UserSchema = new Schema({
       enum: ['light', 'dark', 'system'],
       default: 'system'
     }
-  },
-  provider: {
-    type: String,
-    enum: ['local', 'google', 'apple'],
-    default: 'local'
-  },
-  providerId: {
-    type: String,
-    sparse: true
-  },
-  isEmailVerified: {
-    type: Boolean,
-    default: false
   }
 }, {
   timestamps: true
