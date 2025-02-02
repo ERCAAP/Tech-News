@@ -7,6 +7,8 @@ import * as FileSystem from 'expo-file-system';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import api from '@/api/axios';
 import { useRouter } from 'expo-router';
+import { useAppDispatch } from '@/redux/hooks';
+import { fetchNews } from '@/redux/slices/newsSlice';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -48,6 +50,7 @@ export function CreateNewsForm() {
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const handleCoverImagePick = async () => {
     try {
@@ -126,7 +129,7 @@ export function CreateNewsForm() {
     const lastLine = lines[lines.length - 1];
     const urlMatch = lastLine.match(/https?:\/\/[^\s]+/);
     
-    if (urlMatch) {
+    if (urlMatch && urlMatch[0].length > 5) { // En az 5 karakter uzunluğunda olmalı
       const url = urlMatch[0].trim();
       handleUrlPreview(url);
     }
@@ -135,10 +138,15 @@ export function CreateNewsForm() {
   // URL önizleme fonksiyonu güncellendi
   const handleUrlPreview = async (url: string) => {
     try {
+      // URL formatını kontrol et
+      if (!url.match(/^https?:\/\/[^\s]+$/)) {
+        return;
+      }
+
       // URL zaten eklenmiş mi kontrol et
       const isUrlExists = formData.urls.some(item => item.url === url);
       if (isUrlExists) {
-        return; // URL zaten varsa işlemi sonlandır
+        return;
       }
 
       const isValid = await Linking.canOpenURL(url);
@@ -153,18 +161,20 @@ export function CreateNewsForm() {
           const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/) ||
                            html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/);
 
-          const title = titleMatch?.[1] || 'Untitled';
+          const title = titleMatch?.[1] || '';
           const imageUrl = imageMatch?.[1] || '';
 
-          // URL'yi urls array'ine ekle
-          setFormData(prev => ({
-            ...prev,
-            urls: [...prev.urls, { url, title, imageUrl }],
-            // Eğer cover image boşsa ve URL'nin resmi varsa, onu cover image olarak kullan
-            coverImage: !prev.coverImage && imageUrl ? imageUrl : prev.coverImage
-          }));
+          // Başlık veya resim varsa URL'yi ekle
+          if (title || imageUrl) {
+            setFormData(prev => ({
+              ...prev,
+              urls: [...prev.urls, { url, title, imageUrl }],
+              coverImage: !prev.coverImage && imageUrl ? imageUrl : prev.coverImage
+            }));
+          }
         } catch (error) {
           console.log('Error fetching URL metadata:', error);
+          // Meta veri alınamazsa URL'yi ekleme
         }
       }
     } catch (error) {
@@ -288,9 +298,12 @@ export function CreateNewsForm() {
         .filter(line => !line.startsWith('[URL:'))
         .join('\n');
 
-      // URL'leri içeriğe ekle
+      // URL'leri içeriğe ekle - sadece içerikte olmayan URL'leri ekle
       const contentWithUrls = formData.urls.reduce((content, urlData) => {
-        return content + `\n${urlData.url}\n`;
+        // URL zaten içerikte var mı kontrol et
+        const urlExists = content.includes(urlData.url);
+        // URL yoksa ekle
+        return urlExists ? content : content + `\n${urlData.url}\n`;
       }, cleanContent);
 
       // Haberi oluştur
@@ -305,8 +318,10 @@ export function CreateNewsForm() {
 
       await api.post('/news', newsData);
       
+      // Haberleri yenile ve ana sayfaya yönlendir
+      await dispatch(fetchNews()).unwrap();
       Alert.alert('Success', 'News created successfully');
-      router.back();
+      router.replace('/(tabs)');
     } catch (error) {
       console.error('Error creating news:', error);
       Alert.alert('Error', 'Failed to create news');
@@ -373,35 +388,7 @@ export function CreateNewsForm() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Cover Image Section - Artık en üstte */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Cover Image</Text>
-            {formData.coverImage ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image 
-                  source={{ uri: formData.coverImage }} 
-                  style={styles.coverImagePreview} 
-                  resizeMode="cover"
-                />
-                <Button
-                  title="Change Cover Image"
-                  variant="outline"
-                  onPress={handleCoverImagePick}
-                  style={styles.imageButton}
-                />
-              </View>
-            ) : (
-              <Button
-                title="Add Cover Image"
-                variant="outline"
-                onPress={handleCoverImagePick}
-                style={styles.imageButton}
-                icon="image"
-              />
-            )}
-          </View>
-
-          {/* Basic Info Section - Artık ikinci sırada */}
+          {/* Basic Info Section - En üstte */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Basic Info</Text>
             <Input
@@ -434,6 +421,34 @@ export function CreateNewsForm() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Cover Image Section - News Content'in üstünde */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Cover Image</Text>
+            {formData.coverImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image 
+                  source={{ uri: formData.coverImage }} 
+                  style={styles.coverImagePreview} 
+                  resizeMode="cover"
+                />
+                <Button
+                  title="Change Cover Image"
+                  variant="outline"
+                  onPress={handleCoverImagePick}
+                  style={styles.imageButton}
+                />
+              </View>
+            ) : (
+              <Button
+                title="Add Cover Image"
+                variant="outline"
+                onPress={handleCoverImagePick}
+                style={styles.imageButton}
+                icon="image"
+              />
+            )}
           </View>
 
           {/* News Content Section */}

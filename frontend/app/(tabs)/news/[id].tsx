@@ -23,6 +23,7 @@ export default function NewsDetailScreen() {
   const { news } = useAppSelector(state => state.news);
   const newsItem = news.find((item: NewsItem) => item._id === id);
   const [urlPreviews, setUrlPreviews] = useState<{ [key: string]: { title: string; imageUrl: string } }>({});
+  const [processedUrls, setProcessedUrls] = useState<Set<string>>(new Set());
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -41,7 +42,8 @@ export default function NewsDetailScreen() {
       for (const line of lines) {
         if (urlPattern.test(line.trim())) {
           const url = line.trim();
-          if (!urlPreviews[url]) {
+          if (!processedUrls.has(url) && !urlPreviews[url]) {
+            setProcessedUrls(prev => new Set(prev).add(url));
             const preview = await handleUrlPreview(url);
             if (preview) {
               setUrlPreviews(prev => ({
@@ -104,28 +106,41 @@ export default function NewsDetailScreen() {
         const url = part.trim();
         const preview = urlPreviews[url];
         
+        if (preview) {
+          return (
+            <TouchableOpacity
+              key={`url-${index}`}
+              style={styles.urlPreviewContainer}
+              onPress={() => Linking.openURL(url)}
+              activeOpacity={0.8}
+            >
+              {preview.imageUrl && (
+                <Image 
+                  source={{ uri: preview.imageUrl }} 
+                  style={styles.urlPreviewImage}
+                  resizeMode="cover"
+                />
+              )}
+              <View style={styles.urlPreviewContent}>
+                <Text style={styles.urlPreviewTitle} numberOfLines={2}>
+                  {preview.title || url}
+                </Text>
+                <Text style={styles.urlText} numberOfLines={1}>
+                  {url}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }
+        
         return (
           <TouchableOpacity
             key={`url-${index}`}
-            style={styles.urlPreviewContainer}
             onPress={() => Linking.openURL(url)}
-            activeOpacity={0.8}
           >
-            {preview?.imageUrl && (
-              <Image 
-                source={{ uri: preview.imageUrl }} 
-                style={styles.urlPreviewImage}
-                resizeMode="cover"
-              />
-            )}
-            <View style={styles.urlPreviewContent}>
-              <Text style={styles.urlPreviewTitle} numberOfLines={2}>
-                {preview?.title || url}
-              </Text>
-              <Text style={styles.urlText} numberOfLines={1}>
-                {url}
-              </Text>
-            </View>
+            <Text style={styles.urlText}>
+              {url}
+            </Text>
           </TouchableOpacity>
         );
       }
@@ -161,7 +176,7 @@ export default function NewsDetailScreen() {
         showsVerticalScrollIndicator={true}
         bounces={true}
         contentContainerStyle={{
-          paddingBottom: insets?.bottom || 0
+          paddingBottom: insets.bottom + 80
         }}
       >
         {coverImageUrl ? (
