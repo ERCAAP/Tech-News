@@ -7,11 +7,9 @@ import { Loading } from '@/components/common/Loading';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { NewsCard } from '@/components/news/NewsCard';
-import Animated from 'react-native-reanimated';
 import { NewsItem } from '@/types';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
 const CATEGORY_CARD_WIDTH = width * 0.75;
 const SPACING = 20;
 
@@ -45,13 +43,6 @@ export default function HomeScreen() {
     loadNews();
   }, [loadNews]);
 
-  // Get trending news (most viewed in last 24h)
-  const trendingNews = useMemo(() => {
-    return [...news]
-      .sort((a, b) => ((b.views?.last24Hours ?? 0) - (a.views?.last24Hours ?? 0)))
-      .slice(0, 3);
-  }, [news]);
-
   // Group news by category
   const newsByCategory = useMemo(() => {
     return CATEGORIES.reduce((acc, category) => {
@@ -73,36 +64,12 @@ export default function HomeScreen() {
     return <Loading />;
   }
 
-
-
   return (
     <ScrollView 
       style={styles.container}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Trending Section */}
-      <View style={styles.trendingSection}>
-        <View style={styles.trendingHeader}>
-          <MaterialIcons name="trending-up" size={24} color={COLORS.white} />
-          <Text style={styles.trendingTitle}>Trending Now</Text>
-        </View>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.trendingContent}
-          snapToInterval={CARD_WIDTH + SPACING}
-          decelerationRate="fast"
-          style={styles.trendingScroll}
-        >
-          {trendingNews.map((item) => (
-            <Animated.View key={item._id} style={styles.trendingCard}>
-              <NewsCard news={item} />
-            </Animated.View>
-          ))}
-        </ScrollView>
-      </View>
-
       {/* Categories with News */}
       {CATEGORIES.map(category => (
         <View key={category.id} style={styles.categorySection}>
@@ -150,54 +117,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: Platform.OS === 'ios' ? 100 : 80,
-  },
-  trendingSection: {
-    marginTop: 16,
-    marginBottom: 32,
-  },
-  trendingScroll: {
-    marginTop: 8,
-  },
-  trendingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    marginHorizontal: 16,
-    borderRadius: 16,
-    marginBottom: 16,
-    backgroundColor: COLORS.primary,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  trendingTitle: {
-    fontSize: 20,
-    fontFamily: FONTS.bold,
-    color: 'white',
-    marginLeft: 8,
-  },
-  trendingContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  trendingCard: {
-    width: CARD_WIDTH,
-    marginRight: SPACING,
-    borderRadius: 16,
-    backgroundColor: COLORS.cardBackground,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
-    elevation: 2,
   },
   categorySection: {
     marginBottom: 32,
