@@ -27,6 +27,11 @@ interface NewsFormData {
     type: 'text' | 'image';
     content: string;
   }>;
+  urls: Array<{
+    url: string;
+    title: string;
+    imageUrl: string;
+  }>;
 }
 
 export function CreateNewsForm() {
@@ -39,8 +44,11 @@ export function CreateNewsForm() {
     coverImage: '',
     contentImages: [],
     contentWithImages: [],
+    urls: [],
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
   const router = useRouter();
 
   const handleCoverImagePick = async () => {
@@ -115,8 +123,11 @@ export function CreateNewsForm() {
   const handleContentChange = (text: string) => {
     setFormData(prev => ({ ...prev, content: text }));
     
-    // URL kontrolü
-    const urlMatch = text.match(/https?:\/\/[^\s]+/);
+    // Son satırda URL var mı kontrol et
+    const lines = text.split('\n');
+    const lastLine = lines[lines.length - 1];
+    const urlMatch = lastLine.match(/https?:\/\/[^\s]+/);
+    
     if (urlMatch) {
       const url = urlMatch[0].trim();
       handleUrlPreview(url);
@@ -126,35 +137,31 @@ export function CreateNewsForm() {
   // URL önizleme fonksiyonu güncellendi
   const handleUrlPreview = async (url: string) => {
     try {
+      // URL zaten eklenmiş mi kontrol et
+      const isUrlExists = formData.urls.some(item => item.url === url);
+      if (isUrlExists) {
+        return; // URL zaten varsa işlemi sonlandır
+      }
+
       const isValid = await Linking.canOpenURL(url);
       if (isValid) {
         try {
           const response = await fetch(url);
           const html = await response.text();
           
-          // Extract title and image
           const titleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"/) ||
                            html.match(/<title[^>]*>([^<]*)<\/title>/);
           
           const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/) ||
                            html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/);
 
-          const title = titleMatch?.[1] || '';
+          const title = titleMatch?.[1] || 'Untitled';
           const imageUrl = imageMatch?.[1] || '';
 
-          // URL preview bloğunu oluştur
-          const urlPreview = `
-[URL_PREVIEW_START]
-${url}
-${title}
-${imageUrl}
-[URL_PREVIEW_END]
-`;
-          
-          // Eski URL'yi yeni preview ile değiştir
+          // URL'yi urls array'ine ekle
           setFormData(prev => ({
             ...prev,
-            content: prev.content.replace(url, urlPreview)
+            urls: [...prev.urls, { url, title, imageUrl }]
           }));
         } catch (error) {
           console.log('Error fetching URL metadata:', error);
@@ -172,45 +179,50 @@ ${imageUrl}
     });
   };
 
-  // Content render fonksiyonu
-  const renderContent = () => {
-    if (!formData.content) return null;
+  // URL önizlemelerini render etmek için yeni fonksiyon
+  const renderUrlPreviews = () => {
+    if (formData.urls.length === 0) return null;
 
-    const parts = formData.content.split(/(\[URL_PREVIEW_START\].*?\[URL_PREVIEW_END\])/s);
-    
-    return parts.map((part, index) => {
-      if (part.startsWith('[URL_PREVIEW_START]')) {
-        const [, url, title, imageUrl] = part.split('\n');
-        
-        return (
-          <View key={index} style={styles.urlPreviewBox}>
-            <Text style={styles.urlPreviewTitle} numberOfLines={2}>
-              {title}
-            </Text>
-            {imageUrl && (
-              <Image 
-                source={{ uri: imageUrl }} 
-                style={styles.urlPreviewImage}
-                resizeMode="cover"
-              />
-            )}
-            <TouchableOpacity 
-              onPress={() => handleUrlClick(url)}
-              style={styles.urlLinkContainer}
-            >
-              <Text style={styles.urlPreviewLink} numberOfLines={1}>
-                {url}
+    return (
+      <View style={styles.formSection}>
+        <Text style={styles.sectionTitle}>URL Previews</Text>
+        {formData.urls.map((urlData, index) => (
+          <View key={index} style={styles.previewUrlContainer}>
+            <Image 
+              source={{ uri: urlData.imageUrl }} 
+              style={styles.previewUrlImage} 
+              resizeMode="cover"
+            />
+            <View style={styles.previewUrlInfo}>
+              <Text style={styles.previewUrlTitle} numberOfLines={2}>
+                {urlData.title}
               </Text>
+              <TouchableOpacity
+                onPress={() => handleUrlClick(urlData.url)}
+              >
+                <Text style={styles.previewUrlLink} numberOfLines={1}>
+                  {urlData.url}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={styles.removeUrlButton}
+              onPress={() => handleRemoveUrl(index)}
+            >
+              <Text style={styles.removeImageText}>×</Text>
             </TouchableOpacity>
           </View>
-        );
-      }
-      return (
-        <Text key={index} style={styles.contentText}>
-          {part}
-        </Text>
-      );
-    });
+        ))}
+      </View>
+    );
+  };
+
+  // URL kaldırma işlevi
+  const handleRemoveUrl = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      urls: prev.urls.filter((_, i) => i !== index)
+    }));
   };
 
   // Resmi sunucuya yükle ve URL al
@@ -270,11 +282,22 @@ ${imageUrl}
         );
       });
 
+      // İçeriği temizle - URL preview işaretlerini kaldır
+      const cleanContent = processedContent
+        .split('\n')
+        .filter(line => !line.startsWith('[URL:'))
+        .join('\n');
+
+      // URL'leri içeriğe ekle
+      const contentWithUrls = formData.urls.reduce((content, urlData) => {
+        return content + `\n${urlData.url}\n`;
+      }, cleanContent);
+
       // Haberi oluştur
       const newsData = {
         title: formData.title,
         displayTitle: formData.displayTitle || formData.title,
-        content: processedContent,
+        content: contentWithUrls,
         category: formData.category,
         imageUrl: coverImageUrl,
         contentImages: uploadedContentImages,
@@ -289,6 +312,70 @@ ${imageUrl}
       Alert.alert('Error', 'Failed to create news');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Resim ekleme işlevi
+  const handleContentImagePick = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant media library permissions to upload images');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const { uri } = result.assets[0];
+        
+        // Geçici dosya oluştur
+        const fileExtension = uri.split('.').pop();
+        const fileName = `${Date.now()}.${fileExtension}`;
+        const newUri = FileSystem.documentDirectory + fileName;
+        
+        try {
+          await FileSystem.copyAsync({
+            from: uri,
+            to: newUri
+          });
+          
+          // İçerik resimlerine ekle
+          setFormData(prev => {
+            const newIndex = prev.contentImages.length;
+            return {
+              ...prev,
+              contentImages: [...prev.contentImages, newUri],
+              content: prev.content + `\n[IMAGE-${newIndex}]\n`
+            };
+          });
+        } catch (error) {
+          console.error('Error copying file:', error);
+          Alert.alert('Error', 'Failed to process image');
+        }
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  // URL ekleme işlevi
+  const handleInsertUrl = () => {
+    setShowUrlModal(true);
+  };
+
+  // URL ekleme işlevi için yeni fonksiyon
+  const handleAddUrl = () => {
+    if (urlInput.trim()) {
+      handleUrlPreview(urlInput.trim());
+      setUrlInput('');
+      setShowUrlModal(false);
     }
   };
 
@@ -375,6 +462,23 @@ ${imageUrl}
               />
             </View>
             
+            {/* Content Toolbar */}
+            <View style={styles.contentToolbar}>
+              <TouchableOpacity 
+                style={styles.toolbarButton}
+                onPress={handleInsertUrl}
+              >
+                <Text style={styles.toolbarButtonText}>Insert URL</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.toolbarButton}
+                onPress={handleContentImagePick}
+              >
+                <Text style={styles.toolbarButtonText}>Insert Image</Text>
+              </TouchableOpacity>
+            </View>
+            
             <View style={styles.contentInputWrapper}>
               <TextInput
                 value={formData.content}
@@ -384,12 +488,11 @@ ${imageUrl}
                 style={styles.contentInput}
                 placeholderTextColor={COLORS.gray}
               />
-              
-              <ScrollView style={styles.contentScrollView}>
-                {renderContent()}
-              </ScrollView>
             </View>
           </View>
+
+          {/* URL Previews Section - Artık ayrı bir bölüm */}
+          {renderUrlPreviews()}
 
           {/* Content Images Preview */}
           {formData.contentImages.length > 0 && (
@@ -423,6 +526,53 @@ ${imageUrl}
           <View style={styles.bottomSpacing} />
         </View>
       </ScrollView>
+
+      {/* URL Insert Modal */}
+      <Modal
+        visible={showUrlModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowUrlModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowUrlModal(false)}
+        >
+          <View style={styles.urlModalContent}>
+            <Text style={styles.modalTitle}>Insert URL</Text>
+            
+            <TextInput
+              value={urlInput}
+              onChangeText={setUrlInput}
+              placeholder="Enter URL here..."
+              style={styles.urlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setUrlInput('');
+                  setShowUrlModal(false);
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.addButton]}
+                onPress={handleAddUrl}
+              >
+                <Text style={styles.addButtonText}>Add URL</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Category Modal */}
       <Modal
@@ -596,7 +746,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   toolbarButtonText: {
-    marginLeft: 8,
     color: COLORS.dark,
     fontSize: 14,
     fontFamily: FONTS.medium,
@@ -617,7 +766,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
-    marginBottom: 12,
   },
   bottomSpacing: {
     height: 100,
@@ -677,6 +825,10 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: COLORS.white,
   },
+  urlText: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+  },
   urlPreviewBox: {
     marginVertical: 8,
     borderRadius: 12,
@@ -692,9 +844,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     padding: 12,
   },
-  urlPreviewImage: {
+  previewUrlImage: {
     width: '100%',
-    height: 200,
+    height: 160,
     backgroundColor: COLORS.lightGray,
   },
   urlLinkContainer: {
@@ -709,13 +861,90 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textDecorationLine: 'underline',
   },
-  contentText: {
+  urlModalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+    ...shadowStyle,
+  },
+  urlInput: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
     fontFamily: FONTS.regular,
     color: COLORS.dark,
-    lineHeight: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    marginVertical: 16,
   },
-  contentScrollView: {
-    maxHeight: 400,
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  addButton: {
+    backgroundColor: COLORS.primary,
+  },
+  cancelButtonText: {
+    color: COLORS.dark,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+  },
+  addButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+  },
+  previewUrlContainer: {
+    width: '100%',
+    marginBottom: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    ...shadowStyle,
+  },
+  previewUrlInfo: {
+    padding: 12,
+  },
+  previewUrlTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
+  previewUrlLink: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+  },
+  removeUrlButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 
