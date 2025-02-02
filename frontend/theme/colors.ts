@@ -10,26 +10,11 @@ export const COLORS = {
   white: '#FFFFFF',
   dark: '#111827',
   gray: '#6B7280',
-  black: '#000000',
   error: '#EF4444',
   success: '#10B981',
   warning: '#F59E0B',
   info: '#3B82F6',
   cardBackground: '#FFFFFF',
   cardBackgroundDark: '#374151',
-  border: '#E5E7EB',
-};
-
-export const FONTS = {
-  regular: 'System',
-  medium: 'System',
-  bold: 'System',
-};
-
-export const shadowStyle = {
-  shadowColor: COLORS.black,
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 2,
+  disabled: '#D1D5DB',
 }; 

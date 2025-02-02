@@ -2,6 +2,11 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { OAuth2Client } from 'google-auth-library';
+import appleSignin from 'apple-signin-auth';
+import { generateToken } from '../utils/auth';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -139,4 +144,114 @@ export const updateProfile = async (req: Request, res: Response) => {
       message: error.message || 'Profil güncellenirken bir hata oluştu'
     });
   }
-}; 
+};
+
+export const socialLogin = async (req: Request, res: Response) => {
+  try {
+    const { provider, token } = req.body;
+
+    let userData;
+
+    switch (provider) {
+      case 'google':
+        userData = await verifyGoogleToken(token);
+        break;
+      case 'apple':
+        userData = await verifyAppleToken(token);
+        break;
+      default:
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid provider'
+        });
+    }
+
+    if (!userData) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid token'
+      });
+    }
+
+    // Kullanıcıyı bul veya oluştur
+    let user = await User.findOne({ email: userData.email });
+
+    if (!user) {
+      user = await User.create({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        provider: provider,
+        providerId: userData.id,
+        isEmailVerified: true
+      });
+    }
+
+    // JWT token oluştur
+    const authToken = generateToken(user);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        }
+      },
+      token: authToken
+    });
+
+  } catch (error) {
+    console.error('Social login error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Social login failed'
+    });
+  }
+};
+
+async function verifyGoogleToken(token: string) {
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    
+    if (!payload) {
+      throw new Error('Invalid Google token payload');
+    }
+
+    return {
+      id: payload.sub,
+      email: payload.email,
+      firstName: payload.given_name,
+      lastName: payload.family_name
+    };
+  } catch (error) {
+    console.error('Google token verification error:', error);
+    return null;
+  }
+}
+
+async function verifyAppleToken(token: string) {
+  try {
+    const appleData = await appleSignin.verifyIdToken(token, {
+      audience: process.env.APPLE_CLIENT_ID,
+    });
+
+    return {
+      id: appleData.sub,
+      email: appleData.email,
+      firstName: appleData.firstName || '',
+      lastName: appleData.lastName || ''
+    };
+  } catch (error) {
+    console.error('Apple token verification error:', error);
+    return null;
+  }
+} 
