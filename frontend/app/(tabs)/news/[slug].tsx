@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, ScrollView, ToastAndroid, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -88,12 +88,12 @@ export default function NewsDetailScreen() {
     );
   };
 
-  function renderContent(content: string) {
+  const renderContent = (content: string) => {
     if (!content) return null;
 
     return content.split('\n').map((part, index) => {
+      // Resim kontrolü
       const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
-      
       if (imageMatch) {
         const imagePath = imageMatch[1];
         const fullImageUrl = getImageUrl(imagePath);
@@ -110,13 +110,31 @@ export default function NewsDetailScreen() {
         );
       }
 
+      // URL kontrolü
+      const urlPattern = /^https?:\/\/[^\s]+$/;
+      if (urlPattern.test(part.trim())) {
+        return (
+          <View key={`url-${index}`} style={styles.urlPreviewContainer}>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(part.trim())}
+              style={styles.urlPreviewLink}
+            >
+              <Text style={styles.urlText} numberOfLines={1}>
+                {part.trim()}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
+
+      // Normal metin
       return part.trim() ? (
         <Text key={`text-${index}`} style={styles.contentText}>
           {part}
         </Text>
       ) : null;
     });
-  }
+  };
 
   const renderStats = () => {
     if (!newsItem) return null;
@@ -270,5 +288,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: COLORS.gray,
+  },
+  urlPreviewContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  urlPreviewLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  urlText: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
 }); 

@@ -47,8 +47,6 @@ export function CreateNewsForm() {
     urls: [],
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [showUrlModal, setShowUrlModal] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
   const router = useRouter();
 
   const handleCoverImagePick = async () => {
@@ -367,20 +365,6 @@ export function CreateNewsForm() {
     }
   };
 
-  // URL ekleme işlevi
-  const handleInsertUrl = () => {
-    setShowUrlModal(true);
-  };
-
-  // URL ekleme işlevi için yeni fonksiyon
-  const handleAddUrl = () => {
-    if (urlInput.trim()) {
-      handleUrlPreview(urlInput.trim());
-      setUrlInput('');
-      setShowUrlModal(false);
-    }
-  };
-
   return (
     <View style={styles.mainContainer}>
       <ScrollView 
@@ -521,53 +505,6 @@ export function CreateNewsForm() {
           <View style={styles.bottomSpacing} />
         </View>
       </ScrollView>
-
-      {/* URL Insert Modal */}
-      <Modal
-        visible={showUrlModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowUrlModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowUrlModal(false)}
-        >
-          <View style={styles.urlModalContent}>
-            <Text style={styles.modalTitle}>Insert URL</Text>
-            
-            <TextInput
-              value={urlInput}
-              onChangeText={setUrlInput}
-              placeholder="Enter URL here..."
-              style={styles.urlInput}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-            />
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setUrlInput('');
-                  setShowUrlModal(false);
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.addButton]}
-                onPress={handleAddUrl}
-              >
-                <Text style={styles.addButtonText}>Add URL</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Category Modal */}
       <Modal
@@ -855,56 +792,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.primary,
     textDecorationLine: 'underline',
-  },
-  urlModalContent: {
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 24,
-    width: '85%',
-    maxWidth: 400,
-    ...shadowStyle,
-  },
-  urlInput: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: COLORS.dark,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-    marginVertical: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 8,
-  },
-  modalButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-  },
-  addButton: {
-    backgroundColor: COLORS.primary,
-  },
-  cancelButtonText: {
-    color: COLORS.dark,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-  },
-  addButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
   },
   previewUrlContainer: {
     width: '100%',

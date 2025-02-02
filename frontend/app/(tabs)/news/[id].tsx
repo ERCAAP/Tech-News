@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -22,7 +22,7 @@ export default function NewsDetailScreen() {
   
   const { news } = useAppSelector(state => state.news);
   const newsItem = news.find((item: NewsItem) => item._id === id);
-  const [] = useState(false);
+  const [urlPreviews, setUrlPreviews] = useState<{ [key: string]: { title: string; imageUrl: string } }>({});
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -31,12 +31,58 @@ export default function NewsDetailScreen() {
     }
   }, [id, dispatch]);
 
+  useEffect(() => {
+    const loadUrlPreviews = async () => {
+      if (!newsItem?.content) return;
+
+      const lines = newsItem.content.split('\n');
+      const urlPattern = /^https?:\/\/[^\s]+$/;
+
+      for (const line of lines) {
+        if (urlPattern.test(line.trim())) {
+          const url = line.trim();
+          if (!urlPreviews[url]) {
+            const preview = await handleUrlPreview(url);
+            if (preview) {
+              setUrlPreviews(prev => ({
+                ...prev,
+                [url]: preview
+              }));
+            }
+          }
+        }
+      }
+    };
+
+    loadUrlPreviews();
+  }, [newsItem?.content]);
+
+  const handleUrlPreview = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const html = await response.text();
+      
+      const titleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"/) ||
+                       html.match(/<title[^>]*>([^<]*)<\/title>/);
+      
+      const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/) ||
+                       html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/);
+
+      return {
+        title: titleMatch?.[1] || 'Untitled',
+        imageUrl: imageMatch?.[1] || '',
+      };
+    } catch (error) {
+      console.log('Error fetching URL metadata:', error);
+      return null;
+    }
+  };
+
   const renderContent = (content: string) => {
     if (!content) return null;
 
     return content.split('\n').map((part, index) => {
       const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
-      
       if (imageMatch) {
         const imagePath = imageMatch[1];
         const fullImageUrl = getImageUrl(imagePath);
@@ -50,6 +96,37 @@ export default function NewsDetailScreen() {
               onError={() => console.warn('Content image load error:', fullImageUrl)}
             />
           </View>
+        );
+      }
+
+      const urlPattern = /^https?:\/\/[^\s]+$/;
+      if (urlPattern.test(part.trim())) {
+        const url = part.trim();
+        const preview = urlPreviews[url];
+        
+        return (
+          <TouchableOpacity
+            key={`url-${index}`}
+            style={styles.urlPreviewContainer}
+            onPress={() => Linking.openURL(url)}
+            activeOpacity={0.8}
+          >
+            {preview?.imageUrl && (
+              <Image 
+                source={{ uri: preview.imageUrl }} 
+                style={styles.urlPreviewImage}
+                resizeMode="cover"
+              />
+            )}
+            <View style={styles.urlPreviewContent}>
+              <Text style={styles.urlPreviewTitle} numberOfLines={2}>
+                {preview?.title || url}
+              </Text>
+              <Text style={styles.urlText} numberOfLines={1}>
+                {url}
+              </Text>
+            </View>
+          </TouchableOpacity>
         );
       }
 
@@ -264,5 +341,39 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     fontSize: 14,
     fontFamily: FONTS.regular,
+  },
+  urlPreviewContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  urlPreviewImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: COLORS.lightGray,
+  },
+  urlPreviewContent: {
+    padding: 16,
+  },
+  urlPreviewTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
+  urlText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
   },
 }); 
