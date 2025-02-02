@@ -9,7 +9,9 @@ import {
   ScrollView,
   Alert,
   ToastAndroid,
-  Platform 
+  Platform,
+  Linking,
+  Image
 } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { updateNewsAsync } from '@/redux/slices/newsSlice';
@@ -31,6 +33,21 @@ export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
     category: news.category,
     imageUrl: news.imageUrl,
   });
+
+  const handleImagePress = () => {
+    if (formData.imageUrl?.startsWith('http')) {
+      const cleanUrl = formData.imageUrl.trim();
+      Linking.canOpenURL(cleanUrl).then(supported => {
+        if (supported) {
+          Linking.openURL(cleanUrl);
+        } else {
+          Alert.alert('Error', 'Cannot open this URL');
+        }
+      }).catch(() => {
+        Alert.alert('Error', 'Failed to open URL');
+      });
+    }
+  };
 
   const handleImagePick = async () => {
     try {
@@ -100,12 +117,41 @@ export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
               onChangeText={(text) => setFormData(prev => ({ ...prev, category: text }))}
               placeholder="Category"
             />
+
+            <TextInput
+              style={styles.input}
+              value={formData.imageUrl}
+              onChangeText={(text) => setFormData(prev => ({ ...prev, imageUrl: text.trim() }))}
+              placeholder="Enter URL"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+
+            {formData.imageUrl?.startsWith('http') && (
+              <View style={styles.previewContainer}>
+                <TouchableOpacity 
+                  style={styles.urlContainer}
+                  onPress={handleImagePress}
+                >
+                  <Text style={styles.urlText} numberOfLines={2}>
+                    {formData.imageUrl}
+                  </Text>
+                </TouchableOpacity>
+                
+                <Image
+                  source={{ uri: formData.imageUrl }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
             
             <TouchableOpacity 
               style={styles.imageButton}
               onPress={handleImagePick}
             >
-              <Text>Change Image</Text>
+              <Text>Pick Image</Text>
             </TouchableOpacity>
             
             <View style={styles.buttonContainer}>
@@ -189,5 +235,25 @@ const styles = StyleSheet.create({
   buttonText: {
     color: COLORS.white,
     fontFamily: FONTS.medium,
+  },
+  previewContainer: {
+    marginBottom: 16,
+  },
+  urlContainer: {
+    padding: 8,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  urlText: {
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
 }); 

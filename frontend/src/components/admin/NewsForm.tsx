@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, Alert, Image, TouchableOpacity, Text, Linking } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
-import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS } from '@/theme';
 
 // Kategori seçenekleri ve gösterim isimleri
@@ -25,32 +24,53 @@ export function NewsForm() {
     imageUrl: '',
   });
 
-  const handleImagePick = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setFormData(prev => ({ ...prev, imageUrl: result.assets[0].uri }));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
 
   const handleCategorySelect = (categoryId: typeof CATEGORIES[number]['id']) => {
     setFormData(prev => ({ ...prev, category: categoryId }));
     setShowCategoryPicker(false);
+  };
+
+  const handleUrlInput = async (url: string) => {
+    const cleanUrl = url.trim();
+    if (cleanUrl.startsWith('http')) {
+      try {
+        const isValid = await Linking.canOpenURL(cleanUrl);
+        if (isValid) {
+          // Fetch URL metadata
+          try {
+            const response = await fetch(cleanUrl);
+            const html = await response.text();
+            
+            // Extract og:image or first image from HTML
+            
+            // Extract title
+            const titleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"/) ||
+                             html.match(/<title[^>]*>([^<]*)<\/title>/);
+
+            setFormData(prev => ({ 
+              ...prev, 
+              imageUrl: cleanUrl,
+              title: prev.title || titleMatch?.[1] || '',
+            }));
+          } catch (error) {
+            // If metadata fetch fails, still set the URL
+            setFormData(prev => ({ ...prev, imageUrl: cleanUrl }));
+          }
+        } else {
+          Alert.alert('Error', 'Invalid URL');
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to validate URL');
+      }
+    }
+  };
+
+  const handleUrlPress = () => {
+    if (formData.imageUrl?.startsWith('http')) {
+      Linking.openURL(formData.imageUrl).catch(() => {
+        Alert.alert('Error', 'Failed to open URL');
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -104,28 +124,41 @@ export function NewsForm() {
       <View style={styles.imageSection}>
         {formData.imageUrl ? (
           <View style={styles.imagePreviewContainer}>
-            <Image 
-              source={{ uri: formData.imageUrl }} 
-              style={styles.imagePreview} 
-              resizeMode="cover"
-            />
-            <Button
-              title="Change Image"
-              variant="outline"
-              onPress={handleImagePick}
-              style={styles.imageButton}
-            />
+            {formData.imageUrl.startsWith('http') && (
+              <TouchableOpacity 
+                style={styles.urlPreviewContainer}
+                onPress={handleUrlPress}
+              >
+                <Image 
+                  source={{ uri: formData.imageUrl }} 
+                  style={styles.previewImage} 
+                  resizeMode="cover"
+                />
+                <View style={styles.urlOverlay}>
+                  <Text style={styles.urlText} numberOfLines={2}>
+                    {formData.imageUrl}
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.removeButton}
+                  onPress={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            )}
           </View>
-        ) : (
-          <Button
-            title="Add News Image"
-            variant="outline"
-            onPress={handleImagePick}
-            style={styles.imageButton}
-            icon="image"
-          />
-        )}
+        ) : null}
       </View>
+
+      <Input
+        label="Image URL"
+        value={formData.imageUrl}
+        onChangeText={handleUrlInput}
+        placeholder="Enter image URL"
+        autoCapitalize="none"
+        keyboardType="default"
+      />
 
       <Input
         label="News Title"
@@ -279,5 +312,46 @@ const styles = StyleSheet.create({
   },
   selectedCategoryText: {
     color: COLORS.white,
+  },
+  urlPreviewContainer: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: COLORS.lightGray,
+  },
+  urlOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 8,
+  },
+  urlText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

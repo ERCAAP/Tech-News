@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   TextInput, 
-  TextInputProps, 
   StyleSheet, 
   View, 
   Text,
@@ -11,7 +10,6 @@ import {
 } from 'react-native';
 import { useResponsive } from '@/hooks/useResponsive';
 import { COLORS, FONTS } from '@/theme';
-import { MaterialIcons } from '@expo/vector-icons';
 
 export interface InputProps {
   label: string;
@@ -22,13 +20,14 @@ export interface InputProps {
   leftIcon?: string;
   rightIcon?: string;
   onRightIconPress?: () => void;
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'web-search';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   multiline?: boolean;
   numberOfLines?: number;
   darkMode?: boolean;
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
+  error?: string;
 }
 
 export function Input({ 
@@ -40,13 +39,13 @@ export function Input({
   const { wp, hp } = useResponsive();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, props.containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
         style={[
           styles.input,
           { 
-            height: hp('6%'),
+            height: props.multiline ? undefined : hp('6%'),
             paddingHorizontal: wp('4%'),
           },
           error && styles.inputError,

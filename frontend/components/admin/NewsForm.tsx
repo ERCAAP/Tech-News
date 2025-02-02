@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Alert, View, TouchableOpacity, Text, StyleSheet, Linking, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '@/theme';
 
@@ -23,6 +23,10 @@ export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
   });
 
   const handleImagePick = async () => {
+    if (formData.imageUrl?.startsWith('http')) {
+      return;
+    }
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -43,6 +47,10 @@ export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
   };
 
   const handleTakePhoto = async () => {
+    if (formData.imageUrl?.startsWith('http')) {
+      return;
+    }
+
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
@@ -77,8 +85,24 @@ export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
     onSubmit(formData);
   };
 
+  const handleImagePress = () => {
+    if (formData.imageUrl?.startsWith('http')) {
+      Linking.openURL(formData.imageUrl);
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {formData.imageUrl && (
+        <TouchableOpacity onPress={handleImagePress}>
+          <Image
+            source={{ uri: formData.imageUrl }}
+            style={styles.newsImage}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      )}
+      
       <TouchableOpacity style={styles.button} onPress={handleImagePick}>
         <Text>Pick Image</Text>
       </TouchableOpacity>
@@ -111,5 +135,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 16,
     alignItems: 'center',
+  },
+  newsImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 16,
   },
 }); 

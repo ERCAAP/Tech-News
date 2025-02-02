@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Image, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
+import { View, StyleSheet, Alert, Image, Text, TouchableOpacity, Modal, ScrollView, TextInput, Linking } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import * as ImagePicker from 'expo-image-picker';
@@ -160,31 +160,107 @@ export function CreateNewsForm() {
     }
   };
 
-  const handleUrlInsert = () => {
-    Alert.prompt(
-      'Insert URL',
-      'Enter the URL you want to insert',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Insert',
-          onPress: (url?: string) => {
-            if (url) {
-              const currentContent = formData.content;
-              const newContent = currentContent + `\n[URL=${url}]\n`;
-              setFormData(prev => ({
-                ...prev,
-                content: newContent,
-              }));
-            }
-          },
-        },
-      ],
-      'plain-text'
-    );
+  // Content değiştiğinde URL kontrolü yap
+  const handleContentChange = (text: string) => {
+    setFormData(prev => ({ ...prev, content: text }));
+    
+    // URL kontrolü
+    const urlMatch = text.match(/https?:\/\/[^\s]+/);
+    if (urlMatch) {
+      const url = urlMatch[0].trim();
+      handleUrlPreview(url);
+    }
+  };
+
+  // URL önizleme fonksiyonu güncellendi
+  const handleUrlPreview = async (url: string) => {
+    try {
+      const isValid = await Linking.canOpenURL(url);
+      if (isValid) {
+        try {
+          const response = await fetch(url);
+          const html = await response.text();
+          
+          // Extract title and image
+          const titleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"/) ||
+                           html.match(/<title[^>]*>([^<]*)<\/title>/);
+          
+          const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/) ||
+                           html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/);
+
+          const title = titleMatch?.[1] || '';
+          const imageUrl = imageMatch?.[1] || '';
+
+          // URL preview bloğunu oluştur
+          const urlPreview = `
+[URL_PREVIEW_START]
+${url}
+${title}
+${imageUrl}
+[URL_PREVIEW_END]
+`;
+          
+          // Eski URL'yi yeni preview ile değiştir
+          setFormData(prev => ({
+            ...prev,
+            content: prev.content.replace(url, urlPreview)
+          }));
+        } catch (error) {
+          console.log('Error fetching URL metadata:', error);
+        }
+      }
+    } catch (error) {
+      console.log('Error validating URL:', error);
+    }
+  };
+
+  // URL'ye tıklama işlevi
+  const handleUrlClick = (url: string) => {
+    Linking.openURL(url).catch(() => {
+      Alert.alert('Error', 'Could not open URL');
+    });
+  };
+
+  // Content render fonksiyonu
+  const renderContent = () => {
+    if (!formData.content) return null;
+
+    const parts = formData.content.split(/(\[URL_PREVIEW_START\].*?\[URL_PREVIEW_END\])/s);
+    
+    return parts.map((part, index) => {
+      if (part.startsWith('[URL_PREVIEW_START]')) {
+        const [, url, title, imageUrl] = part.split('\n');
+        
+        return (
+          <TouchableOpacity 
+            key={index}
+            style={styles.urlPreviewBox}
+            onPress={() => handleUrlClick(url)}
+          >
+            {imageUrl && (
+              <Image 
+                source={{ uri: imageUrl }} 
+                style={styles.urlPreviewImage}
+                resizeMode="cover"
+              />
+            )}
+            <View style={styles.urlPreviewContent}>
+              <Text style={styles.urlPreviewTitle} numberOfLines={2}>
+                {title}
+              </Text>
+              <Text style={styles.urlPreviewLink} numberOfLines={1}>
+                {url}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      }
+      return (
+        <Text key={index} style={styles.contentText}>
+          {part}
+        </Text>
+      );
+    });
   };
 
   // Resmi sunucuya yükle ve URL al
@@ -274,36 +350,9 @@ export function CreateNewsForm() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Cover Image Section */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Cover Image</Text>
-            {formData.coverImage ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image 
-                  source={{ uri: formData.coverImage }} 
-                  style={styles.coverImagePreview} 
-                  resizeMode="cover"
-                />
-                <Button
-                  title="Change Cover Image"
-                  variant="outline"
-                  onPress={handleCoverImagePick}
-                  style={styles.imageButton}
-                />
-              </View>
-            ) : (
-              <Button
-                title="Add Cover Image"
-                variant="outline"
-                onPress={handleCoverImagePick}
-                style={styles.imageButton}
-                icon="image"
-              />
-            )}
-          </View>
-
           {/* Basic Info Section */}
           <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Basic Info</Text>
             <Input
               label="News Title"
               value={formData.title}
@@ -336,37 +385,35 @@ export function CreateNewsForm() {
             </View>
           </View>
 
-          {/* Content Images Section */}
+          {/* Cover Image Section */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Content Images</Text>
-            <ScrollView 
-              horizontal 
-              style={styles.contentImagesScroll}
-              showsHorizontalScrollIndicator={false}
-            >
-              {formData.contentImages.length > 0 ? (
-                formData.contentImages.map((uri, index) => (
-                  <View key={index} style={styles.contentImageContainer}>
-                    <Image 
-                      source={{ uri }} 
-                      style={styles.contentImagePreview} 
-                      resizeMode="cover"
-                    />
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => handleRemoveContentImage(index)}
-                    >
-                      <Text style={styles.removeImageText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noImagesText}>No images added yet</Text>
-              )}
-            </ScrollView>
+            <Text style={styles.sectionTitle}>Cover Image</Text>
+            {formData.coverImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image 
+                  source={{ uri: formData.coverImage }} 
+                  style={styles.coverImagePreview} 
+                  resizeMode="cover"
+                />
+                <Button
+                  title="Change Cover Image"
+                  variant="outline"
+                  onPress={handleCoverImagePick}
+                  style={styles.imageButton}
+                />
+              </View>
+            ) : (
+              <Button
+                title="Add Cover Image"
+                variant="outline"
+                onPress={handleCoverImagePick}
+                style={styles.imageButton}
+                icon="image"
+              />
+            )}
           </View>
 
-          {/* News Content Section */}
+          {/* News Content Section - URL özelliği burada */}
           <View style={styles.formSection}>
             <View style={styles.contentHeader}>
               <Text style={styles.sectionTitle}>News Content</Text>
@@ -381,13 +428,6 @@ export function CreateNewsForm() {
             <View style={styles.contentToolbar}>
               <TouchableOpacity
                 style={styles.toolbarButton}
-                onPress={handleUrlInsert}
-              >
-                <MaterialIcons name="link" size={20} color={COLORS.primary} />
-                <Text style={styles.toolbarButtonText}>Insert URL</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.toolbarButton}
                 onPress={handleContentImagePick}
               >
                 <MaterialIcons name="image" size={20} color={COLORS.primary} />
@@ -396,16 +436,47 @@ export function CreateNewsForm() {
             </View>
 
             <View style={styles.contentInputWrapper}>
+              <ScrollView style={styles.contentScrollView}>
+                {renderContent()}
+              </ScrollView>
               <TextInput
                 value={formData.content}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, content: text }))}
-                placeholder="Write your news content here..."
+                onChangeText={handleContentChange}
+                placeholder="Write your news content here... Paste URL to preview"
                 multiline
                 style={styles.contentInput}
                 placeholderTextColor={COLORS.gray}
               />
             </View>
           </View>
+
+          {/* Content Images Preview */}
+          {formData.contentImages.length > 0 && (
+            <View style={styles.formSection}>
+              <Text style={styles.sectionTitle}>Content Images</Text>
+              <ScrollView 
+                horizontal 
+                style={styles.contentImagesScroll}
+                showsHorizontalScrollIndicator={false}
+              >
+                {formData.contentImages.map((uri, index) => (
+                  <View key={index} style={styles.contentImageContainer}>
+                    <Image 
+                      source={{ uri }} 
+                      style={styles.contentImagePreview} 
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => handleRemoveContentImage(index)}
+                    >
+                      <Text style={styles.removeImageText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Bottom Spacing */}
           <View style={styles.bottomSpacing} />
@@ -592,10 +663,10 @@ const styles = StyleSheet.create({
   contentInputWrapper: {
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    padding: 2,
+    padding: 12,
   },
   contentInput: {
-    minHeight: 200,
+    minHeight: 100,
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -605,6 +676,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
+    marginBottom: 12,
   },
   bottomSpacing: {
     height: 100,
@@ -663,5 +735,42 @@ const styles = StyleSheet.create({
   },
   selectedCategoryText: {
     color: COLORS.white,
+  },
+  urlPreviewBox: {
+    marginVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  urlPreviewImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: COLORS.lightGray,
+  },
+  urlPreviewContent: {
+    padding: 12,
+  },
+  urlPreviewTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 4,
+  },
+  urlPreviewLink: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+  },
+  contentText: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
+    lineHeight: 24,
+  },
+  contentScrollView: {
+    maxHeight: 400,
   },
 }); 
