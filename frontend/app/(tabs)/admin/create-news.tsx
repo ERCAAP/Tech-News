@@ -48,6 +48,26 @@ export default function CreateNewsScreen() {
     }
   };
 
+  // URL'leri işlemek için yardımcı fonksiyon
+  const processContent = (text: string) => {
+    const lines = text.split('\n');
+    const processedLines = lines.map(line => {
+      // URL kontrolü
+      const urlPattern = /^https?:\/\/[^\s]+$/;
+      if (urlPattern.test(line.trim())) {
+        return line.trim(); // URL'leri olduğu gibi bırak
+      }
+      return line; // URL olmayan satırları olduğu gibi bırak
+    });
+    return processedLines.join('\n');
+  };
+
+  // Content değiştiğinde URL'leri işle
+  const handleContentChange = (text: string) => {
+    const processedContent = processContent(text);
+    setContent(processedContent);
+  };
+
   const handleCreateNews = async () => {
     try {
       setIsLoading(true);
@@ -63,7 +83,10 @@ export default function CreateNewsScreen() {
       formData.append('title', title);
       formData.append('displayTitle', displayTitle);
       formData.append('category', category);
-      formData.append('content', content);
+      
+      // Content'i işleyerek ekle
+      const processedContent = processContent(content);
+      formData.append('content', processedContent);
 
       // Cover image'i ekle
       if (coverImage) {
@@ -189,10 +212,19 @@ export default function CreateNewsScreen() {
           <TextArea
             label="News Content"
             value={content}
-            onChangeText={setContent}
-            placeholder="Write your news content here..."
+            onChangeText={handleContentChange}
+            placeholder="Write your news content here... You can add multiple URLs by putting each on a new line"
             numberOfLines={8}
           />
+          <Text style={styles.urlHint}>
+            Tip: Add URLs by putting each on a new line. Example:
+          </Text>
+          <Text style={styles.urlExample}>
+            Your text here...{'\n'}
+            https://example1.com{'\n'}
+            More text here...{'\n'}
+            https://example2.com
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -317,5 +349,20 @@ const styles = StyleSheet.create({
   },
   publishButton: {
     marginVertical: 24,
+  },
+  urlHint: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
+    marginTop: 8,
+  },
+  urlExample: {
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    color: COLORS.primary,
+    backgroundColor: COLORS.lightGray,
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 4,
   },
 }); 

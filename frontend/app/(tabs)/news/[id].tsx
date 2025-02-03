@@ -40,14 +40,7 @@ const translationCache: TranslationCache = {};
 // Add this helper function
 async function translateText(text: string, targetLanguage: string): Promise<string> {
   try {
-    // API key kontrolü
-    if (!OPENAI_API_KEY) {
-      console.error('OpenAI API key is missing');
-      throw new Error('Translation service is not configured');
-    }
-
-    // Boş metin kontrolü
-    if (!text.trim()) {
+    if (!OPENAI_API_KEY || !text.trim()) {
       return text;
     }
 
@@ -66,7 +59,7 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
         model: "gpt-3.5-turbo",
         messages: [{
           role: "system",
-          content: `You are a translator. Translate the following text to ${targetLanguage}. Preserve any formatting and maintain the original meaning as closely as possible.`
+          content: `Translate the text to ${targetLanguage}. If you encounter any untranslatable terms, use the closest equivalent or keep them as is.`
         }, {
           role: "user",
           content: text
@@ -76,18 +69,11 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`API error: ${errorData.error?.message || 'Unknown error'}`);
+      return text;
     }
 
     const data = await response.json();
-    
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from translation service');
-    }
-
-    const translatedText = data.choices[0].message.content.trim();
+    const translatedText = data.choices?.[0]?.message?.content?.trim() || text;
 
     // Cache sonucu
     if (!translationCache[targetLanguage]) {
@@ -97,12 +83,7 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
 
     return translatedText;
   } catch (error) {
-    console.error('Translation error:', error);
-    Alert.alert(
-      'Translation Error',
-      'Failed to translate the content. Please try again later.'
-    );
-    return text; // Hata durumunda orijinal metni döndür
+    return text; // Hata durumunda orijinal metni sessizce döndür
   }
 }
 
@@ -238,10 +219,7 @@ export default function NewsDetailScreen() {
 
     setIsTranslating(true);
     try {
-      // Başlığı çevir
       const translatedTitle = await translateText(newsItem.title, deviceLanguage);
-      
-      // İçeriği çevir
       const contentParts = newsItem.content.split('\n');
       const translatedParts = await Promise.all(
         contentParts.map(async (part) => {
@@ -253,12 +231,7 @@ export default function NewsDetailScreen() {
           }
           
           if (part.trim()) {
-            try {
-              return await translateText(part, deviceLanguage);
-            } catch (error) {
-              console.error('Part translation error:', error);
-              return part;
-            }
+            return await translateText(part, deviceLanguage);
           }
           
           return part;
@@ -271,11 +244,7 @@ export default function NewsDetailScreen() {
       }));
       setShowOriginal(false);
     } catch (error) {
-      console.error('Content translation error:', error);
-      Alert.alert(
-        'Translation Error',
-        'Failed to translate the content. Please try again later.'
-      );
+      setShowOriginal(true);
     } finally {
       setIsTranslating(false);
     }
