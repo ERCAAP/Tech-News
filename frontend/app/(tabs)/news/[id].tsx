@@ -15,13 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
+import { isUserAdmin } from '@/types';
 
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : '';
   const dispatch = useAppDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = isUserAdmin(user);
   
   const { news } = useAppSelector(state => state.news);
   const newsItem = news.find((item: NewsItem) => item._id === id);
