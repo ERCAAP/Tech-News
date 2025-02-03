@@ -22,7 +22,6 @@ export default function RegisterScreen() {
     username: '',
     email: '',
     password: '',
-    confirmPassword: '',
     firstName: '',
     lastName: '',
   });
@@ -65,11 +64,6 @@ export default function RegisterScreen() {
       setIsLoading(true);
       if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
         Alert.alert('Error', 'Please fill in all required fields');
-        return;
-      }
-      
-      if (formData.password !== formData.confirmPassword) {
-        Alert.alert('Error', 'Passwords do not match');
         return;
       }
 
@@ -162,16 +156,6 @@ export default function RegisterScreen() {
             value={formData.password}
             onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
             placeholder="Enter your password"
-            secureTextEntry
-            leftIcon="lock"
-            darkMode={isDark}
-          />
-
-          <Input
-            label="Confirm Password"
-            value={formData.confirmPassword}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, confirmPassword: text }))}
-            placeholder="Confirm your password"
             secureTextEntry
             leftIcon="lock"
             darkMode={isDark}
