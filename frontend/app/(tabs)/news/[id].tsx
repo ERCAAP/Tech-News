@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews } from '@/redux/slices/newsSlice';
+import { viewNews, deleteNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
@@ -153,6 +154,34 @@ export default function NewsDetailScreen() {
     });
   };
 
+  const handleEdit = () => {
+    router.push(`/news/edit/${id}`);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete News",
+      "Are you sure you want to delete this news item? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await dispatch(deleteNews(id));
+              router.back();
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete news item");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (!newsItem) {
     return <Loading />;
@@ -163,11 +192,29 @@ export default function NewsDetailScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       {isAdmin && (
-        <View style={styles.viewCountContainer}>
-          <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
-          <Text style={styles.viewCountText}>
-            {typeof newsItem.views === 'number' ? newsItem.views : 0}
-          </Text>
+        <View style={styles.adminControls}>
+          <View style={styles.viewCountContainer}>
+            <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
+            <Text style={styles.viewCountText}>
+              {typeof newsItem.views === 'number' ? newsItem.views : 0}
+            </Text>
+          </View>
+          
+          <View style={styles.adminActions}>
+            <TouchableOpacity
+              style={styles.adminButton}
+              onPress={handleEdit}
+            >
+              <MaterialIcons name="edit" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.adminButton, styles.deleteButton]}
+              onPress={handleDelete}
+            >
+              <MaterialIcons name="delete" size={24} color={COLORS.error} />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -303,16 +350,12 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   viewCountContainer: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    zIndex: 1000,
     shadowColor: COLORS.dark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -390,5 +433,31 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.primary,
     textDecorationLine: 'underline',
+  },
+  adminControls: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1000,
+    gap: 8,
+  },
+  adminActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  adminButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 8,
+    borderRadius: 20,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
 }); 
