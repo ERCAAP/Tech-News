@@ -19,7 +19,7 @@ const newsSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Technology', 'AI', 'App Development', 'Cyber Security', 'General']
+    enum: ['app-development', 'artificial-intelligence', 'technology']
   },
   views: {
     type: Number,

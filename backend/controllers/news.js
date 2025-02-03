@@ -92,27 +92,22 @@ exports.updateNews = async (req, res) => {
     };
 
     // Yeni kapak resmi varsa ekle
-    if (req.files?.coverImage) {
-      const coverImage = req.files.coverImage[0];
-      updateData.imageUrl = `/uploads/${coverImage.filename}`;
-    } else if (imageUrl) {
+    if (imageUrl) {
       updateData.imageUrl = imageUrl;
     }
 
     // İçerik resimleri varsa ekle
-    if (req.files?.contentImages) {
-      const newContentImages = req.files.contentImages.map(
-        file => `/uploads/${file.filename}`
-      );
-      updateData.contentImages = [...(contentImages || []), ...newContentImages];
-    } else if (contentImages) {
+    if (contentImages) {
       updateData.contentImages = contentImages;
     }
 
     const news = await News.findByIdAndUpdate(
       newsId,
       updateData,
-      { new: true }
+      { 
+        new: true,
+        runValidators: true // Validasyonları çalıştır
+      }
     ).populate('author', 'firstName lastName');
 
     if (!news) {
@@ -130,7 +125,7 @@ exports.updateNews = async (req, res) => {
     console.error('Update news error:', error);
     res.status(400).json({
       status: 'error',
-      message: error.message
+      message: error.message || 'Failed to update news'
     });
   }
 };

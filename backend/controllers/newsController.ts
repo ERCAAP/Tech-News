@@ -43,18 +43,47 @@ export async function createNews(req: AuthRequest, res: Response, next: NextFunc
   }
 }
 
-export async function updateNews(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+export const updateNews = async (req: Request, res: Response) => {
   try {
-    const news = await News.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!news) {
-      res.status(404).json({ message: 'News not found' });
-      return;
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+
+    // Kategoriyi küçük harfe çevir
+    if (updateData.category) {
+      updateData.category = updateData.category.toLowerCase();
     }
-    res.json(news);
-  } catch (error) {
-    next(error);
+
+    const news = await News.findByIdAndUpdate(
+      id,
+      updateData,
+      { 
+        new: true,
+        runValidators: true 
+      }
+    ).populate('author', 'firstName lastName');
+
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Haber bulunamadı'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: { news }
+    });
+  } catch (error: any) {
+    console.error('Update news error:', error);
+    res.status(400).json({
+      status: 'error',
+      message: error.message || 'Haber güncellenirken bir hata oluştu'
+    });
   }
-}
+};
 
 export async function deleteNews(req: AuthRequest, res: Response): Promise<void> {
   try {

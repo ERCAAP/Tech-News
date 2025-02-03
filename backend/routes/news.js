@@ -33,14 +33,10 @@ router.delete('/:id/favorite', authMiddleware, newsController.removeFromFavorite
 router.post('/:id/view', authMiddleware, newsController.incrementViews);
 
 // Admin routes
-router.patch('/:id', [authMiddleware /*, adminMiddleware */], newsController.updateNews);
-router.get('/stats', [authMiddleware /*, adminMiddleware */], newsController.getStats);
+router.get('/stats', [authMiddleware], newsController.getStats);
 
-// Update route'u
-router.put('/:id', 
-  authMiddleware, 
-  uploadFields,
-  newsController.updateNews
-);
+// Haber güncelleme route'u - hem PUT hem PATCH'i destekle
+router.put('/:id', authMiddleware, newsController.updateNews);  // PUT için
+router.patch('/:id', authMiddleware, newsController.updateNews); // PATCH için
 
 module.exports = router; 

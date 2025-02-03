@@ -17,6 +17,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { isUserAdmin } from '@/types';
 
+const categoryMapping: { [key: string]: string } = {
+  'App Development': 'app-development',
+  'Artificial Intelligence': 'artificial-intelligence',
+  'Technology': 'technology',
+  // Add more mappings as needed
+};
+
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : '';
@@ -36,6 +43,13 @@ export default function NewsDetailScreen() {
   const [editedCoverImage, setEditedCoverImage] = useState('');
   const [editedContentImages, setEditedContentImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const categories = [
+    { label: 'Select a category', value: '' },
+    { label: 'App Development', value: 'app-development' },
+    { label: 'Artificial Intelligence', value: 'artificial-intelligence' },
+    { label: 'Technology', value: 'technology' }
+  ];
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -167,7 +181,8 @@ export default function NewsDetailScreen() {
   const handleEdit = () => {
     setEditedTitle(newsItem?.title || '');
     setEditedContent(newsItem?.content || '');
-    setEditedCategory(newsItem?.category || '');
+    const mappedCategory = categoryMapping[newsItem?.category || ''] || '';
+    setEditedCategory(mappedCategory);
     setEditedCoverImage(newsItem?.imageUrl ? getImageUrl(newsItem.imageUrl) : '');
     setEditedContentImages(extractContentImages(newsItem?.content || ''));
     setIsEditModalVisible(true);
@@ -386,12 +401,9 @@ export default function NewsDetailScreen() {
                   style={styles.picker}
                   enabled={!isSubmitting}
                 >
-                  <Picker.Item label="Select a category" value="" />
-                  <Picker.Item label="Technology" value="technology" />
-                  <Picker.Item label="Sports" value="sports" />
-                  <Picker.Item label="Politics" value="politics" />
-                  <Picker.Item label="Entertainment" value="entertainment" />
-                  {/* Add more categories as needed */}
+                  {categories.map((category, index) => (
+                    <Picker.Item key={index} label={category.label} value={category.value} />
+                  ))}
                 </Picker>
               </View>
 

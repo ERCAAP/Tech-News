@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { NewsItem } from '@/types';
 import api from '@/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 interface ApiResponse<T> {
   status: string;
@@ -27,6 +28,22 @@ interface NewsState {
   isLoading: boolean;
   error: string | null;
   stats: NewsStats | null;
+}
+
+interface UpdateNewsPayload {
+  id: string;
+  title?: string;
+  content?: string;
+  category?: string;
+  imageUrl?: string;
+  contentImages?: string[];
+}
+
+interface NewsResponse {
+  status: string;
+  data: {
+    news: NewsItem;
+  };
 }
 
 const initialState: NewsState = {
@@ -152,65 +169,24 @@ export const getFavoriteNews = createAsyncThunk(
 
 export const updateNews = createAsyncThunk(
   'news/updateNews',
-  async ({ 
-    id, 
-    title, 
-    content, 
-    category,
-    imageUrl,
-    contentImages 
-  }: { 
-    id: string; 
-    title: string; 
-    content: string;
-    category: string;
-    imageUrl?: string;
-    contentImages?: string[];
-  }, { rejectWithValue }) => {
+  async ({ id, ...updateData }: UpdateNewsPayload, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', content);
-      formData.append('category', category);
+      // Kategoriyi küçük harfe çevir
+      if (updateData.category) {
+        updateData.category = updateData.category.toLowerCase();
+      }
+
+      const response = await api.put<NewsResponse>(`/news/${id}`, updateData);
       
-      if (imageUrl && imageUrl.startsWith('file://')) {
-        const filename = imageUrl.split('/').pop();
-        formData.append('coverImage', {
-          uri: imageUrl,
-          type: 'image/jpeg',
-          name: filename || 'cover.jpg',
-        } as any);
-      } else if (imageUrl) {
-        formData.append('imageUrl', imageUrl);
-      }
-
-      if (contentImages?.length) {
-        contentImages.forEach((image, index) => {
-          if (image.startsWith('file://')) {
-            const filename = image.split('/').pop();
-            formData.append('contentImages', {
-              uri: image,
-              type: 'image/jpeg',
-              name: filename || `content${index}.jpg`,
-            } as any);
-          } else {
-            formData.append('contentImages[]', image);
-          }
-        });
-      }
-
-      const response = await api.put<ApiResponse<NewsItem>>(`/news/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
       if (!response.data?.data?.news) {
         throw new Error('Invalid response format');
       }
+      
       return response.data.data.news;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update news');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to update news'
+      );
     }
   }
 );
@@ -338,7 +314,7 @@ const newsSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateNews.fulfilled, (state, action) => {
+      .addCase(updateNews.fulfilled, (state, action: PayloadAction<NewsItem>) => {
         state.isLoading = false;
         const index = state.news.findIndex(item => item._id === action.payload._id);
         if (index !== -1) {

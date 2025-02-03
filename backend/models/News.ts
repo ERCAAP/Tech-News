@@ -36,7 +36,12 @@ const NewsSchema = new Schema({
   },
   content: { type: String, required: true },
   imageUrl: { type: String },
-  category: { type: String, required: true },
+  category: {
+    type: String,
+    required: true,
+    enum: ['app-development', 'artificial-intelligence', 'technology'],
+    message: 'Geçersiz kategori seçimi'
+  },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: {
     type: String,
