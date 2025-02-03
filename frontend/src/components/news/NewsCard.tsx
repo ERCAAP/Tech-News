@@ -20,10 +20,10 @@ export function NewsCard({ news, index = 0, isVisible = false }: NewsCardProps) 
 
   const imageUrl = news.imageUrl ? getImageUrl(news.imageUrl) : '';
 
-  // Animasyon stilini useAnimatedStyle ile tanımla
+  // Animasyon stilini daha solid hale getiriyoruz
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: withSpring(isVisible ? 1 : 0.7),
+      opacity: 1, // Sabit opacity değeri
       transform: [
         {
           translateY: withSpring(0)
@@ -39,13 +39,13 @@ export function NewsCard({ news, index = 0, isVisible = false }: NewsCardProps) 
   return (
     <View style={styles.container}>
       <Animated.View
-        entering={FadeIn.delay(index * 100)}
+        entering={FadeIn.delay(index * 50)} // Delay süresini azalttık
         style={[styles.animatedContainer, animatedStyle]}
       >
         <TouchableOpacity
           style={styles.card}
           onPress={handlePress}
-          activeOpacity={0.95}
+          activeOpacity={1} // 0.95'ten 1'e çıkardık
         >
           <View style={styles.coverContainer}>
             {imageUrl ? (
