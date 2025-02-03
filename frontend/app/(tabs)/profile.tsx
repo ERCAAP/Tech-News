@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView, ToastAndroid, Modal, TextInput, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ScrollView, ToastAndroid, Modal, TextInput, Platform, ActivityIndicator, StatusBar } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
@@ -12,6 +12,7 @@ import { getUserInitials } from '@/utils/userHelpers';
 import { User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppDispatch } from '@/redux/store';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const menuItems = [
   { icon: 'edit', label: 'Edit Profile', action: 'edit' },
@@ -242,131 +243,141 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Üst profil bölümü */}
-        <View style={styles.headerSection}>
-          <View style={styles.profileHeader}>
-            <TouchableOpacity 
-              style={styles.avatarContainer}
-              onPress={handleImagePick}
-              disabled={isLoading}
-            >
-              {renderAvatar()}
-            </TouchableOpacity>
-            
-            <View style={styles.userInfo}>
-              <View style={styles.nameContainer}>
-                <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
-                <TouchableOpacity 
-                  style={styles.editProfileButton} 
-                  onPress={handleEditPress}
-                >
-                  <MaterialIcons name="edit" size={20} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.email}>{user?.email}</Text>
-              {user?.role === 'admin' && (
-                <View style={styles.adminBadge}>
-                  <Text style={styles.adminText}>Admin</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-
-        {/* Menu Items - Edit Profile'ı menüden kaldır */}
-        <View style={styles.menuContainer}>
-          {menuItems
-            .filter(item => item.action !== 'edit')
-            .map((item, index, filteredArray) => (
-              <TouchableOpacity
-                key={item.label}
-                style={[
-                  styles.menuItem,
-                  index !== filteredArray.length - 1 && styles.menuItemBorder
-                ]}
-                onPress={() => handleMenuPress(item.action)}
-              >
-                <View style={styles.menuIconContainer}>
-                  <MaterialIcons name={item.icon as any} size={22} color={COLORS.gray} />
-                </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <MaterialIcons name="chevron-right" size={22} color={COLORS.gray} />
-              </TouchableOpacity>
-            ))}
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <MaterialIcons name="logout" size={22} color={COLORS.white} />
-          <Text style={styles.logoutText}>Çıkış Yap</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Modal'ı ScrollView dışına taşı */}
-      <Modal
-        visible={isEditModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsEditModalVisible(false)}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <LinearGradient
+        colors={['#f6f9fc', '#ecf1f7', '#e4ebf3']}
+        style={styles.container}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Profili Düzenle</Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Ad</Text>
-              <TextInput
-                style={styles.input}
-                value={editForm.firstName}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, firstName: text }))}
-                placeholder="Adınız"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Soyad</Text>
-              <TextInput
-                style={styles.input}
-                value={editForm.lastName}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, lastName: text }))}
-                placeholder="Soyadınız"
-              />
-            </View>
-
-            <View style={styles.modalButtons}>
+        <ScrollView style={styles.scrollView}>
+          {/* Üst profil bölümü */}
+          <View style={styles.headerSection}>
+            <View style={styles.profileHeader}>
               <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setIsEditModalVisible(false)}
-              >
-                <Text style={styles.buttonText}>İptal</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={handleUpdateProfile}
+                style={styles.avatarContainer}
+                onPress={handleImagePick}
                 disabled={isLoading}
               >
-                <Text style={styles.buttonText}>
-                  {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
-                </Text>
+                {renderAvatar()}
               </TouchableOpacity>
+              
+              <View style={styles.userInfo}>
+                <View style={styles.nameContainer}>
+                  <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
+                  <TouchableOpacity 
+                    style={styles.editProfileButton} 
+                    onPress={handleEditPress}
+                  >
+                    <MaterialIcons name="edit" size={20} color={COLORS.primary} />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.email}>{user?.email}</Text>
+                {user?.role === 'admin' && (
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminText}>Admin</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+
+          {/* Menu Items - Edit Profile'ı menüden kaldır */}
+          <View style={styles.menuContainer}>
+            {menuItems
+              .filter(item => item.action !== 'edit')
+              .map((item, index, filteredArray) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[
+                    styles.menuItem,
+                    index !== filteredArray.length - 1 && styles.menuItemBorder
+                  ]}
+                  onPress={() => handleMenuPress(item.action)}
+                >
+                  <View style={styles.menuIconContainer}>
+                    <MaterialIcons name={item.icon as any} size={22} color={COLORS.gray} />
+                  </View>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <MaterialIcons name="chevron-right" size={22} color={COLORS.gray} />
+                </TouchableOpacity>
+              ))}
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <MaterialIcons name="logout" size={22} color={COLORS.white} />
+            <Text style={styles.logoutText}>Çıkış Yap</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Modal'ı ScrollView dışına taşı */}
+        <Modal
+          visible={isEditModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsEditModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Profili Düzenle</Text>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Ad</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.firstName}
+                  onChangeText={(text) => setEditForm(prev => ({ ...prev, firstName: text }))}
+                  placeholder="Adınız"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Soyad</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editForm.lastName}
+                  onChangeText={(text) => setEditForm(prev => ({ ...prev, lastName: text }))}
+                  placeholder="Soyadınız"
+                />
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setIsEditModalVisible(false)}
+                >
+                  <Text style={styles.buttonText}>İptal</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={handleUpdateProfile}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -374,8 +385,20 @@ const styles = StyleSheet.create({
   headerSection: {
     backgroundColor: COLORS.white,
     paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   profileHeader: {
     flexDirection: 'row',
@@ -393,6 +416,17 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     overflow: 'hidden',
     backgroundColor: COLORS.background,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.06)',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   avatar: {
     width: '100%',
@@ -447,22 +481,32 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     marginTop: 16,
     marginHorizontal: 16,
-    borderRadius: 12,
-    ...shadowStyle,
+    borderRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    padding: 16,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
   },
   menuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
@@ -479,11 +523,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 14,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 24,
     marginHorizontal: 16,
     marginTop: 20,
     marginBottom: 30,
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   logoutText: {
     color: COLORS.white,
@@ -503,17 +558,17 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 24,
+    padding: 24,
     ...Platform.select({
       ios: {
-        shadowColor: COLORS.dark,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowColor: 'rgba(0,0,0,0.08)',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 8,
+        elevation: 4,
       },
     }),
   },
@@ -535,8 +590,8 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
+    borderColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 12,
     padding: 12,
     fontSize: 16,
     fontFamily: FONTS.regular,
@@ -549,8 +604,8 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     marginHorizontal: 8,
   },
