@@ -5,11 +5,27 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "com.ercaap55.technews",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ercaap55.technews",
+      "config": {
+        "usesAppleSignIn": true,
+        "googleSignIn": {
+          "reservedClientId": "com.googleusercontent.apps.525452151140-hioo013keiekvusk0f83plm0qd5p2g90"
+        }
+      },
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.525452151140-hioo013keiekvusk0f83plm0qd5p2g90"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,11 +39,6 @@
         "WRITE_EXTERNAL_STORAGE",
         "MEDIA_LIBRARY"
       ]
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -46,7 +57,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-apple-authentication",
+      "expo-dev-client"
     ],
     "experiments": {
       "typedRoutes": true

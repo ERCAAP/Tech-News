@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Platform, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
-import { login } from '@/redux/slices/authSlice';
+import { login, register } from '@/redux/slices/authSlice';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Link, router } from 'expo-router';
@@ -12,6 +12,13 @@ import { useColorScheme } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Checkbox } from '@/components/common/Checkbox';
+import * as Google from 'expo-auth-session/providers/google';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { ResponseType } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+
+// Initialize WebBrowser for Google Auth
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
@@ -25,6 +32,17 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: "525452151140-as53nb6dto2vs2b8q27rupd53o8a9ljh.apps.googleusercontent.com",
+    iosClientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
+    clientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
+    responseType: ResponseType.Token,
+    redirectUri: Platform.select({
+      ios: 'com.ercaap55.technews://',
+      android: 'com.ercaap55.technews://'
+    })
+  });
+
   useEffect(() => {
     loadThemePreference();
     loadSavedCredentials();
@@ -34,6 +52,13 @@ export default function LoginScreen() {
       useNativeDriver: true,
     }).start();
   }, []);
+
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      handleGoogleAuthResponse(authentication?.accessToken);
+    }
+  }, [response]);
 
   const loadThemePreference = async () => {
     try {
@@ -126,12 +151,82 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert('Info', 'Google login will be implemented soon');
+  const handleGoogleAuthResponse = async (accessToken: string | undefined) => {
+    if (!accessToken) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch user info');
+      }
+
+      const userInfo = await response.json();
+      
+      const googleUserData = {
+        email: userInfo.email,
+        firstName: userInfo.given_name,
+        lastName: userInfo.family_name,
+        password: '', 
+        socialProvider: 'google',
+        socialId: userInfo.id,
+        picture: userInfo.picture,
+        locale: userInfo.locale
+      };
+
+      await dispatch(register(googleUserData)).unwrap();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert(
+        'Google Sign-In Error',
+        error.message || 'Failed to sign in with Google'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAppleLogin = () => {
-    Alert.alert('Info', 'Apple login will be implemented soon');
+  const handleGoogleLogin = async () => {
+    try {
+      await promptAsync();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to initiate Google Sign-In');
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      // Use the registration logic with Apple user info
+      const appleUserData = {
+        email: credential.email || '',
+        firstName: credential.fullName?.givenName || '',
+        lastName: credential.fullName?.familyName || '',
+        password: '', // Handle this according to your backend requirements
+        socialProvider: 'apple',
+        socialId: credential.user,
+      };
+
+      await dispatch(register(appleUserData)).unwrap();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      if (error.code !== 'ERR_CANCELED') {
+        Alert.alert('Apple Sign-In Error', error.message || 'Failed to sign in with Apple');
+      }
+    }
   };
 
   const isDark = colorScheme === 'dark';
@@ -227,18 +322,25 @@ export default function LoginScreen() {
             <TouchableOpacity 
               style={[styles.socialButton, isDark && styles.socialButtonDark]} 
               onPress={handleGoogleLogin}
+              disabled={!request}
             >
               <FontAwesome name="google" size={20} color={isDark ? COLORS.white : COLORS.dark} />
-              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Google</Text>
+              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>
+                Google
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.socialButton, isDark && styles.socialButtonDark]} 
-              onPress={handleAppleLogin}
-            >
-              <FontAwesome name="apple" size={20} color={isDark ? COLORS.white : COLORS.dark} />
-              <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>Apple</Text>
-            </TouchableOpacity>
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity 
+                style={[styles.socialButton, isDark && styles.socialButtonDark]} 
+                onPress={handleAppleLogin}
+              >
+                <FontAwesome name="apple" size={20} color={isDark ? COLORS.white : COLORS.dark} />
+                <Text style={[styles.socialButtonText, isDark && styles.socialButtonTextDark]}>
+                  Apple
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <Link href="/(auth)/register">
@@ -378,5 +480,9 @@ const styles = StyleSheet.create({
   },
   socialButtonTextDark: {
     color: COLORS.white,
+  },
+  appleButton: {
+    width: '48%',
+    height: 44,
   },
 }); 
