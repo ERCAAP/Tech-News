@@ -410,9 +410,10 @@ export function CreateNewsForm() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.container}>
-          {/* Basic Info Section - En üstte */}
+          {/* Basic Info Section */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Basic Info</Text>
+            
             <Input
               label="News Title"
               value={formData.title}
@@ -434,6 +435,55 @@ export function CreateNewsForm() {
                   }
                 </Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Notification Settings - Basic Info içine taşındı */}
+            <View style={styles.notificationContainer}>
+              <View style={styles.notificationRow}>
+                <Text style={styles.label}>Send Push Notification</Text>
+                <Switch
+                  value={formData.notification.enabled}
+                  onValueChange={(enabled: boolean) => setFormData(prev => ({
+                    ...prev,
+                    notification: {
+                      ...prev.notification,
+                      enabled
+                    }
+                  }))}
+                />
+              </View>
+
+              {formData.notification.enabled && (
+                <View style={styles.notificationForm}>
+                  <Input
+                    label="Notification Title"
+                    value={formData.notification.title}
+                    onChangeText={(text: string) => setFormData(prev => ({
+                      ...prev,
+                      notification: {
+                        ...prev.notification,
+                        title: text
+                      }
+                    }))}
+                    placeholder="Enter notification title"
+                    {...{ maxLength: 50 }}
+                  />
+
+                  <Input
+                    label="Notification Message"
+                    value={formData.notification.message}
+                    onChangeText={(text: string) => setFormData(prev => ({
+                      ...prev,
+                      notification: {
+                        ...prev.notification,
+                        message: text
+                      }
+                    }))}
+                    placeholder="Enter notification message"
+                    {...{ maxLength: 100, multiline: true }}
+                  />
+                </View>
+              )}
             </View>
           </View>
 
@@ -529,57 +579,6 @@ export function CreateNewsForm() {
               </ScrollView>
             </View>
           )}
-
-          {/* Notification Settings */}
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Notification Settings</Text>
-            
-            <View style={styles.notificationRow}>
-              <Text style={styles.label}>Send Push Notification</Text>
-              <Switch
-                value={formData.notification.enabled}
-                onValueChange={(enabled: boolean) => setFormData(prev => ({
-                  ...prev,
-                  notification: {
-                    ...prev.notification,
-                    enabled
-                  }
-                }))}
-              />
-            </View>
-
-            {formData.notification.enabled && (
-              <View style={styles.notificationForm}>
-                <Input
-                  label="Notification Title"
-                  value={formData.notification.title}
-                  onChangeText={(text: string) => setFormData(prev => ({
-                    ...prev,
-                    notification: {
-                      ...prev.notification,
-                      title: text
-                    }
-                  }))}
-                  placeholder="Enter notification title"
-                  {...{ maxLength: 50 }}
-                />
-
-                <Input
-                  label="Notification Message"
-                  value={formData.notification.message}
-                  onChangeText={(text: string) => setFormData(prev => ({
-                    ...prev,
-                    notification: {
-                      ...prev.notification,
-                      message: text
-                    }
-                  }))}
-                  placeholder="Enter notification message"
-                  {...{ maxLength: 100, multiline: true }}
-                />
-              </View>
-            )}
-          </View>
 
           {/* Bottom Spacing */}
           <View style={styles.bottomSpacing} />
@@ -909,19 +908,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  notificationContainer: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingTop: 16,
+  },
   notificationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
-    backgroundColor: COLORS.white,
-    padding: 16,
-    borderRadius: 8,
   },
   notificationForm: {
     marginTop: 8,
-    backgroundColor: COLORS.white,
-    padding: 16,
-    borderRadius: 8,
   },
 }); 
