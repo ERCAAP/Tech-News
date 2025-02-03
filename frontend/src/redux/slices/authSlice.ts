@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '@/services/api';
 import { AuthState, User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BaseRegisterData, SocialRegisterData } from '../../types/auth';
 
 // API Response tipi
 interface ApiResponse {
@@ -23,7 +24,7 @@ const initialState: AuthState = {
 // Login thunk
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }) => {
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
       // Önce credentials'ı kontrol edelim
       if (!credentials.email || !credentials.password) {
@@ -43,7 +44,7 @@ export const login = createAsyncThunk(
       return response;
     } catch (error: any) {
       console.error('Login Error:', error.response?.data || error.message);
-      throw error.response?.data || { message: 'Giriş yapılamadı' };
+      return rejectWithValue(error.response?.data || { message: 'Giriş yapılamadı' });
     }
   }
 );
@@ -51,15 +52,25 @@ export const login = createAsyncThunk(
 // Register thunk
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: { email: string; password: string; firstName: string; lastName: string }) => {
+  async (userData: BaseRegisterData | SocialRegisterData, { rejectWithValue }) => {
     try {
-      const response = await authAPI.register(userData);
-      if (response.token) {
-        await AsyncStorage.setItem('token', response.token);
+      // API çağrısı burada
+      const response = await fetch('YOUR_API_URL/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
       }
-      return response;
+
+      const data = await response.json();
+      return data;
     } catch (error: any) {
-      throw error.response?.data || { message: 'Kayıt işlemi başarısız' };
+      return rejectWithValue(error.message);
     }
   }
 );
@@ -163,7 +174,7 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || null;
+        state.error = action.payload as string || null;
       });
 
     // Register
@@ -179,7 +190,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || null;
+        state.error = action.payload as string || null;
       });
 
     // Get Me

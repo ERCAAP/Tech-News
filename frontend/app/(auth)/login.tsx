@@ -16,6 +16,9 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { ResponseType } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
+import * as Crypto from 'expo-crypto';
+import * as SecureStore from 'expo-secure-store';
+import { BaseRegisterData, SocialRegisterData } from '../../src/types/auth';
 
 // Initialize WebBrowser for Google Auth
 WebBrowser.maybeCompleteAuthSession();
@@ -35,13 +38,14 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: "525452151140-as53nb6dto2vs2b8q27rupd53o8a9ljh.apps.googleusercontent.com",
     iosClientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
-    clientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
-    responseType: ResponseType.Token,
+    responseType: ResponseType.Code,
+    usePKCE: true,
     scopes: ['profile', 'email'],
     redirectUri: Platform.select({
-      ios: 'com.ercaap55.technews:/oauth2redirect/google',
-      android: 'com.ercaap55.technews:/oauth2redirect/google'
-    })
+      ios: 'com.ercaap55.technews:/oauth2redirect',
+      android: 'com.ercaap55.technews:/oauth2redirect'
+    }),
+    state: Crypto.randomUUID()
   });
 
   useEffect(() => {
@@ -171,7 +175,7 @@ export default function LoginScreen() {
 
       const userInfo = await response.json();
       
-      const googleUserData = {
+      const googleUserData: SocialRegisterData = {
         email: userInfo.email,
         firstName: userInfo.given_name,
         lastName: userInfo.family_name,
@@ -196,9 +200,64 @@ export default function LoginScreen() {
 
   const handleGoogleLogin = async () => {
     try {
-      await promptAsync();
+      const result = await promptAsync();
+      
+      if (result?.type === 'success') {
+        // Authorization code'u alıyoruz
+        const { code } = result.params;
+        
+        // Backend'e code'u gönderip token alıyoruz
+        const tokenResponse = await fetch('YOUR_BACKEND_URL/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            code,
+            codeVerifier: request?.codeVerifier // PKCE code verifier
+          })
+        });
+
+        if (!tokenResponse.ok) {
+          throw new Error('Token exchange failed');
+        }
+
+        const tokens = await tokenResponse.json();
+        
+        // Token'ı güvenli şekilde saklıyoruz
+        await SecureStore.setItemAsync('accessToken', tokens.accessToken);
+        await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
+
+        // Kullanıcı bilgilerini alıyoruz
+        const userInfoResponse = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+          headers: { 
+            Authorization: `Bearer ${tokens.accessToken}`,
+            Accept: 'application/json'
+          },
+        });
+
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+
+        const userInfo = await userInfoResponse.json();
+        
+        // Kullanıcıyı kaydet/giriş yap
+        await dispatch(register({
+          email: userInfo.email,
+          firstName: userInfo.given_name,
+          lastName: userInfo.family_name,
+          socialProvider: 'google',
+          socialId: userInfo.id,
+          picture: userInfo.picture,
+          password: '' // Add empty password for social login
+        })).unwrap();
+
+        router.replace('/(tabs)');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to initiate Google Sign-In');
+      console.error('Google Sign-In Error:', error);
+      Alert.alert('Error', 'Failed to sign in with Google');
     }
   };
 
@@ -211,14 +270,13 @@ export default function LoginScreen() {
         ],
       });
 
-      // Use the registration logic with Apple user info
-      const appleUserData = {
+      const appleUserData: SocialRegisterData = {
         email: credential.email || '',
         firstName: credential.fullName?.givenName || '',
         lastName: credential.fullName?.familyName || '',
-        password: '', // Handle this according to your backend requirements
+        password: '',
         socialProvider: 'apple',
-        socialId: credential.user,
+        socialId: credential.user
       };
 
       await dispatch(register(appleUserData)).unwrap();

@@ -46,11 +46,14 @@
           "data": [
             {
               "scheme": "com.ercaap55.technews",
-              "host": "oauth2redirect",
-              "pathPrefix": "/google"
+              "host": "*",
+              "pathPrefix": "/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -73,7 +76,16 @@
         }
       ],
       "expo-apple-authentication",
-      "expo-dev-client"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      "expo-dev-client",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
