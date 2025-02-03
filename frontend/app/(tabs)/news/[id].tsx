@@ -6,7 +6,7 @@ import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews, deleteNews, updateNews } from '@/redux/slices/newsSlice';
+import { viewNews, deleteNews, updateNews, fetchNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
@@ -17,6 +17,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { isUserAdmin } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
+import * as Localization from 'expo-localization';
+import { OPENAI_API_KEY } from '../../../constants/config';
 
 const categoryMapping: { [key: string]: string } = {
   'App Development': 'app-development',
@@ -24,6 +26,85 @@ const categoryMapping: { [key: string]: string } = {
   'Technology': 'technology',
   // Add more mappings as needed
 };
+
+// Add this type for translation cache
+interface TranslationCache {
+  [key: string]: {
+    [text: string]: string;
+  };
+}
+
+// Add these near the top of the file, outside the component
+const translationCache: TranslationCache = {};
+
+// Add this helper function
+async function translateText(text: string, targetLanguage: string): Promise<string> {
+  try {
+    // API key kontrolü
+    if (!OPENAI_API_KEY) {
+      console.error('OpenAI API key is missing');
+      throw new Error('Translation service is not configured');
+    }
+
+    // Boş metin kontrolü
+    if (!text.trim()) {
+      return text;
+    }
+
+    // Cache kontrolü
+    if (translationCache[targetLanguage]?.[text]) {
+      return translationCache[targetLanguage][text];
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{
+          role: "system",
+          content: `You are a translator. Translate the following text to ${targetLanguage}. Preserve any formatting and maintain the original meaning as closely as possible.`
+        }, {
+          role: "user",
+          content: text
+        }],
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from translation service');
+    }
+
+    const translatedText = data.choices[0].message.content.trim();
+
+    // Cache sonucu
+    if (!translationCache[targetLanguage]) {
+      translationCache[targetLanguage] = {};
+    }
+    translationCache[targetLanguage][text] = translatedText;
+
+    return translatedText;
+  } catch (error) {
+    console.error('Translation error:', error);
+    Alert.alert(
+      'Translation Error',
+      'Failed to translate the content. Please try again later.'
+    );
+    return text; // Hata durumunda orijinal metni döndür
+  }
+}
 
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
@@ -44,6 +125,10 @@ export default function NewsDetailScreen() {
   const [editedCoverImage, setEditedCoverImage] = useState('');
   const [editedContentImages, setEditedContentImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deviceLanguage] = useState(Localization.locale.split('-')[0]);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [showOriginal, setShowOriginal] = useState(true);
 
   const categories = [
     { label: 'Select a category', value: '' },
@@ -64,22 +149,35 @@ export default function NewsDetailScreen() {
 
       const lines = newsItem.content.split('\n');
       const urlPattern = /^https?:\/\/[^\s]+$/;
+      const urlLines = lines.filter(line => urlPattern.test(line.trim()));
 
-      for (const line of lines) {
-        if (urlPattern.test(line.trim())) {
-          const url = line.trim();
-          if (!processedUrls.has(url) && !urlPreviews[url]) {
-            setProcessedUrls(prev => new Set(prev).add(url));
-            const preview = await handleUrlPreview(url);
-            if (preview) {
-              setUrlPreviews(prev => ({
-                ...prev,
-                [url]: preview
-              }));
-            }
+      // Tüm URL'leri paralel olarak işle
+      const previewPromises = urlLines.map(async (line) => {
+        const url = line.trim();
+        if (!processedUrls.has(url) && !urlPreviews[url]) {
+          const preview = await handleUrlPreview(url);
+          if (preview) {
+            return { url, preview };
           }
         }
-      }
+        return null;
+      });
+
+      const results = await Promise.all(previewPromises);
+      
+      // Yeni previews'ları toplu olarak ekle
+      const newPreviews = results.reduce<Record<string, any>>((acc, result) => {
+        if (result) {
+          acc[result.url] = result.preview;
+          setProcessedUrls(prev => new Set(prev).add(result.url));
+        }
+        return acc;
+      }, {});
+
+      setUrlPreviews(prev => ({
+        ...prev,
+        ...newPreviews
+      }));
     };
 
     loadUrlPreviews();
@@ -90,15 +188,44 @@ export default function NewsDetailScreen() {
       const response = await fetch(url);
       const html = await response.text();
       
-      const titleMatch = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]*)"/) ||
-                       html.match(/<title[^>]*>([^<]*)<\/title>/);
+      // Title için birden fazla pattern kontrol et
+      const titlePatterns = [
+        /<meta[^>]*property="og:title"[^>]*content="([^"]*)"[^>]*>/i,
+        /<meta[^>]*content="([^"]*)"[^>]*property="og:title"[^>]*>/i,
+        /<title[^>]*>([^<]*)<\/title>/i
+      ];
       
-      const imageMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/) ||
-                       html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/);
+      // Image için birden fazla pattern kontrol et
+      const imagePatterns = [
+        /<meta[^>]*property="og:image"[^>]*content="([^"]*)"[^>]*>/i,
+        /<meta[^>]*content="([^"]*)"[^>]*property="og:image"[^>]*>/i,
+        /<meta[^>]*name="twitter:image"[^>]*content="([^"]*)"[^>]*>/i
+      ];
+
+      let title = 'Untitled';
+      let imageUrl = '';
+
+      // Title için tüm pattern'ları dene
+      for (const pattern of titlePatterns) {
+        const match = html.match(pattern);
+        if (match?.[1]) {
+          title = match[1];
+          break;
+        }
+      }
+
+      // Image için tüm pattern'ları dene
+      for (const pattern of imagePatterns) {
+        const match = html.match(pattern);
+        if (match?.[1]) {
+          imageUrl = match[1];
+          break;
+        }
+      }
 
       return {
-        title: titleMatch?.[1] || 'Untitled',
-        imageUrl: imageMatch?.[1] || '',
+        title: title || url,
+        imageUrl: imageUrl || '',
       };
     } catch (error) {
       console.log('Error fetching URL metadata:', error);
@@ -106,10 +233,64 @@ export default function NewsDetailScreen() {
     }
   };
 
+  const handleTranslateContent = async () => {
+    if (!newsItem || isTranslating) return;
+
+    setIsTranslating(true);
+    try {
+      // Başlığı çevir
+      const translatedTitle = await translateText(newsItem.title, deviceLanguage);
+      
+      // İçeriği çevir
+      const contentParts = newsItem.content.split('\n');
+      const translatedParts = await Promise.all(
+        contentParts.map(async (part) => {
+          const urlPattern = /^https?:\/\/[^\s]+$/;
+          const imagePattern = /\[IMAGE:(.*?)\]/;
+          
+          if (urlPattern.test(part.trim()) || imagePattern.test(part)) {
+            return part;
+          }
+          
+          if (part.trim()) {
+            try {
+              return await translateText(part, deviceLanguage);
+            } catch (error) {
+              console.error('Part translation error:', error);
+              return part;
+            }
+          }
+          
+          return part;
+        })
+      );
+
+      setTranslatedContent(JSON.stringify({
+        title: translatedTitle,
+        content: translatedParts.join('\n')
+      }));
+      setShowOriginal(false);
+    } catch (error) {
+      console.error('Content translation error:', error);
+      Alert.alert(
+        'Translation Error',
+        'Failed to translate the content. Please try again later.'
+      );
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const renderContent = (content: string) => {
     if (!content) return null;
 
-    return content.split('\n').map((part, index) => {
+    let contentToRender = content;
+    if (!showOriginal && translatedContent) {
+      const parsed = JSON.parse(translatedContent);
+      contentToRender = parsed.content;
+    }
+
+    return contentToRender.split('\n').map((part, index) => {
       const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
       if (imageMatch) {
         const imagePath = imageMatch[1];
@@ -249,22 +430,24 @@ export default function NewsDetailScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      "Delete News",
-      "Are you sure you want to delete this news item? This action cannot be undone.",
+      "Haberi Sil",
+      "Bu haberi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
       [
         {
-          text: "Cancel",
+          text: "İptal",
           style: "cancel"
         },
         {
-          text: "Delete",
+          text: "Sil",
           style: "destructive",
           onPress: async () => {
             try {
               await dispatch(deleteNews(id));
-              router.back();
+              // Ana sayfaya dönmeden önce haberleri yenile
+              await dispatch(fetchNews()); // fetchNews action'ını import etmeyi unutmayın
+              router.replace('/(tabs)'); // replace kullanarak geri dönüşü engelliyoruz
             } catch (error) {
-              Alert.alert("Error", "Failed to delete news item");
+              Alert.alert("Hata", "Haber silinirken bir hata oluştu");
             }
           }
         }
@@ -349,60 +532,6 @@ export default function NewsDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isAdmin ? (
-        <View style={styles.adminControls}>
-          <View style={styles.viewCountContainer}>
-            <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
-            <Text style={styles.viewCountText}>
-              {typeof newsItem.views === 'number' ? newsItem.views : 0}
-            </Text>
-          </View>
-          
-          <View style={styles.adminActions}>
-            <TouchableOpacity
-              style={styles.adminButton}
-              onPress={handleShare}
-            >
-              <MaterialIcons name="share" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.adminButton}
-              onPress={handleEdit}
-            >
-              <MaterialIcons name="edit" size={24} color={COLORS.primary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.adminButton, styles.deleteButton]}
-              onPress={handleDelete}
-            >
-              <MaterialIcons name="delete" size={24} color={COLORS.error} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.adminControls}>
-          <View style={styles.userActions}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleShare}
-            >
-              <MaterialIcons name="share" size={20} color={COLORS.primary} />
-              <Text style={styles.actionButtonText}>Share</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleContactUs}
-            >
-              <MaterialIcons name="mail" size={20} color={COLORS.primary} />
-              <Text style={styles.actionButtonText}>Contact Us</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       <ScrollView 
         style={styles.container}
         showsVerticalScrollIndicator={true}
@@ -420,6 +549,81 @@ export default function NewsDetailScreen() {
               onError={() => console.warn('Cover image load error:', coverImageUrl)}
             />
             <View style={styles.overlay} />
+            <View style={styles.headerControls}>
+              {isAdmin ? (
+                <View style={styles.adminControls}>
+                  <View style={styles.viewCountContainer}>
+                    <MaterialIcons name="visibility" size={20} color={COLORS.white} />
+                    <Text style={styles.viewCountText}>
+                      {typeof newsItem.views === 'number' ? newsItem.views : 0}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.adminActions}>
+                    <TouchableOpacity
+                      style={styles.adminButton}
+                      onPress={handleShare}
+                    >
+                      <MaterialIcons name="share" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.adminButton}
+                      onPress={handleEdit}
+                    >
+                      <MaterialIcons name="edit" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.adminButton, styles.deleteButton]}
+                      onPress={handleDelete}
+                    >
+                      <MaterialIcons name="delete" size={20} color={COLORS.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.userControls}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleShare}
+                  >
+                    <MaterialIcons name="share" size={20} color={COLORS.white} />
+                    <Text style={styles.actionButtonText}>Paylaş</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleContactUs}
+                  >
+                    <MaterialIcons name="mail" size={20} color={COLORS.white} />
+                    <Text style={styles.actionButtonText}>İletişim</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <TouchableOpacity
+                style={[styles.translationButton, isTranslating && styles.disabledButton]}
+                onPress={() => {
+                  if (translatedContent) {
+                    setShowOriginal(!showOriginal);
+                  } else {
+                    handleTranslateContent();
+                  }
+                }}
+                disabled={isTranslating}
+              >
+                <MaterialIcons 
+                  name={translatedContent ? (showOriginal ? "g-translate" : "language") : "g-translate"} 
+                  size={20} 
+                  color={COLORS.white} 
+                />
+                <Text style={styles.translationButtonText}>
+                  {isTranslating ? 'Çeviriliyor...' : 
+                   translatedContent ? (showOriginal ? 'Çeviri' : 'Orijinal') : 
+                   'Çevir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{newsItem.category}</Text>
             </View>
@@ -427,7 +631,11 @@ export default function NewsDetailScreen() {
         ) : null}
         
         <View style={styles.content}>
-          <Text style={styles.title}>{newsItem.title}</Text>
+          <Text style={styles.title}>
+            {!showOriginal && translatedContent 
+              ? JSON.parse(translatedContent || '{"title":""}').title 
+              : newsItem.title}
+          </Text>
           
           <View style={styles.authorContainer}>
             <MaterialIcons name="person" size={20} color={COLORS.primary} />
@@ -672,21 +880,16 @@ const styles = StyleSheet.create({
   viewCountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    shadowColor: COLORS.dark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   viewCountText: {
     marginLeft: 6,
     fontSize: 14,
     fontFamily: FONTS.medium,
-    color: COLORS.gray,
+    color: COLORS.white,
   },
   statsContainer: {
     padding: 16,
@@ -755,30 +958,58 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   adminControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  
+  adminActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  adminButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 8,
+    borderRadius: 20,
+  },
+
+  deleteButton: {
+    backgroundColor: 'rgba(255, 0, 0, 0.3)',
+  },
+
+  userControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+
+  actionButtonText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.white,
+  },
+
+  headerControls: {
     position: 'absolute',
     top: 16,
     right: 16,
+    left: 16,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    zIndex: 1000,
-    gap: 8,
-  },
-  adminActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  adminButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 8,
-    borderRadius: 20,
-    shadowColor: COLORS.dark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  deleteButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    zIndex: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -858,7 +1089,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
   imagePickerContainer: {
     marginBottom: 16,
@@ -907,27 +1138,18 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
   },
-  userActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
+  translationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
-    shadowColor: COLORS.dark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  actionButtonText: {
-    marginLeft: 8,
+  translationButtonText: {
+    marginLeft: 4,
     fontSize: 14,
     fontFamily: FONTS.medium,
-    color: COLORS.primary,
+    color: COLORS.white,
   },
 }); 
