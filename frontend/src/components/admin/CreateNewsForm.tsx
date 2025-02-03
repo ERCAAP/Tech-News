@@ -21,7 +21,6 @@ type NewsCategory = typeof NEWS_CATEGORIES[number]['value'];
 
 interface NewsFormData {
   title: string;
-  displayTitle: string;
   content: string;
   category: NewsCategory | '';
   coverImage: string;
@@ -53,7 +52,6 @@ export function CreateNewsForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<NewsFormData>({
     title: '',
-    displayTitle: '',
     content: '',
     category: '',
     coverImage: '',
@@ -328,7 +326,6 @@ export function CreateNewsForm() {
       // Haberi oluştur
       const newsData = {
         title: formData.title,
-        displayTitle: formData.displayTitle || formData.title,
         content: contentWithUrls,
         category: formData.category,
         imageUrl: coverImageUrl,
@@ -421,14 +418,6 @@ export function CreateNewsForm() {
               value={formData.title}
               onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
               placeholder="Enter news title"
-              containerStyle={styles.inputContainer}
-            />
-
-            <Input
-              label="Display Title"
-              value={formData.displayTitle}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, displayTitle: text }))}
-              placeholder="Enter title to display"
               containerStyle={styles.inputContainer}
             />
 
