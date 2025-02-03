@@ -100,7 +100,6 @@ const styles = StyleSheet.create({
   },
   animatedContainer: {
     flex: 1,
-    padding: 2,
   },
   card: {
     flex: 1,
@@ -108,18 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    borderColor: '#f0f0f0',
   },
   coverContainer: {
     width: '100%',
@@ -143,7 +131,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: COLORS.dark,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -158,7 +146,7 @@ const styles = StyleSheet.create({
     padding: 10,
     flex: 1,
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: COLORS.white,
   },
   title: {
     fontSize: 14,
@@ -174,7 +162,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopColor: '#f0f0f0',
   },
   authorInfo: {
     flexDirection: 'row',

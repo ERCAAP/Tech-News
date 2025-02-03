@@ -10,8 +10,8 @@ import { NewsCard } from '@/components/news/NewsCard';
 import { NewsItem } from '@/types';
 
 const { width } = Dimensions.get('window');
-const CATEGORY_CARD_WIDTH = width * 0.75;
-const SPACING = 20;
+const CATEGORY_CARD_WIDTH = width * 0.7;
+const SPACING = 16;
 
 interface Category {
   id: string;
@@ -117,84 +117,96 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: Platform.OS === 'ios' ? 100 : 80,
-  },
-  categorySection: {
-    marginBottom: 32,
     paddingTop: 8,
   },
+  categorySection: {
+    marginBottom: 24,
+    paddingTop: 4,
+  },
   categoryScroll: {
-    marginTop: 12,
+    marginTop: 8,
   },
   categoryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: COLORS.cardBackground,
-    padding: 12,
+    marginBottom: 8,
+    backgroundColor: COLORS.white,
+    padding: 14,
     marginHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   categoryTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   categoryTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONTS.bold,
     color: COLORS.dark,
-    marginLeft: 8,
   },
   moreButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.primary + '10',
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
   },
   moreText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONTS.medium,
-    color: COLORS.primary,
-    marginRight: 4,
+    color: COLORS.dark,
   },
   categoryContent: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   categoryNewsCard: {
     width: CATEGORY_CARD_WIDTH,
-    marginRight: SPACING,
+    marginRight: 16,
     backgroundColor: 'transparent',
-    marginVertical: 8,
+    marginVertical: 4,
   },
   emptyText: {
     width: CATEGORY_CARD_WIDTH,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONTS.medium,
     color: COLORS.gray,
     textAlign: 'center',
-    backgroundColor: COLORS.cardBackground,
+    backgroundColor: COLORS.white,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 16,
-    shadowColor: COLORS.dark,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   bottomPadding: {
     height: Platform.OS === 'ios' ? 100 : 80,
