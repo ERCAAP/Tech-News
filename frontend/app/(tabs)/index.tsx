@@ -83,7 +83,6 @@ export default function HomeScreen() {
               onPress={() => handleViewAllCategory(category.id)}
             >
               <Text style={styles.moreText}>More</Text>
-              <MaterialIcons name="arrow-forward" size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
           
@@ -117,10 +116,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: Platform.OS === 'ios' ? 100 : 80,
-    paddingTop: 8,
+    paddingTop: 4,
   },
   categorySection: {
-    marginBottom: 24,
+    marginBottom: 12,
     paddingTop: 4,
   },
   categoryScroll: {
@@ -133,15 +132,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 8,
     backgroundColor: COLORS.white,
-    padding: 14,
+    padding: 12,
     marginHorizontal: 16,
     borderRadius: 16,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 2,
       },
       android: {
         elevation: 2,
@@ -163,16 +162,17 @@ const styles = StyleSheet.create({
   moreButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: COLORS.primary + '10',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
-    gap: 4,
+    borderWidth: 1,
+    borderColor: COLORS.primary + '20',
   },
   moreText: {
     fontSize: 13,
-    fontFamily: FONTS.medium,
-    color: COLORS.dark,
+    fontFamily: FONTS.semibold,
+    color: COLORS.primary,
   },
   categoryContent: {
     paddingHorizontal: 16,
