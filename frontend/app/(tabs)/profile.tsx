@@ -244,7 +244,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
       <LinearGradient
         colors={['#f6f9fc', '#ecf1f7', '#e4ebf3']}
         style={styles.container}
