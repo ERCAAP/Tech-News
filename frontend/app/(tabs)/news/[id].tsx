@@ -95,6 +95,25 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
   }
 }
 
+// Kategori seçeneklerini tanımla
+const CATEGORIES = [
+  { 
+    value: 'ai', 
+    label: 'Artificial Intelligence',
+    description: 'News about AI and machine learning'
+  },
+  { 
+    value: 'app', 
+    label: 'Applications',
+    description: 'Mobile and web application news'
+  },
+  { 
+    value: 'technology', 
+    label: 'Technology',
+    description: 'General technology news'
+  }
+];
+
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : '';
@@ -377,28 +396,45 @@ export default function NewsDetailScreen() {
     setEditedContentImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Kategori seçimi için Picker komponenti
+  const CategoryPicker = () => (
+    <View style={styles.pickerContainer}>
+      <Text style={styles.label}>Category</Text>
+      <View style={styles.selectContainer}>
+        {CATEGORIES.map((cat) => (
+          <TouchableOpacity
+            key={cat.value}
+            style={[
+              styles.categoryOption,
+              editedCategory === cat.value && styles.categoryOptionSelected
+            ]}
+            onPress={() => setEditedCategory(cat.value)}
+          >
+            <Text style={[
+              styles.categoryOptionText,
+              editedCategory === cat.value && styles.categoryOptionTextSelected
+            ]}>
+              {cat.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
   const handleSaveEdit = async () => {
     if (!editedTitle.trim() || !editedContent.trim() || !editedCategory) {
-      Alert.alert('Error', 'Title, content, and category cannot be empty');
+      Alert.alert('Error', 'Title, content, and category are required');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      console.log('Updating news with data:', {
-        id,
-        title: editedTitle,
-        content: editedContent,
-        category: editedCategory,
-        imageUrl: editedCoverImage,
-        contentImages: editedContentImages,
-      });
-
       const resultAction = await dispatch(updateNews({
         id,
         title: editedTitle,
         content: editedContent,
-        category: editedCategory,
+        category: editedCategory.toLowerCase().trim(),
         imageUrl: editedCoverImage,
         contentImages: editedContentImages,
       }));
@@ -406,7 +442,6 @@ export default function NewsDetailScreen() {
       if (updateNews.fulfilled.match(resultAction)) {
         setIsEditModalVisible(false);
         Alert.alert('Success', 'News updated successfully');
-        // Haberi yeniden yükle
         dispatch(fetchNews());
       } else {
         const error = resultAction.payload || 'Failed to update news';
@@ -690,19 +725,7 @@ export default function NewsDetailScreen() {
                 )}
               </View>
 
-              <Text style={styles.inputLabel}>Category</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={editedCategory}
-                  onValueChange={setEditedCategory}
-                  style={styles.picker}
-                  enabled={!isSubmitting}
-                >
-                  {categories.map((category, index) => (
-                    <Picker.Item key={index} label={category.label} value={category.value} />
-                  ))}
-                </Picker>
-              </View>
+              <CategoryPicker />
 
               <Text style={styles.inputLabel}>Title</Text>
               <TextInput
@@ -1121,14 +1144,39 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pickerContainer: {
+    marginBottom: 16,
+  },
+  selectContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  categoryOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
-    marginBottom: 16,
-    backgroundColor: COLORS.white,
   },
-  picker: {
-    height: 50,
+  categoryOptionSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  categoryOptionTextSelected: {
+    color: COLORS.white,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
   },
   translationButton: {
     flexDirection: 'row',
