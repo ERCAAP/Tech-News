@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Animated, Text, Platform } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { register } from '@/redux/slices/authSlice';
+import axiosInstance from '@/api/axios';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Link, router } from 'expo-router';
@@ -33,17 +34,48 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     try {
       setIsLoading(true);
+      
+      // Form validation
       if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-        Alert.alert('Error', 'Please fill in all required fields');
+        Alert.alert('Error', 'All fields are required');
         return;
       }
 
-      await dispatch(register(formData)).unwrap();
-      router.replace('/(tabs)');
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        Alert.alert('Error', 'Please enter a valid email address');
+        return;
+      }
+
+      // Password validation
+      if (formData.password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters long');
+        return;
+      }
+
+      console.log('Submitting registration form:', formData);
+
+      // Doğrudan axios instance'ı kullanarak register isteği
+      const response = await axiosInstance.post('/auth/register', formData);
+      console.log('Registration API response:', response.data);
+
+      if (response.data.status === 'success') {
+        const { user, token } = response.data.data;
+        
+        // Redux store'u güncelle
+        await dispatch(register({ user, token })).unwrap();
+        
+        console.log('Registration successful:', user);
+        router.replace('/(tabs)');
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
     } catch (error: any) {
+      console.error('Registration error:', error.response?.data || error);
       Alert.alert(
         'Registration Error',
-        error.message || 'Failed to register. Please try again.'
+        error.response?.data?.message || error.message || 'Failed to register. Please try again.'
       );
     } finally {
       setIsLoading(false);

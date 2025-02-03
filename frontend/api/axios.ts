@@ -1,13 +1,13 @@
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import { API_URL } from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // API URL'i platform'a göre ayarla
 const baseURL = Platform.select({
-  android: 'http://10.0.2.2:3000/api/v1', // Android Emulator için
-  ios: 'http://localhost:3000/api/v1',     // iOS Simulator için
-  default: API_URL                         // Diğer durumlar için
+  android: 'http://10.0.2.2:3000', // Android Emulator için
+  ios: 'http://localhost:3000',    // iOS Simulator için
+  default: API_URL                 // Diğer durumlar için
 });
 
 console.log('API Configuration:', {
@@ -26,14 +26,13 @@ const axiosInstance = axios.create({
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
+  async (config) => {
     try {
       const token = await AsyncStorage.getItem('token');
       console.log('API Request:', {
         method: config.method,
         url: config.url,
-        hasToken: !!token,
-        headers: config.headers
+        hasToken: !!token
       });
 
       if (token) {
@@ -54,7 +53,7 @@ axiosInstance.interceptors.request.use(
 
 // Response interceptor
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response) => {
     console.log('API Response:', {
       status: response.status,
       url: response.config.url,
@@ -71,7 +70,6 @@ axiosInstance.interceptors.response.use(
     });
 
     if (error.response?.status === 401) {
-      // Token expired veya geçersiz
       await AsyncStorage.removeItem('token');
       // Burada yeniden login sayfasına yönlendirme yapabilirsiniz
     }

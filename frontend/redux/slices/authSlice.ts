@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '@/services/api';
+import { api, authAPI } from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 interface AuthState {
   user: {
@@ -67,6 +68,33 @@ const restoreUserSession = createAsyncThunk(
   }
 );
 
+interface RegisterFormData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
+export const register = createAsyncThunk(
+  'auth/register',
+  async (userData: { user: any; token: string }, { rejectWithValue }) => {
+    try {
+      // Token'ı kaydet
+      await AsyncStorage.setItem('token', userData.token);
+      // User bilgisini kaydet
+      await AsyncStorage.setItem('user', JSON.stringify(userData.user));
+      
+      return userData;
+    } catch (error: any) {
+      console.error('Register error:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 
+        'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.'
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -94,6 +122,19 @@ const authSlice = createSlice({
       })
       .addCase(restoreUserSession.fulfilled, (state, action) => {
         state.user = action.payload;
+      })
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.error = null;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   }
 });
