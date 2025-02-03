@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput, Share } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -316,6 +316,31 @@ export default function NewsDetailScreen() {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      // Universal URL (Web ve Deep Link için)
+      const webUrl = `https://yourapp.com/news/${id}`;
+      // Deep Link URL'i
+      const deepLinkUrl = `yourapp://news/${id}`;
+      
+      const result = await Share.share({
+        message: `${newsItem?.title}\n\nRead more: ${webUrl}`,
+        url: webUrl, // iOS için
+        title: newsItem?.title, // Android için
+      });
+      
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('Shared with activity type:', result.activityType);
+        } else {
+          console.log('Shared successfully');
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Could not share this news');
+    }
+  };
+
   if (!newsItem) {
     return <Loading />;
   }
@@ -336,6 +361,13 @@ export default function NewsDetailScreen() {
           <View style={styles.adminActions}>
             <TouchableOpacity
               style={styles.adminButton}
+              onPress={handleShare}
+            >
+              <MaterialIcons name="share" size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.adminButton}
               onPress={handleEdit}
             >
               <MaterialIcons name="edit" size={24} color={COLORS.primary} />
@@ -351,13 +383,23 @@ export default function NewsDetailScreen() {
         </View>
       ) : (
         <View style={styles.adminControls}>
-          <TouchableOpacity
-            style={styles.contactButton}
-            onPress={handleContactUs}
-          >
-            <MaterialIcons name="mail" size={20} color={COLORS.primary} />
-            <Text style={styles.contactButtonText}>Contact Us</Text>
-          </TouchableOpacity>
+          <View style={styles.userActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleShare}
+            >
+              <MaterialIcons name="share" size={20} color={COLORS.primary} />
+              <Text style={styles.actionButtonText}>Share</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleContactUs}
+            >
+              <MaterialIcons name="mail" size={20} color={COLORS.primary} />
+              <Text style={styles.actionButtonText}>Contact Us</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -865,7 +907,11 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
   },
-  contactButton: {
+  userActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -878,7 +924,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  contactButtonText: {
+  actionButtonText: {
     marginLeft: 8,
     fontSize: 14,
     fontFamily: FONTS.medium,
