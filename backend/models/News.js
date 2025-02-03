@@ -16,7 +16,11 @@ const newsSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  category: String,
+  category: {
+    type: String,
+    required: true,
+    enum: ['Technology', 'AI', 'App Development', 'Cyber Security', 'General']
+  },
   views: {
     type: Number,
     default: 0
@@ -36,7 +40,8 @@ const newsSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
-  }
+  },
+  contentImages: [String]
 });
 
 // Görüntülenme sayısını artır

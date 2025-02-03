@@ -81,17 +81,57 @@ exports.removeFromFavorites = async (req, res) => {
 exports.updateNews = async (req, res) => {
   try {
     const newsId = req.params.id;
-    const updates = req.body;
+    const { title, content, category, imageUrl, contentImages } = req.body;
     
+    // Form data işleme
+    const updateData = {
+      title,
+      content,
+      category,
+      updatedAt: Date.now()
+    };
+
+    // Yeni kapak resmi varsa ekle
+    if (req.files?.coverImage) {
+      const coverImage = req.files.coverImage[0];
+      updateData.imageUrl = `/uploads/${coverImage.filename}`;
+    } else if (imageUrl) {
+      updateData.imageUrl = imageUrl;
+    }
+
+    // İçerik resimleri varsa ekle
+    if (req.files?.contentImages) {
+      const newContentImages = req.files.contentImages.map(
+        file => `/uploads/${file.filename}`
+      );
+      updateData.contentImages = [...(contentImages || []), ...newContentImages];
+    } else if (contentImages) {
+      updateData.contentImages = contentImages;
+    }
+
     const news = await News.findByIdAndUpdate(
       newsId,
-      { ...updates, updatedAt: Date.now() },
+      updateData,
       { new: true }
-    );
+    ).populate('author', 'firstName lastName');
 
-    res.json({ status: 'success', data: { news } });
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: { news }
+    });
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message });
+    console.error('Update news error:', error);
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
   }
 };
 

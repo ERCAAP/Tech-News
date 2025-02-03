@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
 import { Loading } from '@/components/common/Loading';
 import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { viewNews, deleteNews } from '@/redux/slices/newsSlice';
+import { viewNews, deleteNews, updateNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
@@ -26,6 +28,13 @@ export default function NewsDetailScreen() {
   const [urlPreviews, setUrlPreviews] = useState<{ [key: string]: { title: string; imageUrl: string } }>({});
   const [processedUrls, setProcessedUrls] = useState<Set<string>>(new Set());
   const insets = useSafeAreaInsets();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedContent, setEditedContent] = useState('');
+  const [editedCategory, setEditedCategory] = useState('');
+  const [editedCoverImage, setEditedCoverImage] = useState('');
+  const [editedContentImages, setEditedContentImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -155,7 +164,70 @@ export default function NewsDetailScreen() {
   };
 
   const handleEdit = () => {
-    router.push(`/news/edit/${id}`);
+    setEditedTitle(newsItem?.title || '');
+    setEditedContent(newsItem?.content || '');
+    setEditedCategory(newsItem?.category || '');
+    setEditedCoverImage(newsItem?.imageUrl ? getImageUrl(newsItem.imageUrl) : '');
+    setEditedContentImages(extractContentImages(newsItem?.content || ''));
+    setIsEditModalVisible(true);
+  };
+
+  const extractContentImages = (content: string) => {
+    const imageRegex = /\[IMAGE:(.*?)\]/g;
+    const matches = [...content.matchAll(imageRegex)];
+    return matches.map(match => getImageUrl(match[1]));
+  };
+
+  const pickImage = async (type: 'cover' | 'content') => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      if (type === 'cover') {
+        setEditedCoverImage(result.assets[0].uri);
+      } else {
+        setEditedContentImages(prev => [...prev, result.assets[0].uri]);
+      }
+    }
+  };
+
+  const removeContentImage = (index: number) => {
+    setEditedContentImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editedTitle.trim() || !editedContent.trim() || !editedCategory) {
+      Alert.alert('Error', 'Title, content, and category cannot be empty');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const resultAction = await dispatch(updateNews({
+        id,
+        title: editedTitle,
+        content: editedContent,
+        category: editedCategory,
+        imageUrl: editedCoverImage,
+        contentImages: editedContentImages,
+      }));
+
+      if (updateNews.fulfilled.match(resultAction)) {
+        setIsEditModalVisible(false);
+        Alert.alert('Success', 'News updated successfully');
+      } else if (updateNews.rejected.match(resultAction)) {
+        const error = resultAction.payload || 'Failed to update news';
+        Alert.alert('Error', typeof error === 'string' ? error : 'Failed to update news');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update news');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDelete = () => {
@@ -258,6 +330,144 @@ export default function NewsDetailScreen() {
           {renderContent(newsItem.content)}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit News</Text>
+              <TouchableOpacity
+                onPress={() => setIsEditModalVisible(false)}
+                style={styles.closeButton}
+                disabled={isSubmitting}
+              >
+                <MaterialIcons name="close" size={24} color={COLORS.dark} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Cover Image</Text>
+              <View style={styles.imagePickerContainer}>
+                {editedCoverImage ? (
+                  <View style={styles.selectedImageContainer}>
+                    <Image 
+                      source={{ uri: editedCoverImage }} 
+                      style={styles.selectedImage} 
+                    />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => setEditedCoverImage('')}
+                    >
+                      <MaterialIcons name="close" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.imagePicker}
+                    onPress={() => pickImage('cover')}
+                  >
+                    <MaterialIcons name="add-photo-alternate" size={24} color={COLORS.primary} />
+                    <Text style={styles.imagePickerText}>Add Cover Image</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <Text style={styles.inputLabel}>Category</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={editedCategory}
+                  onValueChange={setEditedCategory}
+                  style={styles.picker}
+                  enabled={!isSubmitting}
+                >
+                  <Picker.Item label="Select a category" value="" />
+                  <Picker.Item label="Technology" value="technology" />
+                  <Picker.Item label="Sports" value="sports" />
+                  <Picker.Item label="Politics" value="politics" />
+                  <Picker.Item label="Entertainment" value="entertainment" />
+                  {/* Add more categories as needed */}
+                </Picker>
+              </View>
+
+              <Text style={styles.inputLabel}>Title</Text>
+              <TextInput
+                style={styles.input}
+                value={editedTitle}
+                onChangeText={setEditedTitle}
+                placeholder="Enter title"
+                multiline={false}
+                editable={!isSubmitting}
+              />
+
+              <Text style={styles.inputLabel}>Content</Text>
+              <TextInput
+                style={[styles.input, styles.contentInput]}
+                value={editedContent}
+                onChangeText={setEditedContent}
+                placeholder="Enter content"
+                multiline={true}
+                textAlignVertical="top"
+                editable={!isSubmitting}
+              />
+
+              <Text style={styles.inputLabel}>Content Images</Text>
+              <View style={styles.contentImagesContainer}>
+                {editedContentImages.map((image, index) => (
+                  <View key={index} style={styles.selectedImageContainer}>
+                    <Image source={{ uri: image }} style={styles.selectedImage} />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => removeContentImage(index)}
+                    >
+                      <MaterialIcons name="close" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={styles.imagePicker}
+                  onPress={() => pickImage('content')}
+                >
+                  <MaterialIcons name="add-photo-alternate" size={24} color={COLORS.primary} />
+                  <Text style={styles.imagePickerText}>Add Content Image</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton, 
+                  styles.cancelButton,
+                  isSubmitting && styles.disabledButton
+                ]}
+                onPress={() => setIsEditModalVisible(false)}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.footerButton, 
+                  styles.saveButton,
+                  isSubmitting && styles.disabledButton
+                ]}
+                onPress={handleSaveEdit}
+                disabled={isSubmitting}
+              >
+                <Text style={[styles.buttonText, styles.saveButtonText]}>
+                  {isSubmitting ? 'Saving...' : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -459,5 +669,132 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    maxHeight: '80%',
+    width: '100%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 16,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    marginBottom: 16,
+    backgroundColor: COLORS.white,
+  },
+  contentInput: {
+    height: 200,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    gap: 12,
+  },
+  footerButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: COLORS.lightGray,
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  saveButtonText: {
+    color: COLORS.white,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  imagePickerContainer: {
+    marginBottom: 16,
+  },
+  imagePicker: {
+    height: 120,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.lightGray,
+  },
+  imagePickerText: {
+    marginTop: 8,
+    color: COLORS.primary,
+    fontFamily: FONTS.medium,
+  },
+  selectedImageContainer: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  selectedImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  contentImagesContainer: {
+    gap: 8,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    marginBottom: 16,
+    backgroundColor: COLORS.white,
+  },
+  picker: {
+    height: 50,
   },
 }); 

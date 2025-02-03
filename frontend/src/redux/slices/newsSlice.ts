@@ -3,18 +3,30 @@ import { NewsItem } from '@/types';
 import api from '@/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+interface ApiResponse<T> {
+  status: string;
+  data: {
+    news?: T;
+    stats?: any;
+    views?: number;
+  };
+  message?: string;
+}
+
+interface NewsStats {
+  views: {
+    total: number;
+    unique: number;
+  };
+  favorites: number;
+}
+
 interface NewsState {
   news: NewsItem[];
   favorites: NewsItem[];
   isLoading: boolean;
   error: string | null;
-  stats: {
-    views: {
-      total: number;
-      unique: number;
-    };
-    favorites: number;
-  } | null;
+  stats: NewsStats | null;
 }
 
 const initialState: NewsState = {
@@ -90,31 +102,18 @@ export const viewNews = createAsyncThunk(
 export const toggleFavorite = createAsyncThunk(
   'news/toggleFavorite',
   async (newsId: string) => {
-    const response = await api.post(`/news/${newsId}/favorite`);
-    return response.data;
+    const response = await api.post<ApiResponse<NewsItem>>(`/news/${newsId}/favorite`);
+    return response.data.data;
   }
 );
 
 export const getNewsStats = createAsyncThunk(
   'news/getStats',
   async ({ startDate, endDate }: { startDate?: string; endDate?: string }) => {
-    const response = await api.get('/news/stats', {
+    const response = await api.get<ApiResponse<NewsStats>>('/news/stats', {
       params: { startDate, endDate }
     });
-    return response.data;
-  }
-);
-
-// updateNewsAsync thunk'ını ekleyelim
-export const updateNewsAsync = createAsyncThunk(
-  'news/updateNews',
-  async ({ newsId, data }: { newsId: string; data: any }, { rejectWithValue }) => {
-    try {
-      const response = await api.put(`/news/${newsId}`, data);
-      return response.data.data.news;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update news');
-    }
+    return response.data.data;
   }
 );
 
@@ -123,7 +122,7 @@ export const deleteNews = createAsyncThunk(
   'news/deleteNews',
   async (newsId: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/news/${newsId}`);
+      const response = await api.delete<ApiResponse<void>>(`/news/${newsId}`);
       return newsId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete news');
@@ -136,14 +135,82 @@ export const getFavoriteNews = createAsyncThunk(
   'news/getFavoriteNews',
   async (token: string, { rejectWithValue }) => {
     try {
-      const response = await api.get('/news/favorites', {
+      const response = await api.get<ApiResponse<NewsItem[]>>('/news/favorites', {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+      if (!response.data?.data?.news) {
+        throw new Error('Invalid response format');
+      }
       return response.data.data.news;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch favorite news');
+    }
+  }
+);
+
+export const updateNews = createAsyncThunk(
+  'news/updateNews',
+  async ({ 
+    id, 
+    title, 
+    content, 
+    category,
+    imageUrl,
+    contentImages 
+  }: { 
+    id: string; 
+    title: string; 
+    content: string;
+    category: string;
+    imageUrl?: string;
+    contentImages?: string[];
+  }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      formData.append('category', category);
+      
+      if (imageUrl && imageUrl.startsWith('file://')) {
+        const filename = imageUrl.split('/').pop();
+        formData.append('coverImage', {
+          uri: imageUrl,
+          type: 'image/jpeg',
+          name: filename || 'cover.jpg',
+        } as any);
+      } else if (imageUrl) {
+        formData.append('imageUrl', imageUrl);
+      }
+
+      if (contentImages?.length) {
+        contentImages.forEach((image, index) => {
+          if (image.startsWith('file://')) {
+            const filename = image.split('/').pop();
+            formData.append('contentImages', {
+              uri: image,
+              type: 'image/jpeg',
+              name: filename || `content${index}.jpg`,
+            } as any);
+          } else {
+            formData.append('contentImages[]', image);
+          }
+        });
+      }
+
+      const response = await api.put<ApiResponse<NewsItem>>(`/news/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!response.data?.data?.news) {
+        throw new Error('Invalid response format');
+      }
+      return response.data.data.news;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update news');
     }
   }
 );
@@ -234,27 +301,12 @@ const newsSlice = createSlice({
       })
       .addCase(getNewsStats.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.stats = action.payload;
+        state.stats = action.payload as NewsStats;
+        state.error = null;
       })
       .addCase(getNewsStats.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'İstatistikleri getirme hatası';
-      })
-      .addCase(updateNewsAsync.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(updateNewsAsync.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const index = state.news.findIndex(item => item._id === action.payload._id);
-        if (index !== -1) {
-          state.news[index] = action.payload;
-        }
-        state.error = null;
-      })
-      .addCase(updateNewsAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message || 'Failed to update news';
       })
       .addCase(deleteNews.pending, (state) => {
         state.isLoading = true;
@@ -281,6 +333,22 @@ const newsSlice = createSlice({
       .addCase(getFavoriteNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(updateNews.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateNews.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.news.findIndex(item => item._id === action.payload._id);
+        if (index !== -1) {
+          state.news[index] = action.payload;
+        }
+        state.error = null;
+      })
+      .addCase(updateNews.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   }
 });
@@ -297,7 +365,7 @@ export const newsThunks = {
   viewNews,
   toggleFavorite,
   getNewsStats,
-  updateNewsAsync,
   deleteNews,
   getFavoriteNews,
+  updateNews,
 }; 

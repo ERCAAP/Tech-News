@@ -11,7 +11,7 @@ const getBaseUrl = () => {
 };
 
 const api = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: process.env.EXPO_PUBLIC_API_URL || getBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
