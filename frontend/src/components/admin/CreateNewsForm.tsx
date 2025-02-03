@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Image, Text, TouchableOpacity, Modal, ScrollView, TextInput, Linking } from 'react-native';
-import { Input } from '@/components/common/Input';
+import { Input, InputProps } from '../../../components/common/Input';
 import { Button } from '@/components/common/Button';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -9,6 +9,7 @@ import api from '@/api/axios';
 import { useRouter } from 'expo-router';
 import { useAppDispatch } from '@/redux/hooks';
 import { fetchNews } from '@/redux/slices/newsSlice';
+import { Switch } from '../../../components/common/Switch';
 
 const NEWS_CATEGORIES = [
   { label: 'App Development', value: 'app' },
@@ -34,6 +35,18 @@ interface NewsFormData {
     title: string;
     imageUrl: string;
   }>;
+  notification: {
+    enabled: boolean;
+    title: string;
+    message: string;
+  };
+}
+
+interface NewsResponse {
+  _id: string;
+  title: string;
+  content: string;
+  // ... diğer gerekli alanlar
 }
 
 export function CreateNewsForm() {
@@ -47,6 +60,11 @@ export function CreateNewsForm() {
     contentImages: [],
     contentWithImages: [],
     urls: [],
+    notification: {
+      enabled: false,
+      title: '',
+      message: ''
+    }
   });
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const router = useRouter();
@@ -254,7 +272,8 @@ export function CreateNewsForm() {
         },
       });
 
-      return response.data.imageUrl;
+      const data = response.data as { imageUrl: string };
+      return data.imageUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw new Error('Failed to upload image');
@@ -314,9 +333,15 @@ export function CreateNewsForm() {
         category: formData.category,
         imageUrl: coverImageUrl,
         contentImages: uploadedContentImages,
+        notification: formData.notification.enabled ? {
+          enabled: true,
+          title: formData.notification.title || formData.title,
+          message: formData.notification.message || formData.content.substring(0, 100)
+        } : undefined
       };
 
-      await api.post('/news', newsData);
+      const response = await api.post<NewsResponse>('/news', newsData);
+      const { _id } = response.data;
       
       // Haberleri yenile ve ana sayfaya yönlendir
       await dispatch(fetchNews()).unwrap();
@@ -515,6 +540,57 @@ export function CreateNewsForm() {
               </ScrollView>
             </View>
           )}
+
+          {/* Notification Settings */}
+          <View style={styles.formSection}>
+            <Text style={styles.sectionTitle}>Notification Settings</Text>
+            
+            <View style={styles.notificationRow}>
+              <Text style={styles.label}>Send Push Notification</Text>
+              <Switch
+                value={formData.notification.enabled}
+                onValueChange={(enabled: boolean) => setFormData(prev => ({
+                  ...prev,
+                  notification: {
+                    ...prev.notification,
+                    enabled
+                  }
+                }))}
+              />
+            </View>
+
+            {formData.notification.enabled && (
+              <View style={styles.notificationForm}>
+                <Input
+                  label="Notification Title"
+                  value={formData.notification.title}
+                  onChangeText={(text: string) => setFormData(prev => ({
+                    ...prev,
+                    notification: {
+                      ...prev.notification,
+                      title: text
+                    }
+                  }))}
+                  placeholder="Enter notification title"
+                  {...{ maxLength: 50 }}
+                />
+
+                <Input
+                  label="Notification Message"
+                  value={formData.notification.message}
+                  onChangeText={(text: string) => setFormData(prev => ({
+                    ...prev,
+                    notification: {
+                      ...prev.notification,
+                      message: text
+                    }
+                  }))}
+                  placeholder="Enter notification message"
+                  {...{ maxLength: 100, multiline: true }}
+                />
+              </View>
+            )}
+          </View>
 
           {/* Bottom Spacing */}
           <View style={styles.bottomSpacing} />
@@ -843,5 +919,20 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 8,
+  },
+  notificationForm: {
+    marginTop: 8,
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 8,
   },
 }); 

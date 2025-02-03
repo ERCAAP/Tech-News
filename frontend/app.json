@@ -85,7 +85,14 @@
         }
       ],
       "expo-dev-client",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-onesignal",
+        {
+          "mode": "development",
+          "devTeam": "YOUR_APPLE_DEVELOPER_TEAM_ID"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -96,7 +103,8 @@
       },
       "eas": {
         "projectId": "dbd936e6-46de-42c0-9b5e-bbca841476ec"
-      }
+      },
+      "oneSignalAppId": "YOUR_ONESIGNAL_APP_ID"
     }
   }
 }

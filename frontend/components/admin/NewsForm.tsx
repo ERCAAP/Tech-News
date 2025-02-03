@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { Alert, View, TouchableOpacity, Text, StyleSheet, Linking, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS } from '@/theme';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
+import { Switch } from '../common/Switch';
+import { Input } from '../common/Input';
 
 interface FormData {
   title: string;
   content: string;
   category: string;
   imageUrl?: string;
+  notification: {
+    enabled: boolean;
+    title: string;
+    message: string;
+  };
 }
 
 interface NewsFormProps {
@@ -16,10 +23,16 @@ interface NewsFormProps {
 }
 
 export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
-  const [formData, setFormData] = useState<FormData>(initialData || {
-    title: '',
-    content: '',
-    category: '',
+  const [formData, setFormData] = useState<FormData>({
+    title: initialData?.title || '',
+    content: initialData?.content || '',
+    category: initialData?.category || '',
+    imageUrl: initialData?.imageUrl,
+    notification: {
+      enabled: initialData?.notification?.enabled || false,
+      title: initialData?.notification?.title || '',
+      message: initialData?.notification?.message || ''
+    }
   });
 
   const handleImagePick = async () => {
@@ -91,6 +104,16 @@ export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
     }
   };
 
+  const updateNotification = (updates: Partial<FormData['notification']>) => {
+    setFormData(prev => ({
+      ...prev,
+      notification: {
+        ...prev.notification,
+        ...updates
+      }
+    }));
+  };
+
   return (
     <View style={styles.container}>
       {formData.imageUrl && (
@@ -111,6 +134,39 @@ export function NewsForm({ initialData, onSubmit }: NewsFormProps) {
         <Text>Take Photo</Text>
       </TouchableOpacity>
       
+      <View style={styles.notificationSection}>
+        <Text style={styles.sectionTitle}>Push Notification</Text>
+        
+        <View style={styles.notificationRow}>
+          <Text style={styles.label}>Send Notification</Text>
+          <Switch
+            value={formData.notification.enabled}
+            onValueChange={(value) => updateNotification({ enabled: value })}
+          />
+        </View>
+
+        {formData.notification.enabled && (
+          <View style={styles.notificationForm}>
+            <Input
+              label="Notification Title"
+              value={formData.notification.title}
+              onChangeText={(text) => updateNotification({ title: text })}
+              placeholder="Enter notification title"
+              maxLength={50}
+            />
+
+            <Input
+              label="Notification Message"
+              value={formData.notification.message}
+              onChangeText={(text) => updateNotification({ message: text })}
+              placeholder="Enter notification message"
+              maxLength={100}
+              multiline
+            />
+          </View>
+        )}
+      </View>
+
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text>Submit</Text>
       </TouchableOpacity>
@@ -141,5 +197,32 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 8,
     marginBottom: 16,
+  },
+  notificationSection: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    ...shadowStyle,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 16,
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  notificationForm: {
+    marginTop: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
   },
 }); 

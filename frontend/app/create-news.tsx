@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, Alert, Text } from 'react-native';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { createNews } from '@/redux/slices/newsSlice';
 import * as ImagePicker from 'expo-image-picker';
-import { COLORS, shadowStyle } from '@/theme';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { router } from 'expo-router';
 import { isUserAdmin } from '@/types';
+import { Switch } from '../components/common/Switch';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function CreateNewsScreen() {
   const dispatch = useAppDispatch();
@@ -20,6 +23,10 @@ export default function CreateNewsScreen() {
     videoUrl: '',
     category: '',
   });
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const { sendNotification } = useNotifications();
 
   // Admin kontrolü
   if (!user || !isUserAdmin(user)) {
@@ -55,7 +62,15 @@ export default function CreateNewsScreen() {
       }
 
       setIsLoading(true);
-      await dispatch(createNews(formData)).unwrap();
+      const result = await dispatch(createNews({
+        ...formData,
+        notification: notificationEnabled ? {
+          enabled: true,
+          title: notificationTitle,
+          message: notificationMessage
+        } : undefined
+      })).unwrap();
+
       Alert.alert('Success', 'News created successfully');
       router.back();
     } catch (error: any) {
@@ -101,28 +116,48 @@ export default function CreateNewsScreen() {
           placeholder="Enter YouTube or video URL"
         />
 
-        {formData.imageUrl ? (
-          <View style={styles.imagePreview}>
-            <Image
-              source={{ uri: formData.imageUrl }}
-              style={styles.image}
-              resizeMode="cover"
-            />
-            <Button
-              title="Change Image"
-              onPress={handleImagePick}
-              variant="outline"
-              style={styles.imageButton}
-            />
-          </View>
-        ) : (
-          <Button
-            title="Add Image"
-            onPress={handleImagePick}
-            variant="outline"
-            style={styles.imageButton}
-          />
-        )}
+        <View style={styles.imagePreview}>
+          {formData.imageUrl ? (
+            <>
+              <Image
+                source={{ uri: formData.imageUrl }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+              
+              <View style={styles.notificationSection}>
+                <Text style={styles.sectionTitle}>Notification Settings</Text>
+                <View style={styles.notificationRow}>
+                  <Text style={styles.label}>Send Push Notification</Text>
+                  <Switch
+                    value={notificationEnabled}
+                    onValueChange={setNotificationEnabled}
+                  />
+                </View>
+
+                {notificationEnabled && (
+                  <View style={styles.notificationForm}>
+                    <Input
+                      label="Notification Title"
+                      value={notificationTitle}
+                      onChangeText={setNotificationTitle}
+                      placeholder="Enter notification title"
+                      {...{ maxLength: 50 }}
+                    />
+                    <Input
+                      label="Notification Message"
+                      value={notificationMessage}
+                      onChangeText={setNotificationMessage}
+                      placeholder="Enter short notification message"
+                      {...{ maxLength: 100 }}
+                      multiline
+                    />
+                  </View>
+                )}
+              </View>
+            </>
+          ) : null}
+        </View>
 
         <Button
           title={isLoading ? "Creating..." : "Create News"}
@@ -161,5 +196,32 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: 16,
+  },
+  notificationSection: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    ...shadowStyle,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 16,
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  notificationForm: {
+    marginTop: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
   },
 }); 

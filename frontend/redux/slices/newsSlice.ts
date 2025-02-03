@@ -5,6 +5,7 @@ import axiosInstance from '@/api/axios';
 import { API_URL } from '@/utils/api';
 import { api } from '@/services/api';
 import * as Notifications from 'expo-notifications';
+import OneSignal from 'react-native-onesignal';
 
 const initialState: NewsState = {
   news: [],
@@ -114,18 +115,25 @@ export const updateReadingProgress = createAsyncThunk(
   }
 );
 
-export const updateNewsAsync = createAsyncThunk(
+interface UpdateNewsPayload {
+  id: string;
+  title?: string;
+  content?: string;
+  category?: string;
+  imageUrl?: string;
+  notification?: {
+    enabled: boolean;
+    title: string;
+    message: string;
+  };
+}
+
+export const updateNews = createAsyncThunk(
   'news/updateNews',
-  async ({ newsId, data }: { newsId: string; data: any }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.put(`/news/${newsId}`, data);
-      return response.data;
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        return rejectWithValue(error.response?.data?.message || 'Failed to update news');
-      }
-      return rejectWithValue('Failed to update news');
-    }
+  async (payload: UpdateNewsPayload) => {
+    const { id, ...updates } = payload;
+    const response = await axiosInstance.patch(`/news/${id}`, updates);
+    return response.data;
   }
 );
 
@@ -189,6 +197,20 @@ export const createNews = createAsyncThunk(
   async (newsData: any, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post('/news', newsData);
+
+      // Bildirim gönderme
+      if (newsData.notification?.enabled) {
+        await OneSignal.postNotification({
+          contents: { en: newsData.notification.message || newsData.title },
+          headings: { en: newsData.notification.title || 'New Article' },
+          data: {
+            newsId: response.data._id,
+            type: 'news'
+          },
+          included_segments: ['Subscribed Users']
+        });
+      }
+
       return response.data;
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
@@ -267,17 +289,17 @@ const newsSlice = createSlice({
       .addCase(fetchUserFavorites.fulfilled, (state, action) => {
         state.favorites = action.payload;
       })
-      .addCase(updateNewsAsync.pending, (state) => {
+      .addCase(updateNews.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(updateNewsAsync.fulfilled, (state, action) => {
+      .addCase(updateNews.fulfilled, (state, action) => {
         state.isLoading = false;
         const index = state.news.findIndex((item: any) => item._id === action.payload._id);
         if (index !== -1) {
           state.news[index] = action.payload;
         }
       })
-      .addCase(updateNewsAsync.rejected, (state, action) => {
+      .addCase(updateNews.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || null;
       })

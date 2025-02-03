@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { News } from '../models/News';
 import { User } from '../models/User';
+import { sendNotification } from '../services/notificationService';
 
 interface AuthRequest extends Request {
   user?: {
@@ -25,23 +26,48 @@ export async function getAllNews(req: AuthRequest, res: Response, next: NextFunc
   }
 }
 
-export async function createNews(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+export const createNews = async (req: Request, res: Response) => {
   try {
-    if (!req.user?._id) {
-      res.status(401).json({ message: 'Authentication required' });
-      return;
-    }
+    const { 
+      title, 
+      content, 
+      category,
+      notification 
+    } = req.body;
 
     const news = new News({
-      ...req.body,
-      author: toObjectId(req.user._id)
+      title,
+      content,
+      category,
+      author: req.user._id
     });
+
     await news.save();
-    res.status(201).json(news);
+
+    // Bildirim gönderme
+    if (notification?.enabled) {
+      await sendNotification({
+        title: notification.title || title,
+        message: notification.message || content.substring(0, 30) + '...',
+        data: {
+          newsId: news._id,
+          type: 'news'
+        }
+      });
+    }
+
+    res.status(201).json({
+      status: 'success',
+      data: { news }
+    });
   } catch (error) {
-    next(error);
+    console.error('Create news error:', error);
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
   }
-}
+};
 
 export const updateNews = async (req: Request, res: Response) => {
   try {

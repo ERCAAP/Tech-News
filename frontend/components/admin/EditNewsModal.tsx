@@ -14,10 +14,24 @@ import {
   Image
 } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
-import { updateNewsAsync } from '@/redux/slices/newsSlice';
-import { COLORS, FONTS } from '@/theme';
+import { updateNews } from '@/redux/slices/newsSlice';
+import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { NewsItem } from '@/types';
 import * as ImagePicker from 'expo-image-picker';
+import { Switch } from '../common/Switch';
+import { Input } from '../common/Input';
+
+interface FormData {
+  title: string;
+  content: string;
+  category: string;
+  imageUrl?: string;
+  notification: {
+    enabled: boolean;
+    title: string;
+    message: string;
+  };
+}
 
 interface EditNewsModalProps {
   visible: boolean;
@@ -27,11 +41,16 @@ interface EditNewsModalProps {
 
 export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
   const dispatch = useAppDispatch();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: news.title,
     content: news.content,
     category: news.category,
     imageUrl: news.imageUrl,
+    notification: {
+      enabled: false,
+      title: '',
+      message: ''
+    }
   });
 
   const handleImagePress = () => {
@@ -68,10 +87,22 @@ export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
 
   const handleSave = async () => {
     try {
-      await dispatch(updateNewsAsync({ 
-        newsId: news._id, 
-        data: formData 
-      })).unwrap();
+      const updateData = {
+        id: news._id,
+        title: formData.title,
+        content: formData.content,
+        category: formData.category,
+        imageUrl: formData.imageUrl,
+        ...(formData.notification.enabled && {
+          notification: {
+            enabled: true,
+            title: formData.notification.title,
+            message: formData.notification.message
+          }
+        })
+      };
+
+      await dispatch(updateNews(updateData)).unwrap();
       
       if (Platform.OS === 'android') {
         ToastAndroid.show('News updated successfully', ToastAndroid.SHORT);
@@ -82,6 +113,16 @@ export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
     } catch (error) {
       Alert.alert('Error', 'Failed to update news');
     }
+  };
+
+  const updateNotification = (updates: Partial<FormData['notification']>) => {
+    setFormData(prev => ({
+      ...prev,
+      notification: {
+        ...prev.notification,
+        ...updates
+      }
+    }));
   };
 
   return (
@@ -153,6 +194,39 @@ export function EditNewsModal({ visible, onClose, news }: EditNewsModalProps) {
             >
               <Text>Pick Image</Text>
             </TouchableOpacity>
+            
+            <View style={styles.notificationSection}>
+              <Text style={styles.sectionTitle}>Push Notification</Text>
+              
+              <View style={styles.notificationRow}>
+                <Text style={styles.label}>Send Update Notification</Text>
+                <Switch
+                  value={formData.notification.enabled}
+                  onValueChange={(value) => updateNotification({ enabled: value })}
+                />
+              </View>
+
+              {formData.notification.enabled && (
+                <View style={styles.notificationForm}>
+                  <Input
+                    label="Notification Title"
+                    value={formData.notification.title}
+                    onChangeText={(text) => updateNotification({ title: text })}
+                    placeholder="Enter notification title"
+                    maxLength={50}
+                  />
+
+                  <Input
+                    label="Notification Message"
+                    value={formData.notification.message}
+                    onChangeText={(text) => updateNotification({ message: text })}
+                    placeholder="Enter notification message"
+                    maxLength={100}
+                    multiline
+                  />
+                </View>
+              )}
+            </View>
             
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
@@ -255,5 +329,32 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 8,
+  },
+  notificationSection: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    ...shadowStyle,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+    marginBottom: 16,
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  notificationForm: {
+    marginTop: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    color: COLORS.dark,
   },
 }); 
