@@ -37,9 +37,10 @@ export default function LoginScreen() {
     iosClientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
     clientId: "525452151140-hioo013keiekvusk0f83plm0qd5p2g90.apps.googleusercontent.com",
     responseType: ResponseType.Token,
+    scopes: ['profile', 'email'],
     redirectUri: Platform.select({
-      ios: 'com.ercaap55.technews://',
-      android: 'com.ercaap55.technews://'
+      ios: 'com.ercaap55.technews:/oauth2redirect/google',
+      android: 'com.ercaap55.technews:/oauth2redirect/google'
     })
   });
 
