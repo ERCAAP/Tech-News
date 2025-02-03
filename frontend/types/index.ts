@@ -8,6 +8,8 @@ export interface ViewsData {
   }>;
 }
 
+export type NewsCategory = 'ai' | 'app' | 'technology';
+
 export interface NewsItem {
   _id: string;
   title: string;
@@ -18,7 +20,7 @@ export interface NewsItem {
     firstName: string;
     lastName: string;
   };
-  category: string;
+  category: NewsCategory;
   imageUrl?: string;
   views?: {
     total: number;

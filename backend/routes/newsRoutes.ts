@@ -3,12 +3,12 @@ import { auth, isAdmin } from '../middleware/auth';
 import { 
   getAllNews, 
   createNews, 
-  viewNews,
   updateNews,
   deleteNews,
-  getNewsById,
-  toggleFavorite,
-  incrementViews,
+  viewNews,
+  getSimilarNews,
+  shareNews,
+  updateReadingProgress
 } from '../controllers/newsController';
 import { protect } from '../middleware/authMiddleware';
 
@@ -22,38 +22,39 @@ interface AuthRequest extends Request {
 
 const router = express.Router();
 
-// Log middleware
-router.use((req: AuthRequest, res: Response, next: NextFunction) => {
-  console.log('News Route - Incoming request:', {
-    method: req.method,
-    path: req.path,
-    params: req.params,
-    query: req.query,
-    body: req.body,
-    userId: req.user?._id
+// Debug için tüm requestleri logla
+router.use((req: Request, res: Response, next: NextFunction) => {
+  console.log('\n=== Incoming News Request ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Params:', req.params);
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+  console.log('Headers:', {
+    authorization: req.headers.authorization ? 'Present' : 'Missing',
+    contentType: req.headers['content-type']
   });
+  console.log('========================\n');
   next();
 });
 
 // Public routes
 router.get('/', getAllNews);
-router.get('/:id', getNewsById);
 
 // Protected routes
-router.use(protect); // Tüm aşağıdaki route'lar için auth gerekli
+router.use(protect); // Auth middleware
 
-// Route handlers
+// NOT: Önceki route tanımlarını kaldırıp, sadece bir tane update route'u bırakıyoruz
+router.route('/:id')
+  .put(updateNews)
+  .patch(updateNews)
+  .delete(deleteNews);
+
+// Diğer routelar
 router.post('/', createNews);
-router.put('/:id', updateNews);
-router.patch('/:id', updateNews);
-router.delete('/:id', deleteNews);
-
-// Özel route'lar
-router.post('/:id/favorite', toggleFavorite);
-router.post('/:id/view', incrementViews);
-
-// Admin routeları - sadece admin erişebilir
-router.put('/:id', auth, isAdmin, updateNews);
-router.delete('/:id', auth, isAdmin, deleteNews);
+router.get('/:id/similar', getSimilarNews);
+router.post('/:id/share', shareNews);
+router.post('/:id/view', viewNews);
+router.post('/:id/reading-progress', updateReadingProgress);
 
 export default router; 

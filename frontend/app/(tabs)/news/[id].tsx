@@ -27,6 +27,14 @@ const categoryMapping: { [key: string]: string } = {
   // Add more mappings as needed
 };
 
+// Ters kategori eşleştirmesi için yeni bir mapping ekleyelim
+const reverseCategoryMapping: { [key: string]: string } = {
+  'app-development': 'App Development',
+  'artificial-intelligence': 'Artificial Intelligence',
+  'technology': 'Technology',
+  // Add more mappings as needed
+};
+
 // Add this type for translation cache
 interface TranslationCache {
   [key: string]: {
@@ -116,7 +124,10 @@ export default function NewsDetailScreen() {
     { label: 'App Development', value: 'app-development' },
     { label: 'Artificial Intelligence', value: 'artificial-intelligence' },
     { label: 'Technology', value: 'technology' }
-  ];
+  ].map(category => ({
+    ...category,
+    value: category.value || category.label?.toLowerCase().replace(/\s+/g, '-') || ''
+  }));
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -332,8 +343,8 @@ export default function NewsDetailScreen() {
   const handleEdit = () => {
     setEditedTitle(newsItem?.title || '');
     setEditedContent(newsItem?.content || '');
-    const mappedCategory = categoryMapping[newsItem?.category || ''] || '';
-    setEditedCategory(mappedCategory);
+    // Doğrudan newsItem'dan gelen kategoriyi kullan
+    setEditedCategory(newsItem?.category?.toLowerCase().replace(/\s+/g, '-') || '');
     setEditedCoverImage(newsItem?.imageUrl ? getImageUrl(newsItem.imageUrl) : '');
     setEditedContentImages(extractContentImages(newsItem?.content || ''));
     setIsEditModalVisible(true);
@@ -374,6 +385,15 @@ export default function NewsDetailScreen() {
 
     setIsSubmitting(true);
     try {
+      console.log('Updating news with data:', {
+        id,
+        title: editedTitle,
+        content: editedContent,
+        category: editedCategory,
+        imageUrl: editedCoverImage,
+        contentImages: editedContentImages,
+      });
+
       const resultAction = await dispatch(updateNews({
         id,
         title: editedTitle,
@@ -386,11 +406,14 @@ export default function NewsDetailScreen() {
       if (updateNews.fulfilled.match(resultAction)) {
         setIsEditModalVisible(false);
         Alert.alert('Success', 'News updated successfully');
-      } else if (updateNews.rejected.match(resultAction)) {
+        // Haberi yeniden yükle
+        dispatch(fetchNews());
+      } else {
         const error = resultAction.payload || 'Failed to update news';
         Alert.alert('Error', typeof error === 'string' ? error : 'Failed to update news');
       }
     } catch (error) {
+      console.error('Update news error:', error);
       Alert.alert('Error', 'Failed to update news');
     } finally {
       setIsSubmitting(false);

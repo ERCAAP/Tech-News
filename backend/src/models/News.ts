@@ -63,10 +63,10 @@ const newsSchema = new Schema<INews>({
     type: String,
     required: [true, 'Kategori gereklidir'],
     enum: {
-      values: ['TECHNOLOGY', 'AI', 'APP_DEVELOPMENT', 'CYBER_SECURITY', 'GENERAL'],
+      values: ['ai', 'app', 'technology'],
       message: '{VALUE} geçerli bir kategori değildir'
     },
-    uppercase: true
+    lowercase: true,
   },
   subCategory: {
     type: String,

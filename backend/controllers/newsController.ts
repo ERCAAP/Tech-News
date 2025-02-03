@@ -45,39 +45,79 @@ export async function createNews(req: AuthRequest, res: Response, next: NextFunc
 
 export const updateNews = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const updateData = {
-      ...req.body,
-      updatedAt: new Date()
-    };
+    console.log('\n=== Update News Request ===');
+    console.log('ID:', req.params.id);
+    console.log('Update Data:', req.body);
+    console.log('User:', (req as any).user);
 
-    // Kategoriyi küçük harfe çevir
-    if (updateData.category) {
-      updateData.category = updateData.category.toLowerCase();
+    const { id } = req.params;
+    
+    // ID kontrolü
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ID format:', id);
+      return res.status(400).json({
+        status: 'error',
+        message: 'Geçersiz haber ID formatı'
+      });
     }
 
-    const news = await News.findByIdAndUpdate(
-      id,
-      updateData,
-      { 
-        new: true,
-        runValidators: true 
-      }
-    ).populate('author', 'firstName lastName');
-
-    if (!news) {
+    // Önce haberin var olup olmadığını kontrol et
+    const existingNews = await News.findById(id);
+    if (!existingNews) {
+      console.log('News not found with ID:', id);
       return res.status(404).json({
         status: 'error',
         message: 'Haber bulunamadı'
       });
     }
 
+    const updateData = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+
+    // Kategori kontrolü ve dönüşümü
+    if (updateData.category) {
+      console.log('Original category:', updateData.category);
+      updateData.category = updateData.category.toLowerCase().replace(/\s+/g, '-');
+      console.log('Transformed category:', updateData.category);
+    }
+
+    console.log('Final update data:', updateData);
+
+    const updatedNews = await News.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { 
+        new: true,
+        runValidators: true 
+      }
+    ).populate('author', 'firstName lastName');
+
+    console.log('Update result:', updatedNews);
+
+    if (!updatedNews) {
+      console.log('Update failed for ID:', id);
+      return res.status(404).json({
+        status: 'error',
+        message: 'Haber güncellenemedi'
+      });
+    }
+
+    console.log('News updated successfully');
     res.json({
       status: 'success',
-      data: { news }
+      data: { news: updatedNews }
     });
+
   } catch (error: any) {
-    console.error('Update news error:', error);
+    console.error('=== Update News Error ===');
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     res.status(400).json({
       status: 'error',
       message: error.message || 'Haber güncellenirken bir hata oluştu'

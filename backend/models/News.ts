@@ -38,9 +38,9 @@ const NewsSchema = new Schema({
   imageUrl: { type: String },
   category: {
     type: String,
-    required: true,
+    required: [true, 'Kategori gereklidir'],
     enum: ['app-development', 'artificial-intelligence', 'technology'],
-    message: 'Geçersiz kategori seçimi'
+    set: (value: string) => value.toLowerCase().replace(/\s+/g, '-')
   },
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: {
@@ -65,7 +65,9 @@ const NewsSchema = new Schema({
   updatedAt: { type: Date },
   publishedAt: { type: Date }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Slug oluşturma middleware'i
@@ -83,6 +85,20 @@ NewsSchema.pre('save', function(next) {
     this.readTime = Math.ceil(wordCount / 200);
   }
 
+  // Kategoriyi küçük harfe çevir ve boşlukları tire ile değiştir
+  if (this.isModified('category')) {
+    // Kategori zaten schema'da set edildiği için burada tekrar dönüştürmeye gerek yok
+  }
+
+  next();
+});
+
+// Pre-update middleware ekleyelim
+NewsSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate() as any;
+  if (update.category) {
+    update.category = update.category.toLowerCase().replace(/\s+/g, '-');
+  }
   next();
 });
 

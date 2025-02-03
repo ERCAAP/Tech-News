@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 import { upload } from '../utils/upload';
 import { uploadImage } from '../utils/imageUpload';
 import { User } from '../models/User';
+import mongoose from 'mongoose';
 
 // Request tipini genişlet
 interface AuthRequest extends Request {
@@ -58,53 +59,107 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 
 // Haber oluştur
 export const createNews = asyncHandler(async (req: AuthRequest, res: Response) => {
-  if (!req.user?.id) {
-    throw new AppError('Unauthorized', 401);
-  }
-
-  // Kategoriyi büyük harfe çevir
-  const newsData = {
-    ...req.body,
-    author: req.user.id,
-    category: req.body.category?.toUpperCase(),
-    // Özet yoksa içeriğin ilk 200 karakterini kullan
-    summary: req.body.summary || req.body.content.substring(0, 197) + '...'
-  };
-
   try {
+    console.log('Create News Request:', {
+      body: req.body,
+      user: req.user
+    });
+
+    if (!req.user?._id) {
+      throw new AppError('Unauthorized - User not found', 401);
+    }
+
+    // Kategoriyi normalize et ve gerekli alanları hazırla
+    const newsData = {
+      ...req.body,
+      author: req.user._id,
+      category: req.body.category.toLowerCase().trim(),
+      summary: req.body.summary || req.body.content.substring(0, 197) + '...',
+      status: 'published',
+      publishedAt: new Date()
+    };
+
+    console.log('Creating news with data:', newsData);
+
     const news = await News.create(newsData);
+    const populatedNews = await News.findById(news._id)
+      .populate('author', 'firstName lastName');
 
     res.status(201).json({
       status: 'success',
-      data: { news }
+      data: { news: populatedNews }
     });
   } catch (error: any) {
-    // Validasyon hatalarını daha anlaşılır hale getir
+    console.error('Create news error:', error);
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map((err: any) => err.message);
-      throw new AppError(`Validasyon hatası: ${errors.join(', ')}`, 400);
+      throw new AppError(`Validation error: ${errors.join(', ')}`, 400);
     }
     throw error;
   }
 });
 
 // Haber güncelle
-export const updateNews = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const news = await News.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
+export const updateNews = async (req: Request, res: Response) => {
+  try {
+    console.log('\n=== Update News Handler ===');
+    console.log('ID:', req.params.id);
+    console.log('Update Data:', req.body);
+    console.log('User:', (req as any).user);
 
-  if (!news) {
-    throw new AppError('News not found', 404);
+    const { id } = req.params;
+    
+    // ID kontrolü
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ID format:', id);
+      return res.status(400).json({
+        status: 'error',
+        message: 'Geçersiz haber ID formatı'
+      });
+    }
+
+    // Kategoriyi normalize et
+    if (req.body.category) {
+      req.body.category = req.body.category.toLowerCase().trim();
+    }
+
+    console.log('Final update data:', req.body);
+
+    const updatedNews = await News.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { 
+        new: true,
+        runValidators: true 
+      }
+    ).populate('author', 'firstName lastName');
+
+    if (!updatedNews) {
+      console.log('News not found with ID:', id);
+      return res.status(404).json({
+        status: 'error',
+        message: 'Haber bulunamadı'
+      });
+    }
+
+    console.log('News updated successfully:', updatedNews._id);
+    res.json({
+      status: 'success',
+      data: { news: updatedNews }
+    });
+
+  } catch (error: any) {
+    console.error('Update News Error:', {
+      message: error.message,
+      stack: error.stack
+    });
+    
+    res.status(400).json({
+      status: 'error',
+      message: error.message || 'Haber güncellenirken bir hata oluştu'
+    });
   }
-
-  res.status(200).json({
-    status: 'success',
-    data: { news }
-  });
-});
+};
 
 // Haber sil
 export const deleteNews = asyncHandler(async (req: Request, res: Response) => {

@@ -17,12 +17,28 @@ interface Category {
   id: string;
   title: string;
   icon: keyof typeof MaterialIcons.glyphMap;
+  description: string;
 }
 
 const CATEGORIES: Category[] = [
-  { id: 'AI', title: 'Artificial Intelligence', icon: 'psychology' },
-  { id: 'APP', title: 'Applications', icon: 'apps' },
-  { id: 'TECHNOLOGY', title: 'Technology', icon: 'devices' },
+  { 
+    id: 'ai', 
+    title: 'Artificial Intelligence', 
+    icon: 'psychology',
+    description: 'Latest AI news and updates'
+  },
+  { 
+    id: 'app', 
+    title: 'Applications', 
+    icon: 'apps',
+    description: 'App development news'
+  },
+  { 
+    id: 'technology', 
+    title: 'Technology', 
+    icon: 'devices',
+    description: 'General technology news'
+  }
 ];
 
 export default function HomeScreen() {
@@ -46,9 +62,10 @@ export default function HomeScreen() {
   // Group news by category
   const newsByCategory = useMemo(() => {
     return CATEGORIES.reduce((acc, category) => {
-      acc[category.id] = news
-        .filter(item => item.category === category.id)
-        .slice(0, 3);
+      acc[category.id] = news.filter(item => {
+        const newsCategory = item.category?.toLowerCase().trim();
+        return newsCategory === category.id;
+      }).slice(0, 3);
       return acc;
     }, {} as Record<string, NewsItem[]>);
   }, [news]);

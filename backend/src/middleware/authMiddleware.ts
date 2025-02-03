@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 
+interface JwtPayload {
+  id: string;
+}
+
 // Request tipini genişlet
 interface AuthRequest extends Request {
   user?: {
@@ -11,39 +15,33 @@ interface AuthRequest extends Request {
   };
 }
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Token'ı al
-    let token;
-    if (req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new AppError('Please log in to access this resource', 401);
     }
 
-    if (!token) {
-      throw new AppError('You are not logged in', 401);
-    }
+    const token = authHeader.split(' ')[1];
 
     // Token'ı doğrula
     const decoded = jwt.verify(
-      token, 
+      token,
       process.env.JWT_SECRET || 'your-secret-key'
-    ) as { id: string };
+    ) as JwtPayload;
 
     // Kullanıcıyı bul
     const user = await User.findById(decoded.id);
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError('User not found', 401);
     }
 
-    // Kullanıcıyı request'e ekle
-    req.user = {
-      id: user._id.toString(),
-      role: user.role
-    };
-    
+    // Request'e user bilgisini ekle
+    (req as any).user = user;
     next();
   } catch (error) {
-    next(error);
+    next(new AppError('Authentication failed', 401));
   }
 };
 

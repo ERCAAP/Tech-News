@@ -9,6 +9,25 @@ import * as ImagePicker from 'expo-image-picker';
 import { TextArea } from '@/components/common/TextArea';
 import { MaterialIcons } from '@expo/vector-icons';
 
+// Kategori seçeneklerini tanımla
+const CATEGORIES = [
+  { 
+    value: 'ai', 
+    label: 'Artificial Intelligence',
+    description: 'News about AI and machine learning'
+  },
+  { 
+    value: 'app', 
+    label: 'Applications',
+    description: 'Mobile and web application news'
+  },
+  { 
+    value: 'technology', 
+    label: 'Technology',
+    description: 'General technology news'
+  }
+];
+
 export default function CreateNewsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
@@ -72,23 +91,18 @@ export default function CreateNewsScreen() {
     try {
       setIsLoading(true);
       
-      if (!title || !content) {
-        Alert.alert('Error', 'Title and content are required');
+      if (!title || !content || !category) {
+        Alert.alert('Error', 'Title, content and category are required');
         return;
       }
 
       const formData = new FormData();
-
-      // Ana verileri ekle
       formData.append('title', title);
-      formData.append('displayTitle', displayTitle);
-      formData.append('category', category);
+      formData.append('displayTitle', displayTitle || title);
+      formData.append('category', category.toLowerCase().trim());
+      formData.append('content', processContent(content));
       
-      // Content'i işleyerek ekle
-      const processedContent = processContent(content);
-      formData.append('content', processedContent);
-
-      // Cover image'i ekle
+      // Cover image varsa ekle
       if (coverImage) {
         const coverImageName = coverImage.split('/').pop() || 'cover.jpg';
         formData.append('coverImage', {
@@ -96,29 +110,9 @@ export default function CreateNewsScreen() {
           type: 'image/jpeg',
           name: coverImageName,
         } as any);
-
-        console.log('Adding cover image:', coverImage); // Debug için
       }
 
-      // Content images'ları ekle
-      if (contentImages.length > 0) {
-        contentImages.forEach((imageUri, index) => {
-          const imageName = imageUri.split('/').pop() || `content-${index}.jpg`;
-          formData.append('contentImages', {
-            uri: imageUri,
-            type: 'image/jpeg',
-            name: imageName,
-          } as any);
-        });
-
-        console.log('Adding content images:', contentImages); // Debug için
-      }
-
-      // Form verilerini kontrol et
-      console.log('Form data entries:');
-      for (let [key, value] of (formData as any).entries()) {
-        console.log(key, value);
-      }
+      console.log('Sending request with token:', token);
 
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/news`, {
         method: 'POST',
@@ -130,18 +124,20 @@ export default function CreateNewsScreen() {
         body: formData,
       });
 
-      const responseData = await response.json();
-      console.log('Server response:', responseData); // Debug için
-
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error(responseData.message || 'Failed to create news');
+        throw new Error(data.message || 'Failed to create news');
       }
 
       Alert.alert('Success', 'News created successfully');
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create news error:', error);
-      Alert.alert('Error', 'Failed to create news');
+      Alert.alert(
+        'Error',
+        error.message || 'Failed to create news. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -151,6 +147,32 @@ export default function CreateNewsScreen() {
     // Implement the logic to remove the image from the contentImages array
     console.log(`Removing image at index: ${index}`);
   };
+
+  // Kategori seçimi için Picker komponenti
+  const CategoryPicker = () => (
+    <View style={styles.pickerContainer}>
+      <Text style={styles.label}>Category</Text>
+      <View style={styles.selectContainer}>
+        {CATEGORIES.map((cat) => (
+          <TouchableOpacity
+            key={cat.value}
+            style={[
+              styles.categoryOption,
+              category === cat.value && styles.categoryOptionSelected
+            ]}
+            onPress={() => setCategory(cat.value)}
+          >
+            <Text style={[
+              styles.categoryOptionText,
+              category === cat.value && styles.categoryOptionTextSelected
+            ]}>
+              {cat.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -197,15 +219,7 @@ export default function CreateNewsScreen() {
           />
         </View>
 
-        <View style={styles.inputSection}>
-          <Text style={styles.label}>News Category</Text>
-          <TextInput
-            style={styles.input}
-            value={category}
-            onChangeText={setCategory}
-            placeholder="e.g., Technology, Sports, Politics"
-          />
-        </View>
+        <CategoryPicker />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>News Details</Text>
@@ -364,5 +378,34 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 4,
     marginTop: 4,
+  },
+  pickerContainer: {
+    marginBottom: 16,
+  },
+  selectContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  categoryOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  categoryOptionSelected: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  categoryOptionTextSelected: {
+    color: COLORS.white,
   },
 }); 
