@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { isUserAdmin } from '@/types';
+import * as MailComposer from 'expo-mail-composer';
 
 const categoryMapping: { [key: string]: string } = {
   'App Development': 'app-development',
@@ -271,6 +272,50 @@ export default function NewsDetailScreen() {
     );
   };
 
+  const handleContactUs = async () => {
+    try {
+      // Önce mailto URL'sini deneyelim çünkü bu daha güvenilir çalışır
+      const mailtoUrl = `mailto:support@yourapp.com?subject=${encodeURIComponent(`Feedback about news: ${newsItem?.title || ''}`)}&body=${encodeURIComponent(`News ID: ${id}\n\nPlease write your message here...`)}`;
+      
+      const canOpenMailto = await Linking.canOpenURL(mailtoUrl);
+      if (canOpenMailto) {
+        await Linking.openURL(mailtoUrl);
+        return;
+      }
+
+      // Mailto çalışmazsa MailComposer'ı deneyelim
+      const isMailComposerAvailable = await MailComposer.isAvailableAsync();
+      if (isMailComposerAvailable) {
+        const result = await MailComposer.composeAsync({
+          recipients: ['support@yourapp.com'],
+          subject: `Feedback about news: ${newsItem?.title || ''}`,
+          body: `News ID: ${id}\n\nPlease write your message here...`,
+          isHtml: false,
+        });
+
+        if (result.status === 'sent') {
+          Alert.alert("Success", "Email sent successfully");
+        }
+        return;
+      }
+
+      // Hiçbir yöntem çalışmazsa
+      Alert.alert(
+        "Error",
+        "No email app is available on your device. Please install an email app and try again.",
+        [{ text: "OK" }]
+      );
+
+    } catch (error) {
+      console.error('Mail handling error:', error);
+      Alert.alert(
+        "Error",
+        "Could not open email. Please make sure you have an email app installed.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
   if (!newsItem) {
     return <Loading />;
   }
@@ -279,7 +324,7 @@ export default function NewsDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {isAdmin && (
+      {isAdmin ? (
         <View style={styles.adminControls}>
           <View style={styles.viewCountContainer}>
             <MaterialIcons name="visibility" size={20} color={COLORS.gray} />
@@ -303,6 +348,16 @@ export default function NewsDetailScreen() {
               <MaterialIcons name="delete" size={24} color={COLORS.error} />
             </TouchableOpacity>
           </View>
+        </View>
+      ) : (
+        <View style={styles.adminControls}>
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={handleContactUs}
+          >
+            <MaterialIcons name="mail" size={20} color={COLORS.primary} />
+            <Text style={styles.contactButtonText}>Contact Us</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -809,5 +864,24 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 50,
+  },
+  contactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  contactButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.primary,
   },
 }); 

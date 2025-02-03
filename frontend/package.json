@@ -70,7 +70,8 @@
     "react-native-webview": "13.12.5",
     "react-redux": "^9.2.0",
     "typescript": "^5.7.3",
-    "expo-secure-store": "~14.0.1"
+    "expo-secure-store": "~14.0.1",
+    "expo-mail-composer": "~14.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
