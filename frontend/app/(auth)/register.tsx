@@ -10,6 +10,9 @@ import { COLORS, FONTS } from '@/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { User } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AxiosError } from 'axios';
 
 export default function RegisterScreen() {
   const dispatch = useAppDispatch();
@@ -56,27 +59,72 @@ export default function RegisterScreen() {
 
       console.log('Submitting registration form:', formData);
 
-      // Doğrudan axios instance'ı kullanarak register isteği
       const response = await axiosInstance.post('/auth/register', formData);
       console.log('Registration API response:', response.data);
 
-      if (response.data.status === 'success') {
-        const { user, token } = response.data.data;
-        
-        // Redux store'u güncelle
-        await dispatch(register({ user, token })).unwrap();
+      interface RegisterResponse {
+        status: string;
+        data: {
+          user: User;
+        };
+        token: string;
+        message?: string;
+      }
+
+      const data = response.data as RegisterResponse;
+      
+      if (data.status === 'success' && data.token) {
+        const { user } = data.data;
+        const { token } = data;
+
+        // Save token
+        await AsyncStorage.setItem('token', token);
+
+        // Update Redux store
+        await dispatch(register({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          password: ''
+        })).unwrap();
         
         console.log('Registration successful:', user);
         router.replace('/(tabs)');
       } else {
-        throw new Error(response.data.message || 'Registration failed');
+        throw new Error(data.message || 'Registration failed');
       }
-    } catch (error: any) {
-      console.error('Registration error:', error.response?.data || error);
-      Alert.alert(
-        'Registration Error',
-        error.response?.data?.message || error.message || 'Failed to register. Please try again.'
-      );
+    } catch (error) {
+      // Axios error tipini kontrol et
+      if (axiosInstance.isAxiosError(error)) {
+        const axiosError = error as AxiosError<any>;
+        console.error('Registration error:', {
+          message: axiosError.message,
+          response: {
+            status: axiosError.response?.status,
+            data: axiosError.response?.data,
+          },
+          request: axiosError.request,
+          config: {
+            url: axiosError.config?.url,
+            method: axiosError.config?.method,
+            baseURL: axiosError.config?.baseURL,
+          }
+        });
+
+        Alert.alert(
+          'Registration Error',
+          axiosError.response?.data?.message || 
+          axiosError.message || 
+          'Network error occurred. Please check your connection and try again.'
+        );
+      } else {
+        // Diğer hata tipleri için
+        console.error('Non-Axios error:', error);
+        Alert.alert(
+          'Registration Error',
+          'An unexpected error occurred. Please try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
