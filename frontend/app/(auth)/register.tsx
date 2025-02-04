@@ -12,7 +12,23 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AxiosError } from 'axios';
+import { ActivityIndicator } from 'react-native';
+
+interface ApiResponse {
+  data: {
+    user: {
+      _id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: string;
+      favoriteNews: string[];
+    };
+    message?: string;
+    token: string;
+  };
+  status: number;
+}
 
 export default function RegisterScreen() {
   const dispatch = useAppDispatch();
@@ -23,6 +39,7 @@ export default function RegisterScreen() {
     lastName: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const slideAnim = useState(new Animated.Value(0))[0];
 
   React.useEffect(() => {
@@ -35,98 +52,115 @@ export default function RegisterScreen() {
   }, []);
 
   const handleRegister = async () => {
+    setIsLoading(true);
+    setStatus('loading');
+    
+    // Form validation
+    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
+      setStatus('error');
+      Alert.alert('Error', 'All fields are required');
+      setIsLoading(false);
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setStatus('error');
+      Alert.alert('Error', 'Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+
+    // Password validation
+    if (formData.password.length < 6) {
+      setStatus('error');
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      setIsLoading(true);
-      
-      // Form validation
-      if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-        Alert.alert('Error', 'All fields are required');
-        return;
-      }
+      const response = await axiosInstance.post<ApiResponse>('/auth/register', formData);
+      console.log('API Response:', response.data);
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        Alert.alert('Error', 'Please enter a valid email address');
-        return;
-      }
+      if (response.status === 201 || response.status === 200) {
+        const user = response.data.user;
+        const token = response.data.token;
 
-      // Password validation
-      if (formData.password.length < 6) {
-        Alert.alert('Error', 'Password must be at least 6 characters long');
-        return;
-      }
+        if (!user || !token) {
+          setStatus('error');
+          Alert.alert('Registration Failed', 'Invalid response from server');
+          setIsLoading(false);
+          return;
+        }
 
-      console.log('Submitting registration form:', formData);
-
-      const response = await axiosInstance.post('/auth/register', formData);
-      console.log('Registration API response:', response.data);
-
-      interface RegisterResponse {
-        status: string;
-        data: {
-          user: User;
-        };
-        token: string;
-        message?: string;
-      }
-
-      const data = response.data as RegisterResponse;
-      
-      if (data.status === 'success' && data.token) {
-        const { user } = data.data;
-        const { token } = data;
-
-        // Save token
+        // Token'ı AsyncStorage'a kaydedelim
         await AsyncStorage.setItem('token', token);
 
-        // Update Redux store
         await dispatch(register({
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          password: ''
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          password: formData.password
         })).unwrap();
-        
-        console.log('Registration successful:', user);
-        router.replace('/(tabs)');
-      } else {
-        throw new Error(data.message || 'Registration failed');
-      }
-    } catch (error) {
-      // Axios error tipini kontrol et
-      if (axiosInstance.isAxiosError(error)) {
-        const axiosError = error as AxiosError<any>;
-        console.error('Registration error:', {
-          message: axiosError.message,
-          response: {
-            status: axiosError.response?.status,
-            data: axiosError.response?.data,
-          },
-          request: axiosError.request,
-          config: {
-            url: axiosError.config?.url,
-            method: axiosError.config?.method,
-            baseURL: axiosError.config?.baseURL,
-          }
-        });
 
+        setStatus('success');
+        setIsLoading(false);
+        
         Alert.alert(
-          'Registration Error',
-          axiosError.response?.data?.message || 
-          axiosError.message || 
-          'Network error occurred. Please check your connection and try again.'
+          'Success! 🎉',
+          'Your account has been created successfully!',
+          [
+            {
+              text: 'Continue',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
         );
       } else {
-        // Diğer hata tipleri için
-        console.error('Non-Axios error:', error);
+        setStatus('error');
         Alert.alert(
-          'Registration Error',
-          'An unexpected error occurred. Please try again.'
+          'Registration Failed',
+          response.data.message || 'Registration failed. Please try again.'
         );
+        setIsLoading(false);
       }
-    } finally {
+    } catch (error: any) {
+      setStatus('error');
       setIsLoading(false);
+
+      const errorMessage = error.response?.data?.message || 
+                          'A network error occurred. Please check your connection and try again.';
+      
+      Alert.alert(
+        'Registration Failed',
+        errorMessage
+      );
+    }
+  };
+
+  const getButtonStyle = () => {
+    switch (status) {
+      case 'success':
+        return [styles.button, styles.successButton];
+      case 'error':
+        return [styles.button, styles.errorButton];
+      default:
+        return styles.button;
+    }
+  };
+
+  const getButtonTitle = () => {
+    switch (status) {
+      case 'loading':
+        return "Creating Account...";
+      case 'success':
+        return "Account Created!";
+      case 'error':
+        return "Try Again";
+      default:
+        return "Create Account";
     }
   };
 
@@ -189,12 +223,19 @@ export default function RegisterScreen() {
             />
 
             <Button
-              title={isLoading ? "Creating Account..." : "Create Account"}
+              title={getButtonTitle()}
               onPress={handleRegister}
               disabled={isLoading}
-              style={styles.button}
+              style={getButtonStyle()}
               isLoading={isLoading}
+              icon={status === 'success' ? 'check-circle' : undefined}
             />
+
+            {status === 'error' && (
+              <Text style={styles.errorText}>
+                Please check your information and try again
+              </Text>
+            )}
 
             <Link href="/(auth)/login">
               <Text style={styles.link}>
@@ -255,5 +296,18 @@ const styles = StyleSheet.create({
   linkHighlight: {
     color: COLORS.primary,
     fontFamily: FONTS.medium,
+  },
+  successButton: {
+    backgroundColor: COLORS.success,
+  },
+  errorButton: {
+    backgroundColor: COLORS.error,
+  },
+  errorText: {
+    color: COLORS.error,
+    textAlign: 'center',
+    marginTop: 8,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
   },
 }); 

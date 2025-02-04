@@ -66,6 +66,9 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   if (req.body.password) {
     throw new AppError('This route is not for password updates. Please use /update-password', 400);
   }
+  if (!req.user?.id) {
+    throw new AppError('User not found', 404);
+  }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
@@ -81,6 +84,10 @@ export const updateMe = asyncHandler(async (req: Request, res: Response) => {
 
 // Kendi hesabını sil
 export const deleteMe = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('User not found', 404);
+  }
+
   await User.findByIdAndUpdate(req.user.id, { active: false });
 
   res.status(204).json({

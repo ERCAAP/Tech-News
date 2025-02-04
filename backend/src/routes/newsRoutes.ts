@@ -48,16 +48,15 @@ router.route('/:id')
 router.post('/:id/view', newsController.viewNews);
 router.post('/:id/favorite', newsController.toggleFavorite);
 router.get('/user/favorites', newsController.getFavoriteNews);
-
 // Admin only routes
-router.use(restrictTo('admin'));
+router.use(restrictTo('admin') as express.RequestHandler);
 router.get('/favorites/count', newsController.getFavoriteCount);
 router.get('/stats', newsController.getNewsStats);
 
 // Upload endpoint'i ekle
 router.post('/upload', 
   protect, 
-  restrictTo('admin'),
+  restrictTo('admin') as express.RequestHandler,
   upload.single('image'),
   async (req: AuthenticatedRequest, res: Response) => {
     try {

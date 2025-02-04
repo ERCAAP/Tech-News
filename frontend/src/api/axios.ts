@@ -1,4 +1,5 @@
-import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -12,7 +13,7 @@ const getBaseUrl = () => {
   return process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1'; // Web & fallback
 };
 
-const api = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: getBaseUrl(),
   timeout: 30000,
   headers: {
@@ -67,7 +68,7 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     // Log response in development
     if (__DEV__) {
       console.log('API Response:', {

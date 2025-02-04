@@ -75,16 +75,33 @@ interface RegisterFormData {
   lastName: string;
 }
 
+interface RegisterPayload {
+  user: {
+    _id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    token: string;
+  };
+  token: string;
+}
+
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: { user: any; token: string }, { rejectWithValue }) => {
+  async (userData: RegisterFormData, { rejectWithValue }) => {
     try {
-      // Token'ı kaydet
-      await AsyncStorage.setItem('token', userData.token);
       // User bilgisini kaydet
-      await AsyncStorage.setItem('user', JSON.stringify(userData.user));
+      const userToSave = {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        role: 'user'
+      };
       
-      return userData;
+      await AsyncStorage.setItem('user', JSON.stringify(userToSave));
+      
+      return userToSave;
     } catch (error: any) {
       console.error('Register error:', error);
       return rejectWithValue(
