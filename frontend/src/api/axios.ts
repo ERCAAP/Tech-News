@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -13,7 +13,7 @@ const getBaseUrl = () => {
   return process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1'; // Web & fallback
 };
 
-const api: AxiosInstance = axios.create({
+const api = axios.create({
   baseURL: getBaseUrl(),
   timeout: 30000,
   headers: {
@@ -25,42 +25,44 @@ const api: AxiosInstance = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
+  async (config: AxiosRequestConfig) => {
     try {
       const token = await AsyncStorage.getItem('token');
       
+      const newConfig = { ...config };
+      
       // Initialize headers if they don't exist
-      if (!config.headers) {
-        config.headers = {};
+      if (!newConfig.headers) {
+        newConfig.headers = {};
       }
 
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        newConfig.headers.Authorization = `Bearer ${token}`;
       }
 
       // Handle FormData requests
-      if (config.data instanceof FormData) {
-        config.headers['Content-Type'] = 'multipart/form-data';
+      if (newConfig.data instanceof FormData) {
+        newConfig.headers['Content-Type'] = 'multipart/form-data';
       }
 
       // Log request details in development
       if (__DEV__) {
         console.log('API Request:', {
-          method: config.method,
-          url: config.url,
-          data: config.data,
-          headers: config.headers,
-          baseURL: config.baseURL
+          method: newConfig.method,
+          url: newConfig.url,
+          data: newConfig.data,
+          headers: newConfig.headers,
+          baseURL: newConfig.baseURL
         });
       }
 
-      return config;
+      return newConfig;
     } catch (error) {
       console.error('Request interceptor error:', error);
       return Promise.reject(error);
     }
   },
-  (error) => {
+  (error: unknown) => {
     console.error('Request config error:', error);
     return Promise.reject(error);
   }
@@ -68,7 +70,7 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response) => {
     // Log response in development
     if (__DEV__) {
       console.log('API Response:', {
@@ -79,18 +81,20 @@ api.interceptors.response.use(
     }
     return response;
   },
-  async (error) => {
+  async (error: unknown) => {
     // Log error in development
     if (__DEV__) {
       console.error('API Error:', {
-        status: error.response?.status,
-        url: error.config?.url,
-        message: error.message,
-        data: error.response?.data
+        status: (error as any)?.response?.status,
+        url: (error as any)?.config?.url,
+        message: (error as any)?.message,
+        data: (error as any)?.response?.data
       });
     }
 
-    if (error.response?.status === 401) {
+    // Type assertion for error to include response property
+    const axiosError = error as { response?: { status: number } };
+    if (axiosError.response?.status === 401) {
       await AsyncStorage.removeItem('token');
       // You can add navigation logic here if needed
     }

@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authAPI } from '@/services/api';
 import { AuthState, User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +17,7 @@ interface ApiResponse {
 const initialState: AuthState = {
   user: null,
   token: null,
+  isAuthenticated: false,
   isLoading: false,
   error: null
 };
@@ -158,6 +159,12 @@ const authSlice = createSlice({
     },
     setToken: (state, action) => {
       state.token = action.payload;
+    },
+    register: (state, action: PayloadAction<AuthPayload>) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+      state.isAuthenticated = true;
+      state.isLoading = false;
     }
   },
   extraReducers: (builder) => {

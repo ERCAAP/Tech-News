@@ -14,7 +14,8 @@ import { User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator } from 'react-native';
 
-interface ApiResponse {
+interface RegisterResponse {
+  status: string;
   data: {
     user: {
       _id: string;
@@ -24,10 +25,8 @@ interface ApiResponse {
       role: string;
       favoriteNews: string[];
     };
-    message?: string;
-    token: string;
   };
-  status: number;
+  token: string;
 }
 
 export default function RegisterScreen() {
@@ -40,103 +39,57 @@ export default function RegisterScreen() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const slideAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
-    Animated.spring(slideAnim, {
+    const animation = Animated.spring(slideAnim, {
       toValue: 1,
       useNativeDriver: true,
       speed: 12,
       bounciness: 8,
-    }).start();
+    });
+    
+    animation.start();
+
+    return () => animation.stop();
   }, []);
 
   const handleRegister = async () => {
-    setIsLoading(true);
-    setStatus('loading');
-    
-    // Form validation
-    if (!formData.email || !formData.password || !formData.firstName || !formData.lastName) {
-      setStatus('error');
-      Alert.alert('Error', 'All fields are required');
-      setIsLoading(false);
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setStatus('error');
-      Alert.alert('Error', 'Please enter a valid email address');
-      setIsLoading(false);
-      return;
-    }
-
-    // Password validation
-    if (formData.password.length < 6) {
-      setStatus('error');
-      Alert.alert('Error', 'Password must be at least 6 characters long');
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await axiosInstance.post<ApiResponse>('/auth/register', formData);
-      console.log('API Response:', response.data);
+      setIsLoading(true);
 
-      if (response.status === 201 || response.status === 200) {
-        const user = response.data.user;
-        const token = response.data.token;
+      const response = await axiosInstance.post<RegisterResponse>('/auth/register', {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
 
-        if (!user || !token) {
-          setStatus('error');
-          Alert.alert('Registration Failed', 'Invalid response from server');
-          setIsLoading(false);
-          return;
-        }
+      console.log('Register Response:', response.data);
 
-        // Token'ı AsyncStorage'a kaydedelim
-        await AsyncStorage.setItem('token', token);
-
-        await dispatch(register({
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          password: formData.password
-        })).unwrap();
-
-        setStatus('success');
-        setIsLoading(false);
+      if (response.data.status === 'success' && response.data.data?.user) {
+        // Token'ı kaydet
+        await AsyncStorage.setItem('token', response.data.token);
         
-        Alert.alert(
-          'Success! 🎉',
-          'Your account has been created successfully!',
-          [
-            {
-              text: 'Continue',
-              onPress: () => router.replace('/(tabs)')
-            }
-          ]
-        );
+        // Redux store'u güncelle
+        dispatch(register({
+          user: response.data.data.user,
+          token: response.data.token
+        }));
+
+        // Ana sayfaya yönlendir
+        router.replace('/(tabs)');
       } else {
-        setStatus('error');
-        Alert.alert(
-          'Registration Failed',
-          response.data.message || 'Registration failed. Please try again.'
-        );
-        setIsLoading(false);
+        Alert.alert('Error', 'Registration failed. Please try again.');
       }
     } catch (error: any) {
-      setStatus('error');
-      setIsLoading(false);
-
-      const errorMessage = error.response?.data?.message || 
-                          'A network error occurred. Please check your connection and try again.';
-      
+      console.error('Register Error:', error);
       Alert.alert(
         'Registration Failed',
-        errorMessage
+        error.response?.data?.message || 'An error occurred during registration'
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
