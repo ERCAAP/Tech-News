@@ -63,20 +63,23 @@ export default function LoginScreen() {
 
         if (!isMounted) return;
 
-        if (savedRememberMe === 'true' && savedEmail && savedPassword) {
-          setRememberMe(true);
+        if (savedEmail && savedPassword) {
+          setRememberMe(savedRememberMe === 'true');
           setFormData({
             email: savedEmail,
             password: savedPassword
           });
           
-          try {
-            const result = await dispatch(login({ email: savedEmail, password: savedPassword })).unwrap();
-            if (result) {
-              router.replace('/(tabs)');
+          // Eğer rememberMe true ise otomatik giriş yap
+          if (savedRememberMe === 'true') {
+            try {
+              const result = await dispatch(login({ email: savedEmail, password: savedPassword })).unwrap();
+              if (result) {
+                router.replace('/(tabs)');
+              }
+            } catch (error) {
+              console.log('Auto login failed, user needs to login manually');
             }
-          } catch (error) {
-            console.log('Auto login failed, user needs to login manually');
           }
         }
       } catch (error) {

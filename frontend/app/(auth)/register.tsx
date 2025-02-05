@@ -168,17 +168,44 @@ export default function RegisterScreen() {
           firstName: formData.firstName,
           lastName: formData.lastName
         });
+
         if (registerResponse.data.status === 'success' && registerResponse.data.data?.user) {
-          const { token, email, firstName, lastName } = registerResponse.data.data.user;
-          await AsyncStorage.setItem('token', token);
+          // Token'ı kaydet - userToken olarak değiştirdik
+          if (registerResponse.data.token) {
+            await AsyncStorage.setItem('userToken', registerResponse.data.token);
+          }
+
+          // Remember Me özelliğini aktif et ve kullanıcı bilgilerini kaydet
+          await AsyncStorage.setItem('rememberMe', 'true');
+          await AsyncStorage.setItem('userEmail', formData.email);
+          await AsyncStorage.setItem('userPassword', formData.password);
+
+          // Redux store'u güncelle
           dispatch(register({
-            email,
-            firstName,
-            lastName,
-            password: ''
+            email: registerResponse.data.data.user.email,
+            firstName: registerResponse.data.data.user.firstName,
+            lastName: registerResponse.data.data.user.lastName,
+            password: '',
+            token: registerResponse.data.token,
+            _id: registerResponse.data.data.user._id,
+            role: registerResponse.data.data.user.role || 'user'
           }));
+
           setIsVerificationModalVisible(false);
-          router.replace('/(tabs)');
+          
+          // Login sayfasına yönlendir
+          Alert.alert(
+            'Kayıt Başarılı',
+            'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.',
+            [
+              {
+                text: 'Tamam',
+                onPress: () => {
+                  router.replace('/(auth)/login');
+                }
+              }
+            ]
+          );
         }
       }
     } catch (error: any) {
