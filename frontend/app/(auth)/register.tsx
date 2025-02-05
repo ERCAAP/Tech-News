@@ -18,6 +18,7 @@ interface RegisterResponse {
   status: string;
   data: {
     user: {
+      token(arg0: string, token: any): unknown;
       _id: string;
       email: string;
       firstName: string;
@@ -74,13 +75,15 @@ export default function RegisterScreen() {
         // Token'ı kaydet
         await AsyncStorage.setItem('token', response.data.token);
         
-        // Redux store'u güncelle
+        // Update Redux store
         dispatch(register({
-          user: response.data.data.user,
-          token: response.data.token
+          email: response.data.data.user.email,
+          firstName: response.data.data.user.firstName,
+          lastName: response.data.data.user.lastName,
+          password: ''
         }));
 
-        // Ana sayfaya yönlendir
+        // Navigate to home page
         router.replace('/(tabs)');
       } else {
         Alert.alert('Error', 'Registration failed. Please try again.');
@@ -112,7 +115,8 @@ export default function RegisterScreen() {
           email: formData.email
         });
 
-        if (checkEmailResponse.data.exists) {
+        const emailCheckData = checkEmailResponse.data as { exists: boolean };
+        if (emailCheckData.exists) {
           Alert.alert('Error', 'This email is already registered. Please use a different email or login.');
           return;
         }
@@ -129,7 +133,8 @@ export default function RegisterScreen() {
         email: formData.email
       });
 
-      if (response.data.status === 'success') {
+      const data = response.data as { status: string };
+      if (data.status === 'success') {
         setIsVerificationModalVisible(true);
       }
     } catch (error: any) {
@@ -154,7 +159,8 @@ export default function RegisterScreen() {
         code: verificationCode
       });
 
-      if (verifyResponse.data.status === 'success') {
+      const verifyData = verifyResponse.data as { status: string };
+      if (verifyData.status === 'success') {
         // If verification successful, proceed with registration
         const registerResponse = await axiosInstance.post<RegisterResponse>('/auth/register', {
           email: formData.email,
@@ -162,12 +168,14 @@ export default function RegisterScreen() {
           firstName: formData.firstName,
           lastName: formData.lastName
         });
-
         if (registerResponse.data.status === 'success' && registerResponse.data.data?.user) {
-          await AsyncStorage.setItem('token', registerResponse.data.token);
+          const { token, email, firstName, lastName } = registerResponse.data.data.user;
+          await AsyncStorage.setItem('token', token);
           dispatch(register({
-            user: registerResponse.data.data.user,
-            token: registerResponse.data.token
+            email,
+            firstName,
+            lastName,
+            password: ''
           }));
           setIsVerificationModalVisible(false);
           router.replace('/(tabs)');
@@ -301,12 +309,9 @@ export default function RegisterScreen() {
               value={verificationCode}
               onChangeText={setVerificationCode}
               placeholder="Enter code"
-              keyboardType="number-pad"
-              maxLength={6}
+              keyboardType="numeric"
               style={styles.verificationInput}
-              containerStyle={styles.verificationInputContainer}
-              textAlign="center"
-            />
+              containerStyle={styles.verificationInputContainer} label={''}            />
 
             {verificationError ? (
               <Text style={styles.errorText}>{verificationError}</Text>

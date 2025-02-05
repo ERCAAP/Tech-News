@@ -1,2 +1,5 @@
 uploads/*
-!uploads/.gitkeep 
+!uploads/.gitkeep
+.env
+.env.local
+.env.*.local 
