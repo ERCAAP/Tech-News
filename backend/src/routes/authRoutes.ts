@@ -10,6 +10,7 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 });
 
 // Public routes
+router.post('/check-email', authController.checkEmail);
 router.post('/login', authController.login);
 router.post('/register', authController.register);
 router.post('/send-verification', authController.sendVerificationCode);
