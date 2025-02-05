@@ -106,31 +106,13 @@ export default function RegisterScreen() {
         return;
       }
 
-      // Önce email'in kayıtlı olup olmadığını kontrol et
-      try {
-        const checkEmailResponse = await axiosInstance.post('/auth/check-email', {
-          email: formData.email
-        });
-
-        if (checkEmailResponse.data.exists) {
-          Alert.alert('Error', 'This email is already registered. Please use a different email or login.');
-          return;
-        }
-      } catch (error: any) {
-        if (error.response?.status === 409) { // 409 Conflict - Email exists
-          Alert.alert('Error', 'This email is already registered. Please use a different email or login.');
-          return;
-        }
-        throw error; // Diğer hataları normal hata yakalama bloğuna gönder
-      }
-
-      // Email kontrolü başarılıysa verification code gönder
       const response = await axiosInstance.post('/auth/send-verification', {
         email: formData.email
       });
 
       if (response.data.status === 'success') {
         setIsVerificationModalVisible(true);
+        Alert.alert('Success', 'Verification code has been sent to your email');
       }
     } catch (error: any) {
       console.error('Error sending verification code:', error);
@@ -300,12 +282,10 @@ export default function RegisterScreen() {
             <Input
               value={verificationCode}
               onChangeText={setVerificationCode}
-              placeholder="Enter code"
+              placeholder="Enter verification code"
               keyboardType="number-pad"
               maxLength={6}
               style={styles.verificationInput}
-              containerStyle={styles.verificationInputContainer}
-              textAlign="center"
             />
 
             {verificationError ? (
@@ -404,47 +384,39 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: '90%',
-    maxWidth: 340,
+    maxWidth: 400,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: FONTS.bold,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   modalDescription: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: FONTS.regular,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     color: COLORS.gray,
   },
-  verificationInputContainer: {
-    marginVertical: 8,
-    width: '100%',
-  },
   verificationInput: {
-    fontSize: 20,
+    fontSize: 24,
     textAlign: 'center',
-    letterSpacing: 4,
-    height: 50,
-    paddingHorizontal: 12,
+    letterSpacing: 8,
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
+    marginTop: 20,
   },
   verifyButton: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 10,
     backgroundColor: COLORS.primary,
-    height: 45,
   },
   cancelButton: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     backgroundColor: COLORS.gray,
-    height: 45,
   },
 }); 
