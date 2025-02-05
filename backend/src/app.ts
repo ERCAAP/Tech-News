@@ -1,9 +1,9 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
-import authRoutes from './routes/authRoutes';
-import newsRoutes from './routes/newsRoutes';
+import authRoutes from './routes/auth';
+import newsRoutes from '../routes/newsRoutes';
 
 const app = express();
 
@@ -36,12 +36,17 @@ app.get('/api/v1/test', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/news', newsRoutes);
 
-// Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+// Global hata yönetimi
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Global Error:', err);
-  res.status(err.status || 500).json({
-    status: 'error',
-    message: err.message || 'Internal server error'
+
+  // Status code kontrolü
+  const statusCode = err.statusCode || 500;
+  const status = err.status || 'error';
+
+  return res.status(statusCode).json({
+    status: status,
+    message: err.message || 'Bir hata oluştu'
   });
 });
 

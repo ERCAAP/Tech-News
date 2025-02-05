@@ -49,7 +49,8 @@ const UserSchema = new Schema({
   role: {
     type: String,
     enum: ['user', 'admin'],
-    default: 'user'
+    default: 'user',
+    select: true
   },
   readingHistory: [{
     news: { type: Schema.Types.ObjectId, ref: 'News' },

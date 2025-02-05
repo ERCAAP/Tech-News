@@ -5,10 +5,7 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 
 interface AuthRequest extends Request {
-  user?: {
-    _id: string;
-    role: string;
-  };
+  user?: any;
 }
 
 interface JwtPayload {
@@ -18,47 +15,68 @@ interface JwtPayload {
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: {
+        [key: string]: any;
+        _id: string;
+        role: string;
+      };
     }
   }
 }
 
-export const protect = asyncHandler(async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  // Get token
-  let token;
-  if (req.headers.authorization?.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-
-  if (!token) {
-    throw new AppError('Please log in to access this resource', 401);
-  }
-
+export const protect = async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
   try {
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-
-    // Check if user exists
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      throw new AppError('User no longer exists', 401);
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer')) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Token bulunamadı'
+      });
     }
 
-    // Grant access
-    req.user = user;
-    next();
+    const token = authHeader.split(' ')[1];
+    console.log('Token:', token); // Debug için
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      console.log('Decoded:', decoded); // Debug için
+
+      const user = await User.findById(decoded.id).select('+role');
+      console.log('Found user:', user); // Debug için
+
+      if (!user) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Kullanıcı bulunamadı'
+        });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return res.status(401).json({
+        status: 'error',
+        message: 'Geçersiz token'
+      });
+    }
   } catch (error) {
-    throw new AppError('Invalid token', 401);
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Sunucu hatası'
+    });
   }
-});
+};
 
 export const restrictTo = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!roles.includes(req.user.role)) {
+    // Debug için
+    console.log('User in restrictTo:', req.user);
+    console.log('Required roles:', roles);
+
+    if (!req.user || !roles.includes(req.user.role)) {
       throw new AppError('You do not have permission to perform this action', 403);
     }
     next();

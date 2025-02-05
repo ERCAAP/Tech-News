@@ -30,9 +30,9 @@ const userSchema = new Schema<IUser>({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: [true, 'Şifre gerekli'],
     minlength: 6,
-    select: false  // Varsayılan olarak password'ü getirme
+    select: false  // Varsayılan olarak şifreyi getirme
   },
   role: {
     type: String,

@@ -1,6 +1,6 @@
 import express from 'express';
 import { authController } from '../controllers/auth';
-import { authenticate } from '../middleware/auth';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -11,13 +11,13 @@ router.use((req, res, next) => {
 });
 
 // Public routes
-router.post('/api/v1/auth/login', authController.login);
-router.post('/api/v1/auth/register', authController.register);
+router.post('/login', authController.login);
+router.post('/register', authController.register);
 
 // Protected routes
-router.get('/api/v1/auth/me', authenticate, authController.getMe);
-router.patch('/api/v1/auth/profile', authenticate, authController.updateProfile);
-router.get('/api/v1/auth/favorite-news', authenticate, authController.getFavoriteNews);
+router.get('/me', protect, authController.getMe);
+router.patch('/profile', protect, authController.updateProfile);
+router.get('/favorite-news', protect, authController.getFavoriteNews);
 
 // Debug - mevcut route'ları göster
 const routes = router.stack
