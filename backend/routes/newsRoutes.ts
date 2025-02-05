@@ -8,7 +8,10 @@ import {
   viewNews,
   getSimilarNews,
   shareNews,
-  updateReadingProgress
+  updateReadingProgress,
+  addToFavorites,
+  removeFromFavorites,
+  checkFavoriteStatus
 } from '../controllers/newsController';
 import { protect } from '../middleware/authMiddleware';
 
@@ -56,5 +59,8 @@ router.get('/:id/similar', getSimilarNews);
 router.post('/:id/share', shareNews);
 router.post('/:id/view', viewNews);
 router.post('/:id/reading-progress', updateReadingProgress);
+router.post('/:id/favorite', addToFavorites);
+router.delete('/:id/favorite', removeFromFavorites);
+router.get('/:id/favorite', checkFavoriteStatus);
 
 export default router; 

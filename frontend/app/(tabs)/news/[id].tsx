@@ -19,6 +19,7 @@ import { isUserAdmin } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
 import * as Localization from 'expo-localization';
 import { OPENAI_API_KEY } from '../../../constants/config';
+import axiosInstance from '@/api/axios';
 
 const categoryMapping: { [key: string]: string } = {
   'App Development': 'app-development',
@@ -114,6 +115,15 @@ const CATEGORIES = [
   }
 ];
 
+// Response tipleri için interface'ler ekleyelim
+interface FavoriteResponse {
+  status: string;
+  data: {
+    isFavorited: boolean;
+    favoriteCount: number;
+  };
+}
+
 export default function NewsDetailScreen() {
   const params = useLocalSearchParams();
   const id = typeof params.id === 'string' ? params.id : '';
@@ -137,6 +147,8 @@ export default function NewsDetailScreen() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
   const [showOriginal, setShowOriginal] = useState(true);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteCount, setFavoriteCount] = useState(0);
 
   const categories = [
     { label: 'Select a category', value: '' },
@@ -551,6 +563,41 @@ export default function NewsDetailScreen() {
     }
   };
 
+  // Favori durumunu kontrol et
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      try {
+        const response = await axiosInstance.get<FavoriteResponse>(`/news/${id}/favorite`);
+        if (response.data.status === 'success') {
+          setIsFavorited(response.data.data.isFavorited);
+          setFavoriteCount(response.data.data.favoriteCount);
+        }
+      } catch (error) {
+        console.error('Check favorite status error:', error);
+      }
+    };
+
+    if (id && !isAdmin) {
+      checkFavoriteStatus();
+    }
+  }, [id, isAdmin]);
+
+  // Favori ekleme/çıkarma işlemi
+  const handleFavoritePress = async () => {
+    try {
+      const method = isFavorited ? 'delete' : 'post';
+      const response = await axiosInstance[method]<FavoriteResponse>(`/news/${id}/favorite`);
+      
+      if (response.data.status === 'success') {
+        setIsFavorited(response.data.data.isFavorited);
+        setFavoriteCount(response.data.data.favoriteCount);
+      }
+    } catch (error) {
+      console.error('Favorite toggle error:', error);
+      Alert.alert('Error', 'Failed to update favorite status');
+    }
+  };
+
   if (!newsItem) {
     return <Loading />;
   }
@@ -673,6 +720,22 @@ export default function NewsDetailScreen() {
             <Text style={styles.date}>
               {new Date(newsItem.createdAt).toLocaleDateString()}
             </Text>
+            
+            {!isAdmin && (
+              <TouchableOpacity
+                style={styles.favoriteButton}
+                onPress={handleFavoritePress}
+              >
+                <MaterialIcons
+                  name={isFavorited ? "favorite" : "favorite-border"}
+                  size={24}
+                  color={isFavorited ? COLORS.error : COLORS.gray}
+                />
+                {favoriteCount > 0 && (
+                  <Text style={styles.favoriteCount}>{favoriteCount}</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
           {renderContent(newsItem.content)}
@@ -1192,4 +1255,16 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
+  favoriteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    padding: 8,
+  },
+  favoriteCount: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+  }
 }); 

@@ -283,4 +283,97 @@ export async function updateReadingProgress(req: AuthRequest, res: Response, nex
   } catch (error) {
     next(error);
   }
-} 
+}
+
+// Favoriye ekleme
+export const addToFavorites = async (req: Request, res: Response) => {
+  try {
+    const newsId = req.params.id;
+    const userId = req.user._id;
+
+    const news = await News.findById(newsId);
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
+
+    await news.addToFavorites(userId);
+
+    res.json({
+      status: 'success',
+      data: {
+        favoriteCount: news.favoriteCount,
+        isFavorited: true
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+// Favoriden çıkarma
+export const removeFromFavorites = async (req: Request, res: Response) => {
+  try {
+    const newsId = req.params.id;
+    const userId = req.user._id;
+
+    const news = await News.findById(newsId);
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
+
+    await news.removeFromFavorites(userId);
+
+    res.json({
+      status: 'success',
+      data: {
+        favoriteCount: news.favoriteCount,
+        isFavorited: false
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
+
+// Favori durumunu kontrol etme
+export const checkFavoriteStatus = async (req: Request, res: Response) => {
+  try {
+    const newsId = req.params.id;
+    const userId = req.user._id;
+
+    const news = await News.findById(newsId);
+    if (!news) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'News not found'
+      });
+    }
+
+    const isFavorited = news.favorites.includes(userId);
+
+    res.json({
+      status: 'success',
+      data: {
+        isFavorited,
+        favoriteCount: news.favoriteCount
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+}; 

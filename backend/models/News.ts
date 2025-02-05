@@ -24,6 +24,8 @@ interface INews extends Document {
   createdAt: Date;
   updatedAt: Date;
   publishedAt?: Date;
+  favorites: mongoose.Types.ObjectId[];
+  favoriteCount: number;
 }
 
 const NewsSchema = new Schema({
@@ -63,7 +65,15 @@ const NewsSchema = new Schema({
   url: { type: String }, // Dış kaynak URL'si (varsa)
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date },
-  publishedAt: { type: Date }
+  publishedAt: { type: Date },
+  favorites: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  favoriteCount: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -117,5 +127,23 @@ NewsSchema.virtual('popularityScore').get(function() {
     (this.shareCount || 0) * shareWeight
   );
 });
+
+// Favori ekleme metodu
+NewsSchema.methods.addToFavorites = async function(userId: string) {
+  if (!this.favorites.includes(userId)) {
+    this.favorites.push(userId);
+    this.favoriteCount = this.favorites.length;
+    await this.save();
+  }
+  return this;
+};
+
+// Favoriden çıkarma metodu
+NewsSchema.methods.removeFromFavorites = async function(userId: string) {
+  this.favorites = this.favorites.filter(id => !id.equals(userId));
+  this.favoriteCount = this.favorites.length;
+  await this.save();
+  return this;
+};
 
 export const News = mongoose.model<INews>('News', NewsSchema); 
