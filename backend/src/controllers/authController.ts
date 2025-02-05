@@ -337,6 +337,35 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const checkEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    // Email formatını kontrol et
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid email format'
+      });
+    }
+
+    // Email'in kayıtlı olup olmadığını kontrol et
+    const existingUser = await User.findOne({ email });
+
+    res.status(200).json({
+      status: 'success',
+      exists: !!existingUser
+    });
+
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to check email'
+    });
+  }
+};
+
 export const sendVerificationCode = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -352,7 +381,7 @@ export const sendVerificationCode = async (req: Request, res: Response) => {
     // Kullanıcının zaten kayıtlı olup olmadığını kontrol et
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({ // 409 Conflict
         status: 'error',
         message: 'Email is already registered'
       });
