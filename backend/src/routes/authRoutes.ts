@@ -12,6 +12,8 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 // Public routes
 router.post('/login', authController.login);
 router.post('/register', authController.register);
+router.post('/send-verification', authController.sendVerificationCode);
+router.post('/verify-code', authController.verifyCode);
 
 // Protected routes
 router.use(protect);

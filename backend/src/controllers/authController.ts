@@ -5,6 +5,8 @@ import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
+import nodemailer from 'nodemailer';
+import { VerificationCode } from '../models/VerificationCode';
 
 // JWT yapılandırması
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
@@ -24,6 +26,31 @@ interface AuthRequest extends Request {
     role: string;
   };
 }
+
+interface VerificationCode {
+  code: string;
+  email: string;
+  expiresAt: Date;
+}
+
+// Geçici olarak verification kodlarını tutmak için
+const verificationCodes = new Map<string, VerificationCode>();
+
+// Email gönderme yapılandırması
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // SSL/TLS için
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false // Geliştirme ortamında SSL sertifika hatalarını önler
+    }
+  });
+};
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -91,12 +118,26 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
+    // Email'in doğrulanmış olup olmadığını kontrol et
+    const verificationCode = await VerificationCode.findOne({
+      email,
+      isUsed: true,
+      expiresAt: { $gt: new Date(Date.now() - 15 * 60 * 1000) } // Son 15 dakika içinde
+    });
+
+    if (!verificationCode) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email not verified'
+      });
+    }
+
     // Email kontrolü
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         status: 'error',
-        message: 'Bu email adresi zaten kullanılıyor'
+        message: 'Email is already registered'
       });
     }
 
@@ -116,7 +157,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       { expiresIn: '30d' }
     );
 
-    // Şifre hariç kullanıcı bilgilerini döndür
+    // Kullanıcı bilgilerini döndür
     const userResponse = {
       _id: user._id,
       email: user.email,
@@ -136,18 +177,9 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('Register Error:', error);
-    
-    // MongoDB duplicate key hatası
-    if (error.code === 11000) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Bu email adresi zaten kullanılıyor'
-      });
-    }
-
     res.status(500).json({
       status: 'error',
-      message: error.message || 'Kayıt işlemi sırasında bir hata oluştu'
+      message: error.message || 'Registration failed'
     });
   }
 });
@@ -301,6 +333,141 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({
       status: 'error',
       message: error.message || 'Profil güncellenirken bir hata oluştu'
+    });
+  }
+};
+
+export const sendVerificationCode = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    // E-posta formatını kontrol et
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid email format'
+      });
+    }
+
+    // Kullanıcının zaten kayıtlı olup olmadığını kontrol et
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email is already registered'
+      });
+    }
+
+    // 6 haneli rastgele kod oluştur
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Varolan aktif kodu bul ve sil
+    await VerificationCode.deleteMany({
+      email,
+      expiresAt: { $gt: new Date() }
+    });
+
+    // Yeni kod oluştur
+    await VerificationCode.create({
+      email,
+      code,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      isUsed: false
+    });
+
+    const transporter = createTransporter();
+
+    // Test bağlantısı
+    await new Promise((resolve, reject) => {
+      transporter.verify(function (error, success) {
+        if (error) {
+          console.log("SMTP Server Error:", error);
+          reject(error);
+        } else {
+          console.log("SMTP Server is ready to take our messages");
+          resolve(success);
+        }
+      });
+    });
+
+    // E-posta şablonu
+    const emailTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #333; text-align: center;">Email Verification</h1>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+          <p style="font-size: 16px; color: #666;">Your verification code is:</p>
+          <h2 style="color: #007bff; font-size: 32px; letter-spacing: 5px; margin: 20px 0;">${code}</h2>
+          <p style="color: #999; font-size: 14px;">This code will expire in 15 minutes.</p>
+        </div>
+        <div style="margin-top: 20px; text-align: center; color: #666;">
+          <p>If you didn't request this code, please ignore this email.</p>
+          <p>Do not share this code with anyone.</p>
+        </div>
+      </div>
+    `;
+
+    // E-posta gönderme ayarları
+    const mailOptions = {
+      from: {
+        name: 'Tech News App',
+        address: process.env.EMAIL_USER as string
+      },
+      to: email,
+      subject: 'Email Verification Code',
+      html: emailTemplate
+    };
+
+    // E-postayı gönder
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully:', info.messageId);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Verification code sent successfully'
+    });
+
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to send verification code. Please try again.'
+    });
+  }
+};
+
+export const verifyCode = async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+    
+    // En son gönderilen ve kullanılmamış kodu bul
+    const verificationCode = await VerificationCode.findOne({
+      email,
+      code,
+      isUsed: false,
+      expiresAt: { $gt: new Date() }
+    });
+    
+    if (!verificationCode) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired verification code'
+      });
+    }
+
+    // Kodu kullanıldı olarak işaretle
+    verificationCode.isUsed = true;
+    await verificationCode.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Email verified successfully'
+    });
+
+  } catch (error) {
+    console.error('Error verifying code:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to verify code'
     });
   }
 }; 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Animated, Text, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Animated, Text, Platform, Modal } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { register } from '@/redux/slices/authSlice';
 import axiosInstance from '@/api/axios';
@@ -40,6 +40,9 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const slideAnim = React.useRef(new Animated.Value(0)).current;
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerificationModalVisible, setIsVerificationModalVisible] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
 
   React.useEffect(() => {
     const animation = Animated.spring(slideAnim, {
@@ -88,6 +91,73 @@ export default function RegisterScreen() {
         'Registration Failed',
         error.response?.data?.message || 'An error occurred during registration'
       );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendVerificationCode = async () => {
+    try {
+      setIsLoading(true);
+      
+      // E-posta formatını kontrol et
+      if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+        Alert.alert('Error', 'Please enter a valid email address');
+        return;
+      }
+
+      const response = await axiosInstance.post('/auth/send-verification', {
+        email: formData.email
+      });
+
+      if (response.data.status === 'success') {
+        setIsVerificationModalVisible(true);
+        Alert.alert('Success', 'Verification code has been sent to your email');
+      }
+    } catch (error: any) {
+      console.error('Error sending verification code:', error);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to send verification code'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyCodeAndRegister = async () => {
+    try {
+      setIsLoading(true);
+      setVerificationError('');
+
+      // Verify the code
+      const verifyResponse = await axiosInstance.post('/auth/verify-code', {
+        email: formData.email,
+        code: verificationCode
+      });
+
+      if (verifyResponse.data.status === 'success') {
+        // If verification successful, proceed with registration
+        const registerResponse = await axiosInstance.post<RegisterResponse>('/auth/register', {
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        });
+
+        if (registerResponse.data.status === 'success' && registerResponse.data.data?.user) {
+          await AsyncStorage.setItem('token', registerResponse.data.token);
+          dispatch(register({
+            user: registerResponse.data.data.user,
+            token: registerResponse.data.token
+          }));
+          setIsVerificationModalVisible(false);
+          router.replace('/(tabs)');
+        }
+      }
+    } catch (error: any) {
+      console.error('Verification Error:', error);
+      setVerificationError(error.response?.data?.message || 'Invalid verification code');
     } finally {
       setIsLoading(false);
     }
@@ -176,12 +246,10 @@ export default function RegisterScreen() {
             />
 
             <Button
-              title={getButtonTitle()}
-              onPress={handleRegister}
+              title={isLoading ? "Please wait..." : "Create Account"}
+              onPress={sendVerificationCode}
               disabled={isLoading}
               style={getButtonStyle()}
-              isLoading={isLoading}
-              icon={status === 'success' ? 'check-circle' : undefined}
             />
 
             {status === 'error' && (
@@ -198,6 +266,48 @@ export default function RegisterScreen() {
           </View>
         </Animated.ScrollView>
       </LinearGradient>
+
+      <Modal
+        visible={isVerificationModalVisible}
+        transparent
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Email Verification</Text>
+            <Text style={styles.modalDescription}>
+              Please enter the verification code sent to your email
+            </Text>
+
+            <Input
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+              placeholder="Enter verification code"
+              keyboardType="number-pad"
+              maxLength={6}
+              style={styles.verificationInput}
+            />
+
+            {verificationError ? (
+              <Text style={styles.errorText}>{verificationError}</Text>
+            ) : null}
+
+            <View style={styles.modalButtons}>
+              <Button
+                title="Verify"
+                onPress={verifyCodeAndRegister}
+                disabled={isLoading}
+                style={styles.verifyButton}
+              />
+              <Button
+                title="Cancel"
+                onPress={() => setIsVerificationModalVisible(false)}
+                style={styles.cancelButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -262,5 +372,51 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontFamily: FONTS.regular,
     fontSize: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: COLORS.gray,
+  },
+  verificationInput: {
+    fontSize: 24,
+    textAlign: 'center',
+    letterSpacing: 8,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  verifyButton: {
+    flex: 1,
+    marginRight: 10,
+    backgroundColor: COLORS.primary,
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 10,
+    backgroundColor: COLORS.gray,
   },
 }); 
