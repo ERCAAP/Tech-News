@@ -63,6 +63,7 @@ async function seedData() {
           history: [],
           last24Hours: 0
         },
+        shareCount: 0,
         likes: [],
         favorites: [],
         favoriteCount: 0,
@@ -83,6 +84,7 @@ async function seedData() {
           history: [],
           last24Hours: 0
         },
+        shareCount: 0,
         likes: [],
         favorites: [],
         favoriteCount: 0,
@@ -103,6 +105,7 @@ async function seedData() {
           history: [],
           last24Hours: 0
         },
+        shareCount: 0,
         likes: [],
         favorites: [],
         favoriteCount: 0,

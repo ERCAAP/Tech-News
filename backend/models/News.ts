@@ -1,5 +1,6 @@
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { v4 as uuidv4 } from 'uuid';
 
 const dynamoDB = new DynamoDB({
   region: process.env.AWS_REGION
@@ -47,7 +48,15 @@ export interface Views {
 }
 
 export class NewsModel {
-  private tableName = 'News';
+  private readonly dynamoDB: DynamoDB;
+  private readonly tableName: string;
+
+  constructor() {
+    this.dynamoDB = new DynamoDB({
+      region: process.env.AWS_REGION
+    });
+    this.tableName = process.env.DYNAMODB_NEWS_TABLE || 'news';
+  }
 
   async create(news: INews): Promise<INews> {
     await docClient.put({
@@ -115,6 +124,27 @@ export class NewsModel {
       TableName: this.tableName,
       Key: { newsId }
     });
+  }
+
+  async findByFavorites(userId: string): Promise<INews[]> {
+    const allNews = await this.scan();
+    return allNews.filter(news => news.favorites.includes(userId));
+  }
+
+  async getStats() {
+    const allNews = await this.scan();
+    return {
+      total: allNews.length,
+      published: allNews.filter(news => news.status === 'published').length,
+      draft: allNews.filter(news => news.status === 'draft').length,
+      totalViews: allNews.reduce((sum, news) => sum + (news.views?.total || 0), 0),
+      totalShares: allNews.reduce((sum, news) => sum + (news.shareCount || 0), 0),
+      totalFavorites: allNews.reduce((sum, news) => sum + (news.favoriteCount || 0), 0),
+      byCategory: allNews.reduce((acc, news) => {
+        acc[news.category] = (acc[news.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    };
   }
 }
 

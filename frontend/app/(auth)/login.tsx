@@ -130,9 +130,10 @@ export default function LoginScreen() {
       
       const result = await dispatch(login(formData)).unwrap();
       // Store subscription status
-      await AsyncStorage.setItem('isSubscription', result.user.isSubscription.toString());
+      const hasSubscription = result.data.user.isSubscription ?? false;
+      await AsyncStorage.setItem('isSubscription', String(hasSubscription));
       
-      if (!result.user.isSubscription) {
+      if (!hasSubscription) {
         router.replace('/(auth)/paywall');
       } else {
         router.replace('/(tabs)');

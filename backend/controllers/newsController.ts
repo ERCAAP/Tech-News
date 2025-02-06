@@ -10,7 +10,7 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
 import { CloudWatch } from '@aws-sdk/client-cloudwatch';
-import { upload } from '../src/utils/upload';
+import { uploadFile } from '../src/utils/upload';
 import { uploadImage, validateImageFile } from '../src/utils/imageUpload';
 
 const cloudWatch = new CloudWatch({
@@ -24,6 +24,13 @@ interface ViewRecord {
   viewedAt: string;
 }
 
+interface ViewsData {
+  total: number;
+  unique: number;
+  history: Array<{ userId: string; timestamp: string }>;
+  last24Hours: number;
+}
+
 // Helper function to validate ID
 function validateId(id: string | undefined): string {
   if (!id) throw new Error('Invalid ID');
@@ -31,7 +38,7 @@ function validateId(id: string | undefined): string {
 }
 
 // Get all news
-export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
+export const getAllNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const news = await News.scan();
 
   res.status(200).json({
@@ -56,9 +63,9 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Create news
-export const createNews = asyncHandler<AuthRequest>(async (req, res) => {
+export const createNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user?.userId) {
-    throw new AppError('Unauthorized', 401);
+    return next(new AppError('Unauthorized', 401));
   }
 
   let imageUrl: string | undefined;
@@ -103,16 +110,16 @@ export const createNews = asyncHandler<AuthRequest>(async (req, res) => {
 });
 
 // Update news
-export const updateNews = asyncHandler<AuthRequest>(async (req, res) => {
+export const updateNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user?.userId) {
-    throw new AppError('Unauthorized', 401);
+    return next(new AppError('Unauthorized', 401));
   }
 
   const newsId = req.params.id;
   const news = await News.findById(newsId);
 
   if (!news) {
-    throw new AppError('News not found', 404);
+    return next(new AppError('News not found', 404));
   }
 
   let imageUrl = news.imageUrl;
@@ -121,7 +128,10 @@ export const updateNews = asyncHandler<AuthRequest>(async (req, res) => {
     // Delete old image if exists
     if (imageUrl) {
       const oldKey = imageUrl.split('/').pop() || '';
-      await this.s3Service.deleteFile(oldKey);
+      const s3Service = req.app.locals.s3Service;
+      if (s3Service) {
+        await s3Service.deleteFile(oldKey);
+      }
     }
 
     // Upload new image
@@ -145,9 +155,14 @@ export const updateNews = asyncHandler<AuthRequest>(async (req, res) => {
 });
 
 // Delete news
-export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user?.userId) {
-    throw new AppError('Unauthorized', 401);
+    return next(new AppError('Unauthorized', 401));
+  }
+
+  const news = await News.findById(req.params.id);
+  if (!news) {
+    return next(new AppError('News not found', 404));
   }
 
   await News.delete(req.params.id);
@@ -159,52 +174,48 @@ export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response) =
 });
 
 // View news
-export const viewNews = asyncHandler<AuthRequest>(async (req, res) => {
-  const newsId = req.params.id;
-  const userId = req.user?.userId;
-
-  const news = await News.findById(newsId);
+export const viewNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const news = await News.findById(req.params.id);
   if (!news) {
-    throw new AppError('News not found', 404);
+    return next(new AppError('News not found', 404));
   }
 
   const now = new Date().toISOString();
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const userId = req.user?.userId || 'anonymous';
 
-  // Filter out views older than 24 hours
-  const recentViews = news.views.history.filter(view => view.timestamp > last24Hours);
+  // Define default views
+  const defaultViews: ViewsData = {
+    total: 0,
+    unique: 0,
+    history: [],
+    last24Hours: 0
+  };
 
-  // Check if user has viewed in last 24 hours
-  const hasRecentView = userId && recentViews.some(view => view.userId === userId);
+  // Get current views with safe type assertion
+  const currentViews: ViewsData = {
+    total: news.views?.total ?? defaultViews.total,
+    unique: news.views?.unique ?? defaultViews.unique,
+    history: news.views?.history ?? defaultViews.history,
+    last24Hours: news.views?.last24Hours ?? defaultViews.last24Hours
+  };
 
-  if (!hasRecentView) {
-    // Add new view
-    const updatedHistory = [
-      ...recentViews,
-      ...(userId ? [{ userId, timestamp: now }] : [])
-    ];
+  // Create updated views
+  const updatedViews: ViewsData = {
+    total: currentViews.total + 1,
+    unique: currentViews.unique,
+    history: [...currentViews.history, { userId, timestamp: now }],
+    last24Hours: currentViews.last24Hours + 1
+  };
 
-    const updatedViews: INews['views'] = {
-      total: news.views.total + 1,
-      unique: userId ? new Set(updatedHistory.map(v => v.userId)).size : news.views.unique,
-      history: updatedHistory,
-      last24Hours: updatedHistory.length
-    };
+  // Update the news document
+  const updatedNews = await News.update(req.params.id, {
+    views: updatedViews
+  });
 
-    const updatedNews = await News.update(newsId, {
-      views: updatedViews
-    });
-
-    res.status(200).json({
-      status: 'success',
-      data: { views: updatedViews }
-    });
-  } else {
-    res.status(200).json({
-      status: 'success',
-      data: { views: news.views }
-    });
-  }
+  res.status(200).json({
+    status: 'success',
+    data: { views: updatedViews }
+  });
 });
 
 // Toggle favorite
@@ -290,19 +301,19 @@ export const unlikeNews = asyncHandler(async (req: AuthRequest, res: Response) =
 });
 
 export class NewsController {
-  private dbService: DynamoDBService;
-  private s3Service: S3Service;
+  private readonly dbService: DynamoDBService;
+  private readonly s3Service: S3Service;
 
   constructor() {
     this.dbService = new DynamoDBService();
     this.s3Service = new S3Service();
   }
 
-  getAllNews = asyncHandler(async (req: Request, res: Response) => {
+  getAllNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
     const news = await News.scan();
-    
     res.status(200).json({
       status: 'success',
+      results: news.length,
       data: { news }
     });
   });
@@ -318,43 +329,11 @@ export class NewsController {
     });
   });
 
-  getNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  getNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
     const news = await News.findById(req.params.id);
-    
     if (!news) {
-      throw new AppError('News not found', 404);
+      return next(new AppError('News not found', 404));
     }
-
-    // Update view count
-    const userId = req.user?.userId;
-    if (userId) {
-      const viewKey = `${news.newsId}-${userId}`;
-      const viewRecord = await this.dbService.get('NewsViews', { viewKey }) as ViewRecord | null;
-      
-      if (!viewRecord) {
-        const timestamp = new Date().toISOString();
-        
-        await this.dbService.create('NewsViews', {
-          viewKey,
-          newsId: news.newsId,
-          userId,
-          viewedAt: timestamp
-        });
-
-        const updatedViews = {
-          total: news.views.total + 1,
-          unique: news.views.unique + 1
-        };
-
-        await News.update(news.newsId, {
-          views: updatedViews,
-          updatedAt: timestamp
-        });
-
-        news.views = updatedViews;
-      }
-    }
-
     res.status(200).json({
       status: 'success',
       data: { news }
@@ -568,6 +547,130 @@ export class NewsController {
     res.status(200).json({
       status: 'success',
       data: { isFavorited }
+    });
+  });
+
+  // Create news
+  create = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user?.userId) {
+      return next(new AppError('Unauthorized', 401));
+    }
+
+    let imageUrl: string | undefined;
+    if (req.file) {
+      validateImageFile(req.file);
+      imageUrl = await uploadImage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+    }
+
+    const newsData: INews = {
+      newsId: uuidv4(),
+      title: req.body.title,
+      content: req.body.content,
+      category: req.body.category,
+      authorId: req.user.userId,
+      status: 'published',
+      imageUrl,
+      tags: req.body.tags || [],
+      views: {
+        total: 0,
+        unique: 0,
+        history: [],
+        last24Hours: 0
+      },
+      shareCount: 0,
+      likes: [],
+      favorites: [],
+      favoriteCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const news = await News.create(newsData);
+    res.status(201).json({
+      status: 'success',
+      data: { news }
+    });
+  });
+
+  // Update news
+  update = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user?.userId) {
+      return next(new AppError('Unauthorized', 401));
+    }
+
+    const newsId = req.params.id;
+    const news = await News.findById(newsId);
+
+    if (!news) {
+      return next(new AppError('News not found', 404));
+    }
+
+    let imageUrl = news.imageUrl;
+    if (req.file) {
+      validateImageFile(req.file);
+      if (imageUrl) {
+        const oldKey = imageUrl.split('/').pop() || '';
+        if (this.s3Service) {
+          await this.s3Service.deleteFile(oldKey);
+        }
+      }
+
+      imageUrl = await uploadImage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+    }
+
+    const updatedNews = await News.update(newsId, {
+      ...req.body,
+      imageUrl,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { news: updatedNews }
+    });
+  });
+
+  // Get favorite news
+  getFavoriteNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user?.userId) {
+      return next(new AppError('Unauthorized', 401));
+    }
+
+    const news = await News.findByFavorites(req.user.userId);
+    res.status(200).json({
+      status: 'success',
+      results: news.length,
+      data: { news }
+    });
+  });
+
+  // Get favorite count
+  getFavoriteCount = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user?.userId) {
+      return next(new AppError('Unauthorized', 401));
+    }
+
+    const news = await News.findByFavorites(req.user.userId);
+    res.status(200).json({
+      status: 'success',
+      data: { count: news.length }
+    });
+  });
+
+  // Get news stats
+  getNewsStats = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const stats = await News.getStats();
+    res.status(200).json({
+      status: 'success',
+      data: { stats }
     });
   });
 } 

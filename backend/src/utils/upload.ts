@@ -45,6 +45,7 @@ export const logUploadedFiles = (req: Request, res: Response, next: Function) =>
   next();
 };
 
+// Rename the upload function to uploadFile
 export async function uploadFile(file: Buffer, originalName: string, contentType: string): Promise<string> {
   const key = `uploads/${uuidv4()}-${originalName}`;
   return s3Service.uploadFile(file, key, contentType);

@@ -23,9 +23,8 @@ declare global {
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
-    email: string;
-    role?: string;
+    role: string;
+    email?: string;
   };
-  file?: Express.Multer.File;
   files?: Express.Multer.File[];
 } 

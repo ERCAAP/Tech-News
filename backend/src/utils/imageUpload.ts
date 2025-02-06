@@ -1,4 +1,4 @@
-import { upload } from './upload';
+import { uploadFile } from './upload';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -14,7 +14,7 @@ export async function uploadImage(file: Buffer, originalName: string, mimeType: 
     throw new Error('File size exceeds limit. Maximum size is 5MB.');
   }
 
-  return upload(file, originalName, mimeType);
+  return uploadFile(file, originalName, mimeType);
 }
 
 export function validateImageFile(file: Express.Multer.File): void {
