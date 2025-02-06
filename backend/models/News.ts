@@ -26,6 +26,7 @@ interface INews extends Document {
   publishedAt?: Date;
   favorites: mongoose.Types.ObjectId[];
   favoriteCount: number;
+  likes: mongoose.Types.ObjectId[];
 }
 
 const NewsSchema = new Schema({
@@ -73,7 +74,11 @@ const NewsSchema = new Schema({
   favoriteCount: {
     type: Number,
     default: 0
-  }
+  },
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

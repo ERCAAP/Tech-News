@@ -1,97 +1,108 @@
-import { DynamoDB } from 'aws-sdk';
-import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { 
+  DynamoDB,
+  QueryCommandInput,
+  ScanCommandInput,
+  BatchGetItemCommandInput,
+  BatchWriteItemCommandInput,
+  TransactGetItemsCommandInput,
+  TransactWriteItemsCommandInput
+} from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
 export class DynamoDBService {
-  private db: DynamoDB.DocumentClient;
+  private client: DynamoDBDocument;
 
   constructor() {
-    this.db = new DynamoDB.DocumentClient();
+    const dynamoClient = new DynamoDB({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+      }
+    });
+    this.client = DynamoDBDocument.from(dynamoClient);
   }
 
-  async create(tableName: string, item: Record<string, any>) {
-    const params = {
+  async create(tableName: string, item: Record<string, any>): Promise<Record<string, any>> {
+    await this.client.put({
       TableName: tableName,
-      Item: marshall(item)
-    };
-
-    try {
-      await this.db.put(params).promise();
-      return item;
-    } catch (error) {
-      console.error(`Error creating item in ${tableName}:`, error);
-      throw error;
-    }
+      Item: item
+    });
+    return item;
   }
 
-  async get(tableName: string, key: Record<string, any>) {
-    const params = {
+  async get(tableName: string, key: Record<string, any>): Promise<Record<string, any> | null> {
+    const result = await this.client.get({
       TableName: tableName,
-      Key: marshall(key)
-    };
-
-    try {
-      const result = await this.db.get(params).promise();
-      return result.Item ? unmarshall(result.Item) : null;
-    } catch (error) {
-      console.error(`Error getting item from ${tableName}:`, error);
-      throw error;
-    }
+      Key: key
+    });
+    return result.Item || null;
   }
 
-  async update(tableName: string, key: Record<string, any>, updates: Record<string, any>) {
-    const updateExpression = Object.keys(updates)
-      .map(key => `#${key} = :${key}`)
-      .join(', ');
+  async update(tableName: string, key: Record<string, any>, updates: Record<string, any>): Promise<Record<string, any> | null> {
+    const updateExpressions: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
 
-    const expressionAttributeNames = Object.keys(updates)
-      .reduce((acc, key) => ({ ...acc, [`#${key}`]: key }), {});
+    Object.entries(updates).forEach(([key, value], index) => {
+      const attributeName = `#attr${index}`;
+      const attributeValue = `:val${index}`;
+      updateExpressions.push(`${attributeName} = ${attributeValue}`);
+      expressionAttributeNames[attributeName] = key;
+      expressionAttributeValues[attributeValue] = value;
+    });
 
-    const expressionAttributeValues = Object.entries(updates)
-      .reduce((acc, [key, value]) => ({ ...acc, [`:${key}`]: value }), {});
-
-    const params = {
+    const result = await this.client.update({
       TableName: tableName,
-      Key: marshall(key),
-      UpdateExpression: `SET ${updateExpression}`,
+      Key: key,
+      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
       ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: marshall(expressionAttributeValues),
+      ExpressionAttributeValues: expressionAttributeValues,
       ReturnValues: 'ALL_NEW'
-    };
+    });
 
-    try {
-      const result = await this.db.update(params).promise();
-      return result.Attributes ? unmarshall(result.Attributes) : null;
-    } catch (error) {
-      console.error(`Error updating item in ${tableName}:`, error);
-      throw error;
-    }
+    return result.Attributes || null;
   }
 
-  async delete(tableName: string, key: Record<string, any>) {
-    const params = {
+  async delete(tableName: string, key: Record<string, any>): Promise<boolean> {
+    await this.client.delete({
       TableName: tableName,
-      Key: marshall(key)
-    };
-
-    try {
-      await this.db.delete(params).promise();
-      return true;
-    } catch (error) {
-      console.error(`Error deleting item from ${tableName}:`, error);
-      throw error;
-    }
+      Key: key
+    });
+    return true;
   }
 
-  async query(params: DynamoDB.DocumentClient.QueryInput) {
-    try {
-      const result = await this.db.query(params).promise();
-      return {
-        items: result.Items?.map(item => unmarshall(item)) || [],
-        lastEvaluatedKey: result.LastEvaluatedKey
-      };
-    } catch (error) {
-      console.error('Error querying items:', error);
-      throw error;
-    }
+  async query(params: QueryCommandInput): Promise<{ items: Record<string, any>[]; lastEvaluatedKey?: Record<string, any> }> {
+    const result = await this.client.query(params);
+    return {
+      items: (result.Items || []) as Record<string, any>[],
+      lastEvaluatedKey: result.LastEvaluatedKey as Record<string, any> | undefined
+    };
+  }
+
+  async scan(params: ScanCommandInput): Promise<{ items: Record<string, any>[]; lastEvaluatedKey?: Record<string, any> }> {
+    const result = await this.client.scan(params);
+    return {
+      items: (result.Items || []) as Record<string, any>[],
+      lastEvaluatedKey: result.LastEvaluatedKey as Record<string, any> | undefined
+    };
+  }
+
+  async batchGet(params: BatchGetItemCommandInput): Promise<Record<string, any>[]> {
+    const result = await this.client.batchGet(params);
+    return Object.values(result.Responses || {}).flat() as Record<string, any>[];
+  }
+
+  async batchWrite(params: BatchWriteItemCommandInput): Promise<void> {
+    await this.client.batchWrite(params);
+  }
+
+  async transactWrite(params: TransactWriteItemsCommandInput): Promise<void> {
+    await this.client.transactWrite(params);
+  }
+
+  async transactGet(params: TransactGetItemsCommandInput): Promise<Record<string, any>[]> {
+    const result = await this.client.transactGet(params);
+    return (result.Responses?.map(response => response.Item) || []) as Record<string, any>[];
   }
 } 

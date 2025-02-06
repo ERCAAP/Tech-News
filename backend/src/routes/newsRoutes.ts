@@ -3,20 +3,12 @@ import { protect, restrictTo } from '../middleware/authMiddleware';
 import * as newsController from '../controllers/newsController';
 import { upload, logUploadedFiles } from '../utils/upload';
 import { AppError } from '../utils/AppError';
-
-// Request tipini genişlet
-interface AuthenticatedRequest extends Request {
-  user?: {
-    _id: string;
-    role: string;
-    [key: string]: any;
-  };
-}
+import { AuthRequest } from '../types/express';
 
 const router = express.Router();
 
 // Debug için tüm requestleri logla
-router.use((req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.use((req: Request, res: Response, next: NextFunction) => {
   console.log('\n=== News Route Handler ===');
   console.log('Path:', req.path);
   console.log('Method:', req.method);
@@ -48,17 +40,18 @@ router.route('/:id')
 router.post('/:id/view', newsController.viewNews);
 router.post('/:id/favorite', newsController.toggleFavorite);
 router.get('/user/favorites', newsController.getFavoriteNews);
+
 // Admin only routes
-router.use(restrictTo('admin') as express.RequestHandler);
+router.use(restrictTo('admin'));
 router.get('/favorites/count', newsController.getFavoriteCount);
 router.get('/stats', newsController.getNewsStats);
 
 // Upload endpoint'i ekle
 router.post('/upload', 
   protect, 
-  restrictTo('admin') as express.RequestHandler,
+  restrictTo('admin'),
   upload.single('image'),
-  async (req: AuthenticatedRequest, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       if (!req.file) {
         throw new AppError('No file uploaded', 400);

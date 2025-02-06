@@ -1,8 +1,9 @@
 import express from 'express';
-import * as authController from '../controllers/authController';
+import { AuthController } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
+const authController = new AuthController();
 
 // Test route
 router.get('/test', (req: express.Request, res: express.Response) => {
@@ -10,16 +11,12 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 });
 
 // Public routes
-router.post('/check-email', authController.checkEmail);
-router.post('/login', authController.login);
 router.post('/register', authController.register);
-router.post('/send-verification', authController.sendVerificationCode);
-router.post('/verify-code', authController.verifyCode);
+router.post('/login', authController.login);
 
 // Protected routes
 router.use(protect);
+router.get('/profile', authController.getProfile);
 router.patch('/profile', authController.updateProfile);
-router.get('/me', authController.getMe);
-router.patch('/update-password', authController.updatePassword);
 
 export default router; 

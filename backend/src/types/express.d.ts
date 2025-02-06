@@ -5,13 +5,24 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
+        userId: string;
         email: string;
-        sub: string;
+        role: 'user' | 'admin';
         groups?: string[];
-        [key: string]: any;
+        sub?: string;
       };
       file?: Express.Multer.File;
       files?: Express.Multer.File[];
     }
   }
+}
+
+export interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    email: string;
+    role: 'user' | 'admin';
+    groups?: string[];
+    sub?: string;
+  };
 } 

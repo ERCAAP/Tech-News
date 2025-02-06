@@ -20,17 +20,17 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
     }
 
     const authService = new AuthService();
-    const isValid = await authService.verifyToken(token);
+    const userInfo = await authService.verifyToken(token);
     
-    if (!isValid) {
+    if (!userInfo || !userInfo.email || !userInfo.sub) {
       res.status(401).json({ message: 'Invalid token' });
       return;
     }
 
     // Token geçerliyse kullanıcı bilgilerini request'e ekle
     req.user = {
-      email: isValid.email,
-      sub: isValid.sub
+      email: userInfo.email,
+      sub: userInfo.sub
     };
 
     next();

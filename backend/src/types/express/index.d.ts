@@ -6,8 +6,10 @@ declare global {
       user?: {
         userId: string;
         email: string;
-        role: string;
+        role: 'user' | 'admin';
         groups?: string[];
+        sub?: string;
+        _id?: string;
       };
     }
   }
@@ -17,7 +19,9 @@ export interface AuthRequest extends Request {
   user?: {
     userId: string;
     email: string;
-    role: string;
+    role: 'user' | 'admin';
     groups?: string[];
+    sub?: string;
+    _id?: string;
   };
 } 

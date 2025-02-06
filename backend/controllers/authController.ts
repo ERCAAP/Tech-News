@@ -1,6 +1,22 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { User, IUser } from '../models/User';
+import { AppError } from '../utils/AppError';
+import { asyncHandler } from '../utils/asyncHandler';
+import { logger } from '../utils/logger';
+import nodemailer from 'nodemailer';
 import { AuthService } from '../services/authService';
 import { DynamoDBService } from '../services/dynamoDBService';
+import { AuthRequest } from '../types/express';
+
+function createToken(userId: string): string {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: '1d' }
+  );
+}
 
 export class AuthController {
   private authService: AuthService;
@@ -11,95 +27,128 @@ export class AuthController {
     this.dbService = new DynamoDBService();
   }
 
-  register = async (req: Request, res: Response) => {
-    try {
-      const { email, password, name } = req.body;
+  register = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { email, name } = req.body;
 
-      // Create user in Cognito
-      await this.authService.signUp(email, password, {
-        'custom:name': name,
-        email
-      });
-
-      // Store additional user data in DynamoDB
-      await this.dbService.create(process.env.DYNAMODB_USERS_TABLE!, {
-        userId: email,
-        email,
-        name,
-        createdAt: new Date().toISOString(),
-        preferences: {
-          categories: [],
-          notificationSettings: {
-            newArticles: true,
-            newsletter: true
-          },
-          theme: 'system'
-        }
-      });
-
-      res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ error: error.message });
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      throw new AppError('Email is already registered', 400);
     }
-  };
 
-  login = async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
-      const authResult = await this.authService.signIn(email, password);
-      
-      res.json({
-        token: authResult.AuthenticationResult?.AccessToken,
-        refreshToken: authResult.AuthenticationResult?.RefreshToken
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(401).json({ error: 'Invalid credentials' });
-    }
-  };
-
-  getProfile = async (req: Request, res: Response) => {
-    try {
-      const { email } = req.user!;
-      const user = await this.dbService.get(process.env.DYNAMODB_USERS_TABLE!, {
-        userId: email
-      });
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+    const userId = `user_${Date.now()}`;
+    const user = await User.create({
+      userId,
+      email,
+      name,
+      role: 'user',
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
       }
+    });
 
-      res.json(user);
-    } catch (error) {
-      console.error('Get profile error:', error);
-      res.status(500).json({ error: error.message });
+    const token = createToken(user.userId);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      },
+      token
+    });
+  });
+
+  login = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new AppError('Email ve şifre gereklidir', 400);
     }
-  };
 
-  updateProfile = async (req: Request, res: Response) => {
-    try {
-      const { email } = req.user!;
-      const { name, preferences } = req.body;
-
-      const updates = {
-        name,
-        preferences,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedUser = await this.dbService.update(
-        process.env.DYNAMODB_USERS_TABLE!,
-        { userId: email },
-        updates
-      );
-
-      res.json(updatedUser);
-    } catch (error) {
-      console.error('Update profile error:', error);
-      res.status(500).json({ error: error.message });
+    const user = await User.findByEmail(email);
+    if (!user) {
+      throw new AppError('Geçersiz email veya şifre', 401);
     }
-  };
+
+    const token = createToken(user.userId);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      },
+      token
+    });
+  });
+
+  getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const user = await User.findByEmail(req.user?.email || '');
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          preferences: user.preferences
+        }
+      }
+    });
+  });
+
+  updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const allowedUpdates = ['name', 'preferences'];
+    const updates = Object.keys(req.body)
+      .filter(key => allowedUpdates.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = req.body[key];
+        return obj;
+      }, {} as Partial<IUser>);
+
+    if (Object.keys(updates).length === 0) {
+      throw new AppError('No valid updates provided', 400);
+    }
+
+    const user = await User.findByEmail(req.user?.email || '');
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    Object.assign(user, updates);
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          preferences: user.preferences
+        }
+      }
+    });
+  });
 
   verifyToken = async (req: Request, res: Response) => {
     try {

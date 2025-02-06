@@ -1,37 +1,29 @@
 export class AppError extends Error {
   status: string;
   statusCode: number;
-  code?: string;
   isOperational: boolean;
 
-  constructor(
-    message: string,
-    statusCode: number,
-    code?: string,
-    isOperational: boolean = true
-  ) {
+  constructor(message: string, statusCode: number) {
     super(message);
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
     this.statusCode = statusCode;
-    this.code = code;
-    this.isOperational = isOperational;
+    this.isOperational = true;
 
     Error.captureStackTrace(this, this.constructor);
   }
 
   static fromAWSError(error: any): AppError {
-    if (error.code === 'ConditionalCheckFailedException') {
-      return new AppError('Resource conflict', 409, error.code);
+    switch (error.name) {
+      case 'ConditionalCheckFailedException':
+        return new AppError('Resource already exists or condition check failed', 409);
+      case 'ResourceNotFoundException':
+        return new AppError('Resource not found', 404);
+      case 'ValidationException':
+        return new AppError('Invalid input data', 400);
+      case 'AccessDeniedException':
+        return new AppError('Access denied', 403);
+      default:
+        return new AppError('AWS service error', 503);
     }
-    if (error.code === 'ResourceNotFoundException') {
-      return new AppError('Resource not found', 404, error.code);
-    }
-    if (error.code === 'ValidationException') {
-      return new AppError(error.message, 400, error.code);
-    }
-    if (error.code === 'AccessDeniedException') {
-      return new AppError('Access denied', 403, error.code);
-    }
-    return new AppError('Service unavailable', 503, error.code);
   }
 } 

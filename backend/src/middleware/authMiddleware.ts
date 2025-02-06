@@ -1,55 +1,69 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { AppError } from '../utils/AppError';
+import { User } from '../models/User';
 
-interface JwtPayload {
-  id: string;
+interface CognitoPayload {
+  sub: string;
+  email: string;
+  'cognito:groups'?: string[];
+  [key: string]: any;
 }
 
-// Request tipini genişlet
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
-}
+const cognitoVerifier = CognitoJwtVerifier.create({
+  userPoolId: process.env.COGNITO_USER_POOL_ID!,
+  clientId: process.env.COGNITO_CLIENT_ID!,
+  tokenUse: 'access'
+});
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Token'ı al
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new AppError('Please log in to access this resource', 401);
+    // Get token
+    let token;
+    if (req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return next(new AppError('You are not logged in', 401));
+    }
 
-    // Token'ı doğrula
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'your-secret-key'
-    ) as JwtPayload;
+    // Verify token
+    const payload = (await cognitoVerifier.verify(token)) as unknown as CognitoPayload;
+    if (!payload.email) {
+      return next(new AppError('Invalid token', 401));
+    }
 
-    // Kullanıcıyı bul
-    const user = await User.findById(decoded.id);
+    // Get user
+    const user = await User.findByEmail(payload.email);
     if (!user) {
-      throw new AppError('User not found', 401);
+      return next(new AppError('User no longer exists', 401));
     }
 
-    // Request'e user bilgisini ekle
-    (req as any).user = user;
+    // Add user to request
+    req.user = {
+      userId: user.userId,
+      email: user.email,
+      role: user.role,
+      groups: payload['cognito:groups']
+    };
+
     next();
   } catch (error) {
-    next(new AppError('Authentication failed', 401));
+    next(new AppError('Invalid token', 401));
   }
 };
 
 export const restrictTo = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user?.role || !roles.includes(req.user.role)) {
-      throw new AppError('You do not have permission', 403);
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError('You are not logged in', 401));
     }
+
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission', 403));
+    }
+
     next();
   };
 }; 

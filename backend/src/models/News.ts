@@ -1,5 +1,6 @@
 import { DynamoDBService } from '../services/dynamoDBService';
 import { v4 as uuidv4 } from 'uuid';
+import { AttributeValue } from '@aws-sdk/client-dynamodb';
 
 export interface INews {
   newsId: string;
@@ -19,6 +20,7 @@ export interface INews {
   shareCount: number;
   favorites: string[];
   favoriteCount: number;
+  likes: string[];
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
@@ -53,6 +55,7 @@ class NewsModel {
       shareCount: 0,
       favorites: [],
       favoriteCount: 0,
+      likes: [],
       createdAt: now,
       updatedAt: now,
       publishedAt: newsData.status === 'published' ? now : undefined
@@ -87,12 +90,65 @@ class NewsModel {
       IndexName: 'CategoryIndex',
       KeyConditionExpression: 'category = :category',
       ExpressionAttributeValues: {
-        ':category': category
+        ':category': { S: category } as AttributeValue
       }
     };
 
     const result = await this.dbService.query(params);
     return result.items as INews[];
+  }
+
+  async findByAuthor(authorId: string): Promise<INews[]> {
+    const params = {
+      TableName: this.tableName,
+      IndexName: 'AuthorIndex',
+      KeyConditionExpression: 'authorId = :authorId',
+      ExpressionAttributeValues: {
+        ':authorId': { S: authorId } as AttributeValue
+      }
+    };
+
+    const result = await this.dbService.query(params);
+    return result.items as INews[];
+  }
+
+  async findByFavorites(userId: string): Promise<INews[]> {
+    const params = {
+      TableName: this.tableName,
+      FilterExpression: 'contains(favorites, :userId)',
+      ExpressionAttributeValues: {
+        ':userId': { S: userId } as AttributeValue
+      }
+    };
+
+    const result = await this.dbService.scan(params);
+    return result.items as INews[];
+  }
+
+  async getStats(): Promise<{
+    totalNews: number;
+    totalViews: number;
+    avgViews: number;
+    totalFavorites: number;
+  }> {
+    const params = {
+      TableName: this.tableName
+    };
+
+    const result = await this.dbService.scan(params);
+    const news = result.items as INews[];
+
+    const totalNews = news.length;
+    const totalViews = news.reduce((sum, item) => sum + item.views.total, 0);
+    const avgViews = totalNews > 0 ? totalViews / totalNews : 0;
+    const totalFavorites = news.reduce((sum, item) => sum + item.favoriteCount, 0);
+
+    return {
+      totalNews,
+      totalViews,
+      avgViews,
+      totalFavorites
+    };
   }
 
   private calculateReadTime(content: string): number {

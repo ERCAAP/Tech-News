@@ -1,64 +1,74 @@
-import { CloudWatch } from 'aws-sdk';
+import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs';
 import winston from 'winston';
 
-const cloudWatch = new CloudWatch({
+const cloudWatchLogs = new CloudWatchLogs({
   region: process.env.AWS_REGION
 });
 
-// Create Winston logger with CloudWatch transport
-export const logger = winston.createLogger({
-  level: 'info',
+const logGroupName = process.env.CLOUDWATCH_LOG_GROUP || 'TechNews';
+const logStreamName = process.env.CLOUDWATCH_LOG_STREAM || 'API';
+
+// Winston formatters
+const formatters = {
+  timestamp: winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  json: winston.format.json(),
+  errors: winston.format.errors({ stack: true }),
+  colorize: winston.format.colorize(),
+  simple: winston.format.simple()
+};
+
+// CloudWatch transport
+const cloudWatchTransport = new winston.transports.Console({
   format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
+    formatters.timestamp,
+    formatters.json
+  ),
+  log: async (info, callback) => {
+    try {
+      await cloudWatchLogs.putLogEvents({
+        logGroupName,
+        logStreamName,
+        logEvents: [{
+          timestamp: Date.now(),
+          message: JSON.stringify(info)
+        }]
+      });
+      callback();
+    } catch (error) {
+      console.error('CloudWatch logging error:', error);
+      callback();
+    }
+  }
+});
+
+// Console transport for development
+const consoleTransport = new winston.transports.Console({
+  format: winston.format.combine(
+    formatters.colorize,
+    formatters.timestamp,
+    formatters.simple
+  )
+});
+
+// Create logger instance
+export const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    formatters.timestamp,
+    formatters.errors,
+    formatters.json
   ),
   transports: [
-    new winston.transports.Console({
-      format: winston.format.simple()
-    })
+    process.env.NODE_ENV === 'production' 
+      ? cloudWatchTransport 
+      : consoleTransport
   ]
 });
 
-// Log to CloudWatch
-export const logToCloudWatch = async (
-  logGroupName: string,
-  logStreamName: string,
-  message: string,
-  level: string = 'INFO'
-) => {
-  try {
-    const params = {
-      logGroupName,
-      logStreamName,
-      logEvents: [
-        {
-          message: JSON.stringify({
-            level,
-            message,
-            timestamp: new Date().toISOString()
-          }),
-          timestamp: Date.now()
-        }
-      ]
-    };
-
-    await cloudWatch.putLogEvents(params).promise();
-  } catch (error) {
-    console.error('CloudWatch logging error:', error);
-    // Fall back to console logging
-    console.log(level, message);
-  }
-};
-
-// Override logger methods to also log to CloudWatch
-const originalInfo = logger.info;
-logger.info = function(message: string) {
-  originalInfo.call(this, message);
-  logToCloudWatch('TechNews', 'API', message, 'INFO');
-};
-
-const originalError = logger.error;
-logger.error = function(message: string) {
-  originalError.call(this, message);
-  logToCloudWatch('TechNews', 'API', message, 'ERROR');
+// Export a simplified interface for common log levels
+export const log = {
+  info: (message: string, meta?: any) => logger.info({ message, ...meta }),
+  error: (message: string, meta?: any) => logger.error({ message, ...meta }),
+  warn: (message: string, meta?: any) => logger.warn({ message, ...meta }),
+  debug: (message: string, meta?: any) => logger.debug({ message, ...meta })
 }; 

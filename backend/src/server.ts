@@ -1,16 +1,38 @@
-import app from './app';
 import dotenv from 'dotenv';
-import { initializeAWS } from '../config/aws';
-import { logger } from './utils/logger';
+import { app } from './app';
+import { initializeAWS } from './config/aws';
+import { log } from './utils/logger';
 
+// Load environment variables
 dotenv.config();
 
-// Initialize AWS services
+// Initialize AWS
 initializeAWS();
 
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-  logger.info(`API URL: http://localhost:${PORT}/api/v1`);
+const server = app.listen(port, () => {
+  log.info(`Server running on port ${port}`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err: Error) => {
+  log.error('UNHANDLED REJECTION! Shutting down...', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack
+  });
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err: Error) => {
+  log.error('UNCAUGHT EXCEPTION! Shutting down...', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack
+  });
+  process.exit(1);
 }); 
