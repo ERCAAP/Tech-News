@@ -7,9 +7,9 @@ import { getImageUrl } from '@/utils/imageHelper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { viewNews, deleteNews } from '@/redux/slices/newsSlice';
 import { NewsItem } from '@/types';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { EditNewsModal } from '../../../components/admin/EditNewsModal';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { EditNewsModal } from 'components/admin/EditNewsModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface NewsViews {
   total: number;

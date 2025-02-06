@@ -39,7 +39,7 @@ export const createNews = async (req: Request, res: Response) => {
       title,
       content,
       category,
-      author: (req as AuthRequest).user?._id
+      author: req.user._id
     });
 
     await news.save();
@@ -286,142 +286,94 @@ export async function updateReadingProgress(req: AuthRequest, res: Response, nex
 }
 
 // Favoriye ekleme
-export const addToFavorites = async (req: Request & { user?: any }, res: Response) => {
+export const addToFavorites = async (req: Request, res: Response) => {
   try {
     const newsId = req.params.id;
-    const userId = req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Giriş yapmanız gerekiyor'
-      });
-    }
+    const userId = req.user._id;
 
     const news = await News.findById(newsId);
     if (!news) {
       return res.status(404).json({
         status: 'error',
-        message: 'Haber bulunamadı'
+        message: 'News not found'
       });
     }
 
-    // Update favorites array and increment count
-    await News.findByIdAndUpdate(newsId, {
-      $addToSet: { favorites: userId },
-      $inc: { favoriteCount: 1 }
-    });
+    await news.addToFavorites(userId);
 
-    return res.status(200).json({
-      status: 'success', 
+    res.json({
+      status: 'success',
       data: {
-        isFavorited: true,
         favoriteCount: news.favoriteCount,
-        favorites: news.favorites
+        isFavorited: true
       }
     });
   } catch (error) {
-    console.error('Add to favorites error:', error);
-    return res.status(500).json({
+    res.status(400).json({
       status: 'error',
-      message: 'Favorilere eklenirken bir hata oluştu'
+      message: error.message
     });
   }
 };
 
 // Favoriden çıkarma
-export const removeFromFavorites = async (req: Request & { user?: any }, res: Response) => {
+export const removeFromFavorites = async (req: Request, res: Response) => {
   try {
     const newsId = req.params.id;
-    const userId = req.user?._id;
-
-    console.log('Remove from favorites - User ID:', userId); // Debug için
-
-    if (!userId) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Giriş yapmanız gerekiyor'
-      });
-    }
+    const userId = req.user._id;
 
     const news = await News.findById(newsId);
     if (!news) {
       return res.status(404).json({
         status: 'error',
-        message: 'Haber bulunamadı'
+        message: 'News not found'
       });
     }
 
-    // Favorilerden çıkar
-    const updatedNews = await News.findByIdAndUpdate(
-      newsId,
-      {
-        $pull: { favorites: userId },
-        $inc: { favoriteCount: -1 }
-      },
-      { new: true }
-    );
+    await news.removeFromFavorites(userId);
 
-    if (!updatedNews) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Haber güncellenemedi'
-      });
-    }
-
-    return res.status(200).json({
+    res.json({
       status: 'success',
       data: {
-        isFavorited: false,
-        favoriteCount: updatedNews.favoriteCount,
-        favorites: updatedNews.favorites
+        favoriteCount: news.favoriteCount,
+        isFavorited: false
       }
     });
   } catch (error) {
-    console.error('Remove from favorites error:', error);
-    return res.status(500).json({
+    res.status(400).json({
       status: 'error',
-      message: 'Favorilerden çıkarılırken bir hata oluştu'
+      message: error.message
     });
   }
 };
 
 // Favori durumunu kontrol etme
-export const checkFavoriteStatus = async (req: Request & { user?: any }, res: Response) => {
+export const checkFavoriteStatus = async (req: Request, res: Response) => {
   try {
     const newsId = req.params.id;
-    const userId = req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Giriş yapmanız gerekiyor'
-      });
-    }
+    const userId = req.user._id;
 
     const news = await News.findById(newsId);
     if (!news) {
       return res.status(404).json({
         status: 'error',
-        message: 'Haber bulunamadı'
+        message: 'News not found'
       });
     }
 
     const isFavorited = news.favorites.includes(userId);
 
-    return res.status(200).json({
+    res.json({
       status: 'success',
       data: {
         isFavorited,
-        favoriteCount: news.favoriteCount,
-        favorites: news.favorites
+        favoriteCount: news.favoriteCount
       }
     });
   } catch (error) {
-    console.error('Check favorite status error:', error);
-    return res.status(500).json({
+    res.status(400).json({
       status: 'error',
-      message: 'Favori durumu kontrol edilirken bir hata oluştu'
+      message: error.message
     });
   }
 }; 

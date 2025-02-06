@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput, Share, ToastAndroid, RefreshControl } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput, Share } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -20,7 +20,6 @@ import * as MailComposer from 'expo-mail-composer';
 import * as Localization from 'expo-localization';
 import { OPENAI_API_KEY } from '../../../constants/config';
 import axiosInstance from '@/api/axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const categoryMapping: { [key: string]: string } = {
   'App Development': 'app-development',
@@ -131,7 +130,6 @@ export default function NewsDetailScreen() {
   const dispatch = useAppDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = isUserAdmin(user);
-  const isLoggedIn = !!user;
   
   const { news } = useAppSelector(state => state.news);
   const newsItem = news.find((item: NewsItem) => item._id === id);
@@ -151,7 +149,6 @@ export default function NewsDetailScreen() {
   const [showOriginal, setShowOriginal] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
 
   const categories = [
     { label: 'Select a category', value: '' },
@@ -566,59 +563,10 @@ export default function NewsDetailScreen() {
     }
   };
 
-  // Token kontrolü için useEffect
-  useEffect(() => {
-    const setAuthToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        if (token) {
-          // Token'ı header'a ekle
-          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          console.log('Token set:', token); // Debug için
-        }
-      } catch (error) {
-        console.error('Token set error:', error);
-      }
-    };
-
-    setAuthToken();
-  }, []);
-
-  // Favori ekleme/çıkarma işlemi
-  const handleFavoritePress = async () => {
-    try {
-      if (!isLoggedIn) {
-        Alert.alert('Uyarı', 'Lütfen giriş yapın');
-        return;
-      }
-
-      const method = isFavorited ? 'delete' : 'post';
-      const response = await axiosInstance[method]<FavoriteResponse>(`/news/${id}/favorite`);
-      
-      if (response.data.status === 'success') {
-        setIsFavorited(response.data.data.isFavorited);
-        setFavoriteCount(response.data.data.favoriteCount);
-        
-        ToastAndroid.show(
-          isFavorited ? 'Favorilerden çıkarıldı' : 'Favorilere eklendi',
-          ToastAndroid.SHORT
-        );
-      }
-    } catch (error: any) {
-      console.error('Favorite toggle error:', error);
-      Alert.alert(
-        'Hata',
-        error.response?.data?.message || 'Favori durumu güncellenemedi'
-      );
-    }
-  };
-
-  // Favori durumunu kontrol eden useEffect
+  // Favori durumunu kontrol et
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       try {
-        if (!isLoggedIn) return;
-
         const response = await axiosInstance.get<FavoriteResponse>(`/news/${id}/favorite`);
         if (response.data.status === 'success') {
           setIsFavorited(response.data.data.isFavorited);
@@ -629,37 +577,26 @@ export default function NewsDetailScreen() {
       }
     };
 
-    if (id) {
+    if (id && !isAdmin) {
       checkFavoriteStatus();
     }
-  }, [id, isLoggedIn]);
+  }, [id, isAdmin]);
 
-  const onRefresh = useCallback(async () => {
+  // Favori ekleme/çıkarma işlemi
+  const handleFavoritePress = async () => {
     try {
-      setRefreshing(true);
-      // Haberi yeniden yükle
-      await dispatch(fetchNews());
-      // Favori durumunu kontrol et
-      const checkFavoriteStatus = async () => {
-        try {
-          if (!isLoggedIn) return;
-
-          const response = await axiosInstance.get<FavoriteResponse>(`/news/${id}/favorite`);
-          if (response.data.status === 'success') {
-            setIsFavorited(response.data.data.isFavorited);
-            setFavoriteCount(response.data.data.favoriteCount);
-          }
-        } catch (error) {
-          console.error('Check favorite status error:', error);
-        }
-      };
-      await checkFavoriteStatus();
+      const method = isFavorited ? 'delete' : 'post';
+      const response = await axiosInstance[method]<FavoriteResponse>(`/news/${id}/favorite`);
+      
+      if (response.data.status === 'success') {
+        setIsFavorited(response.data.data.isFavorited);
+        setFavoriteCount(response.data.data.favoriteCount);
+      }
     } catch (error) {
-      console.error('Refresh error:', error);
-    } finally {
-      setRefreshing(false);
+      console.error('Favorite toggle error:', error);
+      Alert.alert('Error', 'Failed to update favorite status');
     }
-  }, [id]);
+  };
 
   if (!newsItem) {
     return <Loading />;
@@ -676,15 +613,6 @@ export default function NewsDetailScreen() {
         contentContainerStyle={{
           paddingBottom: insets.bottom + 80
         }}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-            tintColor={COLORS.primary}
-            title="Yenileniyor..."
-          />
-        }
       >
         {coverImageUrl ? (
           <View style={styles.imageContainer}>
@@ -696,60 +624,82 @@ export default function NewsDetailScreen() {
             />
             <View style={styles.overlay} />
             <View style={styles.headerControls}>
-              <View style={styles.categoryBadge}>
-                <MaterialIcons name="memory" size={16} color={COLORS.white} />
-                <Text style={styles.categoryText}>AI</Text>
-              </View>
-
-              <View style={styles.rightControls}>
-                {isLoggedIn && (
-                  <TouchableOpacity
-                    style={styles.favoriteButton}
-                    onPress={handleFavoritePress}
-                  >
-                    <MaterialIcons
-                      name={isFavorited ? "favorite" : "favorite-border"}
-                      size={24}
-                      color={isFavorited ? COLORS.error : COLORS.white}
-                    />
-                    <Text style={styles.favoriteCount}>{favoriteCount}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {isAdmin && (
-                  <View style={styles.adminControls}>
-                    <View style={styles.viewCountContainer}>
-                      <MaterialIcons name="visibility" size={20} color={COLORS.white} />
-                      <Text style={styles.viewCountText}>
-                        {typeof newsItem.views === 'number' ? newsItem.views : 0}
-                      </Text>
-                    </View>
-                    
-                    <View style={styles.adminActions}>
-                      <TouchableOpacity
-                        style={styles.adminButton}
-                        onPress={handleShare}
-                      >
-                        <MaterialIcons name="share" size={20} color={COLORS.white} />
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        style={styles.adminButton}
-                        onPress={handleEdit}
-                      >
-                        <MaterialIcons name="edit" size={20} color={COLORS.white} />
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        style={[styles.adminButton, styles.deleteButton]}
-                        onPress={handleDelete}
-                      >
-                        <MaterialIcons name="delete" size={20} color={COLORS.error} />
-                      </TouchableOpacity>
-                    </View>
+              {isAdmin ? (
+                <View style={styles.adminControls}>
+                  <View style={styles.viewCountContainer}>
+                    <MaterialIcons name="visibility" size={20} color={COLORS.white} />
+                    <Text style={styles.viewCountText}>
+                      {typeof newsItem.views === 'number' ? newsItem.views : 0}
+                    </Text>
                   </View>
-                )}
-              </View>
+                  
+                  <View style={styles.adminActions}>
+                    <TouchableOpacity
+                      style={styles.adminButton}
+                      onPress={handleShare}
+                    >
+                      <MaterialIcons name="share" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.adminButton}
+                      onPress={handleEdit}
+                    >
+                      <MaterialIcons name="edit" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={[styles.adminButton, styles.deleteButton]}
+                      onPress={handleDelete}
+                    >
+                      <MaterialIcons name="delete" size={20} color={COLORS.error} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.userControls}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleShare}
+                  >
+                    <MaterialIcons name="share" size={20} color={COLORS.white} />
+                    <Text style={styles.actionButtonText}>Paylaş</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={handleContactUs}
+                  >
+                    <MaterialIcons name="mail" size={20} color={COLORS.white} />
+                    <Text style={styles.actionButtonText}>İletişim</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <TouchableOpacity
+                style={[styles.translationButton, isTranslating && styles.disabledButton]}
+                onPress={() => {
+                  if (translatedContent) {
+                    setShowOriginal(!showOriginal);
+                  } else {
+                    handleTranslateContent();
+                  }
+                }}
+                disabled={isTranslating}
+              >
+                <MaterialIcons 
+                  name={translatedContent ? (showOriginal ? "g-translate" : "language") : "g-translate"} 
+                  size={20} 
+                  color={COLORS.white} 
+                />
+                <Text style={styles.translationButtonText}>
+                  {isTranslating ? 'Çeviriliyor...' : 
+                   translatedContent ? (showOriginal ? 'Çeviri' : 'Orijinal') : 
+                   'Çevir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{newsItem.category}</Text>
             </View>
           </View>
         ) : null}
@@ -770,6 +720,22 @@ export default function NewsDetailScreen() {
             <Text style={styles.date}>
               {new Date(newsItem.createdAt).toLocaleDateString()}
             </Text>
+            
+            {!isAdmin && (
+              <TouchableOpacity
+                style={styles.favoriteButton}
+                onPress={handleFavoritePress}
+              >
+                <MaterialIcons
+                  name={isFavorited ? "favorite" : "favorite-border"}
+                  size={24}
+                  color={isFavorited ? COLORS.error : COLORS.gray}
+                />
+                {favoriteCount > 0 && (
+                  <Text style={styles.favoriteCount}>{favoriteCount}</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
           {renderContent(newsItem.content)}
@@ -923,80 +889,20 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.2)',
   },
-  headerControls: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
   categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
   },
   categoryText: {
     color: COLORS.white,
-    marginLeft: 4,
     fontSize: 14,
     fontFamily: FONTS.medium,
-  },
-  rightControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  favoriteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  favoriteCount: {
-    color: COLORS.white,
-    marginLeft: 4,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-  },
-  adminControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  viewCountContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  viewCountText: {
-    marginLeft: 6,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: COLORS.white,
-  },
-  adminActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  adminButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 8,
-    borderRadius: 20,
-  },
-  deleteButton: {
-    backgroundColor: 'rgba(255, 0, 0, 0.3)',
+    textTransform: 'uppercase',
   },
   content: {
     padding: 20,
@@ -1049,6 +955,52 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginVertical: 8,
   },
+  viewCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  viewCountText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.white,
+  },
+  statsContainer: {
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  statItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: COLORS.dark,
+  },
+  statLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
+  },
+  stats: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  statText: {
+    marginLeft: 4,
+    color: COLORS.gray,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+  },
   urlPreviewContainer: {
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
@@ -1082,6 +1034,60 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     color: COLORS.primary,
     textDecorationLine: 'underline',
+  },
+  adminControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  
+  adminActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  adminButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    padding: 8,
+    borderRadius: 20,
+  },
+
+  deleteButton: {
+    backgroundColor: 'rgba(255, 0, 0, 0.3)',
+  },
+
+  userControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+
+  actionButtonText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.white,
+  },
+
+  headerControls: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    left: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -1249,4 +1255,16 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
+  favoriteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    padding: 8,
+  },
+  favoriteCount: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: COLORS.gray,
+  }
 }); 

@@ -56,8 +56,9 @@ export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
     data: { news }
   });
 });
+
 // Haber oluştur
-export const createNews = asyncHandler(async (req: Request, res: Response) => {
+export const createNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   try {
     console.log('Create News Request:', {
       body: req.body,
@@ -173,8 +174,9 @@ export const deleteNews = asyncHandler(async (req: Request, res: Response) => {
     data: null
   });
 });
+
 // Görüntülenme sayısını artır
-export const viewNews = asyncHandler(async (req: Request, res: Response) => {
+export const viewNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const news = await News.findByIdAndUpdate(
     req.params.id,
     { $inc: { views: 1 } },
@@ -190,9 +192,10 @@ export const viewNews = asyncHandler(async (req: Request, res: Response) => {
     data: { views: news.views }
   });
 });
+
 // Favorilere ekle/çıkar
-export const toggleFavorite = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user?._id) {
+export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
     throw new AppError('Unauthorized', 401);
   }
 
@@ -238,8 +241,9 @@ export const toggleFavorite = asyncHandler(async (req: Request, res: Response) =
     }
   });
 });
+
 // Kullanıcının favori haberlerini getir
-export const getFavoriteNews = asyncHandler(async (req: Request, res: Response) => {
+export const getFavoriteNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!req.user?.id) {
     throw new AppError('Unauthorized', 401);
   }
@@ -292,7 +296,7 @@ export const getNewsStats = asyncHandler(async (req: Request, res: Response) => 
 });
 
 // Like/Unlike işlemleri
-export const likeNews = asyncHandler(async (req: Request, res: Response) => {
+export const likeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!req.user?._id) {
     throw new AppError('Unauthorized', 401);
   }
@@ -315,7 +319,7 @@ export const likeNews = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const unlikeNews = asyncHandler(async (req: Request, res: Response) => {
+export const unlikeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!req.user?._id) {
     throw new AppError('Unauthorized', 401);
   }
@@ -337,9 +341,10 @@ export const unlikeNews = asyncHandler(async (req: Request, res: Response) => {
     data: { news }
   });
 });
+
 // Kullanıcının favori haber sayısını getir
-export const getFavoriteCount = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user?._id) {
+export const getFavoriteCount = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
     throw new AppError('Unauthorized', 401);
   }
 
@@ -352,9 +357,10 @@ export const getFavoriteCount = asyncHandler(async (req: Request, res: Response)
     count
   });
 });
+
 // Favori durumunu kontrol et
-export const checkFavoriteStatus = asyncHandler(async (req: Request, res: Response) => {
-  if (!req.user?._id) {
+export const checkFavoriteStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.id) {
     throw new AppError('Unauthorized', 401);
   }
 
@@ -374,131 +380,4 @@ export const checkFavoriteStatus = asyncHandler(async (req: Request, res: Respon
       isFavorited
     }
   });
-});
-
-// Favorilere ekle
-export const addToFavorites = async (req: Request & { user?: any }, res: Response) => {
-  try {
-    const newsId = req.params.id;
-    const userId = req.user?._id;
-
-    console.log('Add to favorites - User:', req.user); // Debug için
-
-    if (!userId) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Giriş yapmanız gerekiyor'
-      });
-    }
-
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      {
-        $addToSet: { favorites: userId },
-        $inc: { favoriteCount: 1 }
-      },
-      { new: true }
-    );
-
-    if (!news) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Haber bulunamadı'
-      });
-    }
-
-    return res.status(200).json({
-      status: 'success',
-      data: {
-        isFavorited: true,
-        favoriteCount: news.favoriteCount,
-        favorites: news.favorites
-      }
-    });
-  } catch (error) {
-    console.error('Add to favorites error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Favorilere eklenirken bir hata oluştu'
-    });
-  }
-};
-
-// Favorilerden çıkar
-export const removeFromFavorites = async (req: Request & { user?: any }, res: Response) => {
-  try {
-    const newsId = req.params.id;
-    const userId = req.user?._id;
-
-    console.log('Remove from favorites - User:', req.user); // Debug için
-
-    if (!userId) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Giriş yapmanız gerekiyor'
-      });
-    }
-
-    const news = await News.findByIdAndUpdate(
-      newsId,
-      {
-        $pull: { favorites: userId },
-        $inc: { favoriteCount: -1 }
-      },
-      { new: true }
-    );
-
-    if (!news) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Haber bulunamadı'
-      });
-    }
-
-    return res.status(200).json({
-      status: 'success',
-      data: {
-        isFavorited: false,
-        favoriteCount: news.favoriteCount,
-        favorites: news.favorites
-      }
-    });
-  } catch (error) {
-    console.error('Remove from favorites error:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Favorilerden çıkarılırken bir hata oluştu'
-    });
-  }
-};
-
-// Benzer haberleri getir
-export const getSimilarNews = async (req: Request, res: Response) => {
-  try {
-    const news = await News.findById(req.params.id);
-    if (!news) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Haber bulunamadı'
-      });
-    }
-
-    const similarNews = await News.find({
-      category: news.category,
-      _id: { $ne: news._id }
-    })
-    .limit(3)
-    .populate('author', 'firstName lastName');
-
-    res.status(200).json({
-      status: 'success',
-      data: { news: similarNews }
-    });
-  } catch (error) {
-    console.error('Get similar news error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Benzer haberler getirilirken bir hata oluştu'
-    });
-  }
-}; 
+}); 

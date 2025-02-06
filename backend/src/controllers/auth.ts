@@ -8,49 +8,22 @@ export const authController = {
     try {
       console.log('👉 Login attempt:', { email: req.body.email });
       const { email, password } = req.body;
-
-      // Email ve şifre kontrolü
-      if (!email || !password) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Email ve şifre gerekli'
-        });
-      }
-
-      // Kullanıcıyı bul ve şifreyi seç
-      const user = await User.findOne({ email }).select('+password');
+      const user = await User.findOne({ email });
 
       if (!user) {
         console.log('❌ Login failed: User not found:', email);
         return res.status(401).json({
           status: 'error',
-          message: 'Geçersiz kimlik bilgileri'
-        });
-      }
-
-      // Debug için
-      console.log('Found user:', {
-        id: user._id,
-        email: user.email,
-        hasPassword: !!user.password
-      });
-
-      // Şifre kontrolü
-      if (!user.password) {
-        console.log('❌ Login failed: No password set for user:', email);
-        return res.status(401).json({
-          status: 'error',
-          message: 'Geçersiz kimlik bilgileri'
+          message: 'Invalid credentials'
         });
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
-      
       if (!isMatch) {
         console.log('❌ Login failed: Invalid password for user:', email);
         return res.status(401).json({
           status: 'error',
-          message: 'Geçersiz kimlik bilgileri'
+          message: 'Invalid credentials'
         });
       }
 
@@ -199,27 +172,10 @@ export const authController = {
 
   getMe: async (req: Request, res: Response) => {
     try {
-      // Check if req.user exists
-      if (!req.user) {
-        console.log('❌ GetMe failed: No user in request');
-        return res.status(401).json({
-          status: 'error', 
-          message: 'Not authenticated'
-        });
-      }
-
       console.log('👉 GetMe request for user:', req.user._id);
       const user = await User.findById(req.user._id).select('-password');
-
-      if (!user) {
-        console.log('❌ GetMe failed: User not found');
-        return res.status(404).json({
-          status: 'error',
-          message: 'User not found'
-        });
-      }
       
-      console.log('✅ GetMe successful:', { userId: user._id });
+      console.log('✅ GetMe successful:', { userId: user?._id });
       res.json({
         status: 'success',
         data: { user }
@@ -235,15 +191,6 @@ export const authController = {
 
   updateProfile: async (req: Request, res: Response) => {
     try {
-      // Check if req.user exists
-      if (!req.user) {
-        console.log('❌ UpdateProfile failed: No user in request');
-        return res.status(401).json({
-          status: 'error',
-          message: 'Not authenticated'
-        });
-      }
-
       console.log('👉 UpdateProfile request:', {
         userId: req.user._id,
         updates: req.body
@@ -296,14 +243,7 @@ export const authController = {
 
   getFavoriteNews: async (req: Request, res: Response) => {
     try {
-      const userId = req.user?._id;
-      if (!userId) {
-        return res.status(401).json({
-          status: 'error', 
-          message: 'Unauthorized - User not found'
-        });
-      }
-
+      const userId = req.user._id;
       const user = await User.findById(userId)
         .populate('favoriteNews')
         .select('favoriteNews');
