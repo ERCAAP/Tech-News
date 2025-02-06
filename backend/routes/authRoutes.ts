@@ -11,12 +11,12 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 });
 
 // Public routes
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/register', (req, res, next) => authController.register(req, res, next));
+router.post('/login', (req, res, next) => authController.login(req, res, next));
 
 // Protected routes
 router.use(auth);
-router.get('/profile', authController.getProfile);
-router.patch('/profile', authController.updateProfile);
+router.get('/profile', (req, res, next) => authController.getProfile(req, res, next));
+router.patch('/profile', (req, res, next) => authController.updateProfile(req, res, next));
 
 export default router; 

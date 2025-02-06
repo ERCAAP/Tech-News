@@ -1,6 +1,7 @@
 import multer from 'multer';
 import { S3Service } from '../services/s3Service';
 import { Request, Response, NextFunction } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
 const s3Service = new S3Service();
 
@@ -18,7 +19,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 };
 
 // Multer config
-export const upload = multer({
+export const multerUpload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
@@ -27,7 +28,7 @@ export const upload = multer({
 });
 
 // Upload to S3
-export const uploadToS3 = async (file: Express.Multer.File, folder: string = 'uploads'): Promise<string> => {
+export async function uploadToS3(file: Express.Multer.File, folder: string = 'uploads'): Promise<string> {
   try {
     const key = `${folder}/${Date.now()}-${file.originalname}`;
     const url = await s3Service.uploadFile(file.buffer, key, file.mimetype);
@@ -36,10 +37,15 @@ export const uploadToS3 = async (file: Express.Multer.File, folder: string = 'up
     console.error('S3 upload error:', error);
     throw new Error('Failed to upload file to S3');
   }
-};
+}
 
 // Log uploaded files
 export const logUploadedFiles = (req: Request, res: Response, next: Function) => {
   console.log('Uploaded files:', req.files);
   next();
-}; 
+};
+
+export async function uploadFile(file: Buffer, originalName: string, contentType: string): Promise<string> {
+  const key = `uploads/${uuidv4()}-${originalName}`;
+  return s3Service.uploadFile(file, key, contentType);
+} 

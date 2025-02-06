@@ -1,39 +1,28 @@
-import multer from 'multer';
-import path from 'path';
+import { upload } from './upload';
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export async function uploadImage(file: Buffer, originalName: string, mimeType: string): Promise<string> {
+  // Validate mime type
+  if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+    throw new Error('Invalid file type. Only JPEG, PNG, GIF and WebP are allowed.');
   }
-});
 
-// Multer upload configuration
-export const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (extname && mimetype) {
-      return cb(null, true);
-    }
-    cb(new Error('Only image files are allowed!'));
+  // Validate file size
+  if (file.length > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds limit. Maximum size is 5MB.');
   }
-});
 
-export const uploadImage = (file: Express.Multer.File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const filename = `${Date.now()}-${file.originalname}`;
-    const filepath = `/uploads/${filename}`;
-    resolve(filepath);
-  });
-}; 
+  return upload(file, originalName, mimeType);
+}
+
+export function validateImageFile(file: Express.Multer.File): void {
+  if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    throw new Error('Invalid file type. Only JPEG, PNG, GIF and WebP are allowed.');
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds limit. Maximum size is 5MB.');
+  }
+} 

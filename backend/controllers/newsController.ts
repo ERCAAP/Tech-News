@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
-import { News } from '../models/News';
+import { News, INews } from '../models/News';
 import { User } from '../models/User';
 import { sendNotification } from '../services/notificationService';
 import { DynamoDBService } from '../services/dynamoDBService';
@@ -10,23 +9,285 @@ import { AuthRequest } from '../types/express';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
-// import { upload } from '../utils/upload';
-// import { uploadImage } from '../utils/imageUpload';
+import { CloudWatch } from '@aws-sdk/client-cloudwatch';
+import { upload } from '../src/utils/upload';
+import { uploadImage, validateImageFile } from '../src/utils/imageUpload';
 
-// Helper function to convert string to ObjectId
-function toObjectId(id: string | undefined): mongoose.Types.ObjectId {
+const cloudWatch = new CloudWatch({
+  region: process.env.AWS_REGION
+});
+
+interface ViewRecord {
+  viewKey: string;
+  newsId: string;
+  userId: string;
+  viewedAt: string;
+}
+
+// Helper function to validate ID
+function validateId(id: string | undefined): string {
   if (!id) throw new Error('Invalid ID');
-  return new mongoose.Types.ObjectId(id);
+  return id;
 }
 
-export async function getAllNews(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const news = await News.find().sort({ createdAt: -1 });
-    res.json(news);
-  } catch (error) {
-    next(error);
+// Get all news
+export const getAllNews = asyncHandler(async (req: Request, res: Response) => {
+  const news = await News.scan();
+
+  res.status(200).json({
+    status: 'success',
+    results: news.length,
+    data: { news }
+  });
+});
+
+// Get news by ID
+export const getNewsById = asyncHandler(async (req: Request, res: Response) => {
+  const news = await News.findById(req.params.id);
+
+  if (!news) {
+    throw new AppError('News not found', 404);
   }
-}
+
+  res.status(200).json({
+    status: 'success',
+    data: { news }
+  });
+});
+
+// Create news
+export const createNews = asyncHandler<AuthRequest>(async (req, res) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  let imageUrl: string | undefined;
+  if (req.file) {
+    validateImageFile(req.file);
+    imageUrl = await uploadImage(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+  }
+
+  const newsData: INews = {
+    newsId: uuidv4(),
+    title: req.body.title,
+    content: req.body.content,
+    category: req.body.category,
+    authorId: req.user.userId,
+    status: 'published',
+    imageUrl,
+    tags: req.body.tags || [],
+    views: {
+      total: 0,
+      unique: 0,
+      history: [],
+      last24Hours: 0
+    },
+    shareCount: 0,
+    likes: [],
+    favorites: [],
+    favoriteCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const news = await News.create(newsData);
+
+  res.status(201).json({
+    status: 'success',
+    data: { news }
+  });
+});
+
+// Update news
+export const updateNews = asyncHandler<AuthRequest>(async (req, res) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const newsId = req.params.id;
+  const news = await News.findById(newsId);
+
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  let imageUrl = news.imageUrl;
+  if (req.file) {
+    validateImageFile(req.file);
+    // Delete old image if exists
+    if (imageUrl) {
+      const oldKey = imageUrl.split('/').pop() || '';
+      await this.s3Service.deleteFile(oldKey);
+    }
+
+    // Upload new image
+    imageUrl = await uploadImage(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype
+    );
+  }
+
+  const updatedNews = await News.update(newsId, {
+    ...req.body,
+    imageUrl,
+    updatedAt: new Date().toISOString()
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { news: updatedNews }
+  });
+});
+
+// Delete news
+export const deleteNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  await News.delete(req.params.id);
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+// View news
+export const viewNews = asyncHandler<AuthRequest>(async (req, res) => {
+  const newsId = req.params.id;
+  const userId = req.user?.userId;
+
+  const news = await News.findById(newsId);
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  const now = new Date().toISOString();
+  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  // Filter out views older than 24 hours
+  const recentViews = news.views.history.filter(view => view.timestamp > last24Hours);
+
+  // Check if user has viewed in last 24 hours
+  const hasRecentView = userId && recentViews.some(view => view.userId === userId);
+
+  if (!hasRecentView) {
+    // Add new view
+    const updatedHistory = [
+      ...recentViews,
+      ...(userId ? [{ userId, timestamp: now }] : [])
+    ];
+
+    const updatedViews: INews['views'] = {
+      total: news.views.total + 1,
+      unique: userId ? new Set(updatedHistory.map(v => v.userId)).size : news.views.unique,
+      history: updatedHistory,
+      last24Hours: updatedHistory.length
+    };
+
+    const updatedNews = await News.update(newsId, {
+      views: updatedViews
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { views: updatedViews }
+    });
+  } else {
+    res.status(200).json({
+      status: 'success',
+      data: { views: news.views }
+    });
+  }
+});
+
+// Toggle favorite
+export const toggleFavorite = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const newsId = req.params.id;
+  const userId = req.user.userId;
+
+  const news = await News.findById(newsId);
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  const isFavorited = news.favorites.includes(userId);
+  const updatedFavorites = isFavorited 
+    ? news.favorites.filter(id => id !== userId)
+    : [...news.favorites, userId];
+
+  const updatedNews = await News.update(newsId, {
+    favorites: updatedFavorites,
+    favoriteCount: updatedFavorites.length
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      isFavorited: !isFavorited,
+      favoriteCount: updatedNews?.favoriteCount
+    }
+  });
+});
+
+// Like/Unlike news
+export const likeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const newsId = req.params.id;
+  const userId = req.user.userId;
+
+  const news = await News.findById(newsId);
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  const updatedLikes = Array.from(new Set([...news.likes, userId]));
+  const updatedNews = await News.update(newsId, {
+    likes: updatedLikes
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { news: updatedNews }
+  });
+});
+
+export const unlikeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError('Unauthorized', 401);
+  }
+
+  const newsId = req.params.id;
+  const userId = req.user.userId;
+
+  const news = await News.findById(newsId);
+  if (!news) {
+    throw new AppError('News not found', 404);
+  }
+
+  const updatedLikes = news.likes.filter(id => id !== userId);
+  const updatedNews = await News.update(newsId, {
+    likes: updatedLikes
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { news: updatedNews }
+  });
+});
 
 export class NewsController {
   private dbService: DynamoDBService;
@@ -37,22 +298,22 @@ export class NewsController {
     this.s3Service = new S3Service();
   }
 
-  createNews = asyncHandler(async (req: AuthRequest, res: Response) => {
-    if (!req.user?.userId) {
-      throw new AppError('Unauthorized - User not found', 401);
-    }
-
-    const newsData = {
-      ...req.body,
-      authorId: req.user.userId,
-      category: req.body.category.toLowerCase().trim(),
-      status: 'published',
-    };
-
-    const news = await News.create(newsData);
-
-    res.status(201).json({
+  getAllNews = asyncHandler(async (req: Request, res: Response) => {
+    const news = await News.scan();
+    
+    res.status(200).json({
       status: 'success',
+      data: { news }
+    });
+  });
+
+  getNewsByCategory = asyncHandler(async (req: Request, res: Response) => {
+    const { category } = req.params;
+    const news = await News.query('category', category);
+    
+    res.status(200).json({
+      status: 'success',
+      results: news.length,
       data: { news }
     });
   });
@@ -67,20 +328,30 @@ export class NewsController {
     // Update view count
     const userId = req.user?.userId;
     if (userId) {
-      const viewKey = `${news._id}-${userId}`;
-      const viewRecord = await this.dbService.get('NewsViews', { viewKey });
+      const viewKey = `${news.newsId}-${userId}`;
+      const viewRecord = await this.dbService.get('NewsViews', { viewKey }) as ViewRecord | null;
       
       if (!viewRecord) {
+        const timestamp = new Date().toISOString();
+        
         await this.dbService.create('NewsViews', {
           viewKey,
-          newsId: news._id,
+          newsId: news.newsId,
           userId,
-          viewedAt: new Date().toISOString()
+          viewedAt: timestamp
         });
 
-        await News.findByIdAndUpdate(news._id, {
-          $inc: { 'views.total': 1, 'views.unique': 1 }
+        const updatedViews = {
+          total: news.views.total + 1,
+          unique: news.views.unique + 1
+        };
+
+        await News.update(news.newsId, {
+          views: updatedViews,
+          updatedAt: timestamp
         });
+
+        news.views = updatedViews;
       }
     }
 
@@ -119,58 +390,6 @@ export class NewsController {
     }
   };
 
-  updateNews = async (req: Request, res: Response) => {
-    try {
-      const { newsId } = req.params;
-      const { title, content, category } = req.body;
-      const file = req.file;
-
-      const existingNews = await this.dbService.get(process.env.DYNAMODB_NEWS_TABLE!, {
-        newsId
-      });
-
-      if (!existingNews) {
-        return res.status(404).json({ error: 'News not found' });
-      }
-
-      let imageUrl = existingNews.imageUrl;
-      if (file) {
-        // Delete old image if exists
-        if (existingNews.imageUrl) {
-          const oldKey = existingNews.imageUrl.split('/').pop();
-          await this.s3Service.deleteFile(oldKey);
-        }
-
-        // Upload new image
-        const key = `news/${uuidv4()}-${file.originalname}`;
-        imageUrl = await this.s3Service.uploadFile(
-          file.buffer,
-          key,
-          file.mimetype
-        );
-      }
-
-      const updates = {
-        title: title || existingNews.title,
-        content: content || existingNews.content,
-        category: category || existingNews.category,
-        imageUrl,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedNews = await this.dbService.update(
-        process.env.DYNAMODB_NEWS_TABLE!,
-        { newsId },
-        updates
-      );
-
-      res.json(updatedNews);
-    } catch (error) {
-      console.error('Update news error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  };
-
   deleteNews = async (req: Request, res: Response) => {
     try {
       const { newsId } = req.params;
@@ -197,126 +416,74 @@ export class NewsController {
     }
   };
 
-  viewNews = async (req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user?.userId) {
-        res.status(401).json({ message: 'Authentication required' });
-        return;
-      }
-
-      const news = await News.findById(req.params.id);
-      if (!news) {
-        res.status(404).json({ message: 'News not found' });
-        return;
-      }
-
-      const userId = toObjectId(req.user.userId);
-      
-      // Son 24 saat içinde aynı kullanıcıdan görüntüleme var mı kontrol et
-      const lastView = news.views.history.find(view => 
-        view.userId.toString() === userId.toString() && 
-        new Date(view.timestamp).getTime() > Date.now() - 24 * 60 * 60 * 1000
-      );
-
-      if (!lastView) {
-        // Yeni görüntüleme ekle
-        news.views.total += 1;
-        news.views.history.push({
-          userId,
-          timestamp: new Date()
-        });
-
-        // Tekil görüntüleme sayısını güncelle
-        const uniqueUserIds = new Set(news.views.history.map(v => v.userId.toString()));
-        news.views.unique = uniqueUserIds.size;
-
-        // Son 24 saatteki görüntülenmeleri hesapla
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        news.views.last24Hours = news.views.history.filter(
-          view => view.timestamp > oneDayAgo
-        ).length;
-
-        await news.save();
-      }
-
-      res.json({
-        status: 'success',
-        data: { views: news.views }
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
   // Benzer haberleri getir
-  getSimilarNews = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const news = await News.findById(id);
-      
-      if (!news) {
-        return res.status(404).json({ message: 'News not found' });
-      }
-
-      const similar = await News.find({
-        category: news.category,
-        _id: { $ne: news._id },
-        status: 'published'
-      })
-      .sort({ publishedAt: -1 })
-      .limit(3)
-      .populate('author', 'firstName lastName');
-
-      return res.json({ similar });
-    } catch (error) {
-      console.error('Get similar news error:', error);
-      return res.status(500).json({ message: 'Failed to get similar news' });
+  getSimilarNews = asyncHandler(async (req: Request, res: Response) => {
+    const news = await News.findById(req.params.id);
+    if (!news) {
+      throw new AppError('News not found', 404);
     }
-  };
+
+    const similarNews = await News.query('category', news.category);
+    const filtered = similarNews.filter(item => item.newsId !== news.newsId)
+      .slice(0, 3);
+
+    res.status(200).json({
+      status: 'success',
+      data: { news: filtered }
+    });
+  });
 
   // Haberi paylaş
-  shareNews = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const { platform } = req.body; // 'twitter', 'facebook', etc.
+  shareNews = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { platform } = req.body;
 
-      await News.findByIdAndUpdate(id, {
-        $inc: { shareCount: 1 }
-      });
-
-      return res.json({ message: 'Share count updated' });
-    } catch (error) {
-      console.error('Share news error:', error);
-      return res.status(500).json({ message: 'Failed to update share count' });
+    const news = await News.findById(id);
+    if (!news) {
+      throw new AppError('News not found', 404);
     }
-  };
+
+    const updatedNews = await News.update(id, {
+      shareCount: (news.shareCount || 0) + 1,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: `News shared on ${platform}`,
+      data: { news: updatedNews }
+    });
+  });
 
   // Okuma geçmişine ekle
-  updateReadingProgress = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      if (!req.user?.userId) {
-        res.status(401).json({ message: 'Authentication required' });
-        return;
-      }
+  updateReadingProgress = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user?.userId) {
+      throw new AppError('Unauthorized', 401);
+    }
 
-      const { id } = req.params;
-      const { completed } = req.body;
-      const userId = toObjectId(req.user.userId);
+    const { id } = req.params;
+    const { completed } = req.body;
+    const userId = req.user.userId;
 
-      await User.findByIdAndUpdate(userId, {
+    const user = await this.dbService.update(
+      process.env.DYNAMODB_USERS_TABLE!,
+      { userId },
+      {
         $push: {
           readingHistory: {
-            news: toObjectId(id),
+            newsId: id,
+            readAt: new Date().toISOString(),
             completedReading: completed
           }
         }
-      });
+      }
+    );
 
-      res.json({ message: 'Reading progress updated' });
-    } catch (error) {
-      next(error);
-    }
-  };
+    res.status(200).json({
+      status: 'success',
+      data: { user }
+    });
+  });
 
   // Favoriye ekleme
   addToFavorites = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -324,21 +491,30 @@ export class NewsController {
       throw new AppError('Unauthorized', 401);
     }
 
-    const news = await News.findById(req.params.id);
+    const newsId = req.params.id;
+    const userId = req.user.userId;
+
+    const news = await News.findById(newsId);
     if (!news) {
       throw new AppError('News not found', 404);
     }
 
-    if (!news.favorites.includes(toObjectId(req.user.userId))) {
-      news.favorites.push(toObjectId(req.user.userId));
-      news.favoriteCount += 1;
-      await news.save();
-    }
+    if (!news.favorites.includes(userId)) {
+      const updatedNews = await News.update(newsId, {
+        favorites: [...news.favorites, userId],
+        favoriteCount: news.favoriteCount + 1
+      });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Added to favorites'
-    });
+      res.status(200).json({
+        status: 'success',
+        data: { news: updatedNews }
+      });
+    } else {
+      res.status(400).json({
+        status: 'fail',
+        message: 'News already in favorites'
+      });
+    }
   });
 
   // Favoriden çıkarma
@@ -347,103 +523,51 @@ export class NewsController {
       throw new AppError('Unauthorized', 401);
     }
 
-    const news = await News.findById(req.params.id);
+    const newsId = req.params.id;
+    const userId = req.user.userId;
+
+    const news = await News.findById(newsId);
     if (!news) {
       throw new AppError('News not found', 404);
     }
 
-    const index = news.favorites.indexOf(toObjectId(req.user.userId));
-    if (index > -1) {
-      news.favorites.splice(index, 1);
-      news.favoriteCount -= 1;
-      await news.save();
-    }
+    if (news.favorites.includes(userId)) {
+      const updatedNews = await News.update(newsId, {
+        favorites: news.favorites.filter(id => id !== userId),
+        favoriteCount: news.favoriteCount - 1
+      });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Removed from favorites'
-    });
+      res.status(200).json({
+        status: 'success',
+        data: { news: updatedNews }
+      });
+    } else {
+      res.status(400).json({
+        status: 'fail',
+        message: 'News not in favorites'
+      });
+    }
   });
 
   // Favori durumunu kontrol etme
-  checkFavoriteStatus = async (req: AuthRequest, res: Response) => {
-    try {
-      const newsId = req.params.id;
-      const userId = req.user?.userId;
-
-      if (!userId) {
-        return res.status(401).json({
-          status: 'error',
-          message: 'Authentication required'
-        });
-      }
-
-      const news = await News.findById(newsId);
-      if (!news) {
-        return res.status(404).json({
-          status: 'error',
-          message: 'News not found'
-        });
-      }
-
-      const isFavorited = news.favorites.includes(toObjectId(userId));
-
-      res.json({
-        status: 'success',
-        data: {
-          isFavorited,
-          favoriteCount: news.favoriteCount
-        }
-      });
-    } catch (error) {
-      res.status(400).json({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'An error occurred'
-      });
-    }
-  };
-
-  // Like/Unlike işlemleri
-  likeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
+  checkFavoriteStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.user?.userId) {
       throw new AppError('Unauthorized', 401);
     }
 
-    const news = await News.findById(req.params.id);
+    const newsId = req.params.id;
+    const userId = req.user.userId;
+
+    const news = await News.findById(newsId);
     if (!news) {
       throw new AppError('News not found', 404);
     }
 
-    if (!news.likes.includes(toObjectId(req.user.userId))) {
-      news.likes.push(toObjectId(req.user.userId));
-      await news.save();
-    }
+    const isFavorited = news.favorites.includes(userId);
 
     res.status(200).json({
       status: 'success',
-      message: 'News liked'
-    });
-  });
-
-  unlikeNews = asyncHandler(async (req: AuthRequest, res: Response) => {
-    if (!req.user?.userId) {
-      throw new AppError('Unauthorized', 401);
-    }
-
-    const news = await News.findById(req.params.id);
-    if (!news) {
-      throw new AppError('News not found', 404);
-    }
-
-    const index = news.likes.indexOf(toObjectId(req.user.userId));
-    if (index > -1) {
-      news.likes.splice(index, 1);
-      await news.save();
-    }
-
-    res.status(200).json({
-      status: 'success',
-      message: 'News unliked'
+      data: { isFavorited }
     });
   });
 } 

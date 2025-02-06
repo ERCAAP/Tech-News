@@ -1,5 +1,6 @@
 import { User } from '../models/User';
-import { News } from '../models/News';
+import { News, INews } from '../models/News';
+import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,7 +11,18 @@ async function seedData() {
     const admin = await User.create({
       email: 'admin@technews.com',
       name: 'Admin User',
-      role: 'admin'
+      role: 'admin',
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
+      }
     });
 
     console.log('Admin user created:', admin);
@@ -19,36 +31,83 @@ async function seedData() {
     const user = await User.create({
       email: 'user@technews.com',
       name: 'Regular User',
-      role: 'user'
+      role: 'user',
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
+      }
     });
 
     console.log('Regular user created:', user);
 
     // Create sample news articles
-    const newsArticles = [
+    const newsArticles: INews[] = [
       {
+        newsId: uuidv4(),
         title: 'The Future of AI',
         content: 'Artificial Intelligence is transforming the way we live and work...',
         category: 'technology',
         authorId: admin.userId,
-        status: 'published',
-        tags: ['AI', 'technology', 'future']
+        status: 'published' as const,
+        tags: ['AI', 'technology', 'future'],
+        views: {
+          total: 0,
+          unique: 0,
+          history: [],
+          last24Hours: 0
+        },
+        likes: [],
+        favorites: [],
+        favoriteCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
+        newsId: uuidv4(),
         title: 'Web Development Trends 2024',
         content: 'The web development landscape is constantly evolving...',
         category: 'development',
         authorId: admin.userId,
-        status: 'published',
-        tags: ['web', 'development', 'trends']
+        status: 'published' as const,
+        tags: ['web', 'development', 'trends'],
+        views: {
+          total: 0,
+          unique: 0,
+          history: [],
+          last24Hours: 0
+        },
+        likes: [],
+        favorites: [],
+        favoriteCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       {
+        newsId: uuidv4(),
         title: 'Cybersecurity Best Practices',
         content: 'In an increasingly connected world, cybersecurity is more important than ever...',
         category: 'security',
         authorId: user.userId,
-        status: 'published',
-        tags: ['security', 'cybersecurity', 'privacy']
+        status: 'published' as const,
+        tags: ['security', 'cybersecurity', 'privacy'],
+        views: {
+          total: 0,
+          unique: 0,
+          history: [],
+          last24Hours: 0
+        },
+        likes: [],
+        favorites: [],
+        favoriteCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
     ];
 

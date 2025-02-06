@@ -1,5 +1,13 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+
+const dynamoDB = new DynamoDB({
+  region: process.env.AWS_REGION
+});
+
+const docClient = DynamoDBDocument.from(dynamoDB);
 
 export interface IUser {
   userId: string;
@@ -16,95 +24,125 @@ export interface IUser {
     theme: 'light' | 'dark' | 'system';
   };
   readingHistory: Array<{
-    news: mongoose.Types.ObjectId;
-    readAt: Date;
+    newsId: string;
+    readAt: string;
     completedReading: boolean;
   }>;
   isSubscription: boolean;
   subscriptionPlan?: 'monthly' | 'yearly' | null;
-  subscriptionEndDate?: Date;
-  favoriteNews: mongoose.Types.ObjectId[];
+  subscriptionEndDate?: string;
+  favoriteNews: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-interface IUserDocument extends IUser, Document {}
+export class UserModel {
+  private tableName = 'Users';
 
-interface IUserModel extends Model<IUserDocument> {
-  findByEmail(email: string): Promise<IUserDocument | null>;
+  async create(userData: Omit<IUser, 'userId' | 'createdAt' | 'updatedAt'>): Promise<IUser> {
+    const timestamp = new Date().toISOString();
+    const user: IUser = {
+      ...userData,
+      userId: uuidv4(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      role: userData.role || 'user',
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
+      }
+    };
+
+    if (user.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(user.password, salt);
+    }
+
+    await docClient.put({
+      TableName: this.tableName,
+      Item: user
+    });
+
+    return user;
+  }
+
+  async findById(userId: string): Promise<IUser | null> {
+    const result = await docClient.get({
+      TableName: this.tableName,
+      Key: { userId }
+    });
+    return result.Item as IUser || null;
+  }
+
+  async findByEmail(email: string): Promise<IUser | null> {
+    const result = await docClient.query({
+      TableName: this.tableName,
+      IndexName: 'email-index',
+      KeyConditionExpression: '#email = :email',
+      ExpressionAttributeNames: {
+        '#email': 'email'
+      },
+      ExpressionAttributeValues: {
+        ':email': email.toLowerCase()
+      }
+    });
+    return result.Items?.[0] as IUser || null;
+  }
+
+  async update(userId: string, updateData: Partial<IUser>): Promise<IUser> {
+    const timestamp = new Date().toISOString();
+    const updates = { ...updateData, updatedAt: timestamp };
+
+    if (updates.password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(updates.password, salt);
+    }
+
+    const updateExpression = 'set ' + Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
+    const expressionAttributeNames = Object.keys(updates).reduce((acc, key) => {
+      acc[`#${key}`] = key;
+      return acc;
+    }, {} as { [key: string]: string });
+    const expressionAttributeValues = Object.entries(updates).reduce((acc, [key, value]) => {
+      acc[`:${key}`] = value;
+      return acc;
+    }, {} as { [key: string]: any });
+
+    const result = await docClient.update({
+      TableName: this.tableName,
+      Key: { userId },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW'
+    });
+
+    return result.Attributes as IUser;
+  }
+
+  async delete(userId: string): Promise<void> {
+    await docClient.delete({
+      TableName: this.tableName,
+      Key: { userId }
+    });
+  }
+
+  async comparePassword(user: IUser, candidatePassword: string): Promise<boolean> {
+    try {
+      if (!user.password) return false;
+      return await bcrypt.compare(candidatePassword, user.password);
+    } catch (error) {
+      console.error('Password compare error:', error);
+      return false;
+    }
+  }
 }
 
-const UserSchema = new Schema<IUserDocument>({
-  userId: { type: String, required: true, unique: true },
-  email: {
-    type: String,
-    required: [true, 'Email adresi gereklidir'],
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  name: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
-  readingHistory: [{
-    news: { type: Schema.Types.ObjectId, ref: 'News' },
-    readAt: { type: Date, default: Date.now },
-    completedReading: { type: Boolean, default: false }
-  }],
-  isSubscription: {
-    type: Boolean,
-    default: false
-  },
-  subscriptionPlan: {
-    type: String,
-    enum: ['monthly', 'yearly', null],
-    default: null
-  },
-  subscriptionEndDate: {
-    type: Date,
-    default: null
-  },
-  favoriteNews: [{
-    type: Schema.Types.ObjectId,
-    ref: 'News'
-  }],
-  preferences: {
-    categories: [{ type: String }],
-    notificationSettings: {
-      newArticles: { type: Boolean, default: true },
-      newsletter: { type: Boolean, default: true }
-    },
-    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' }
-  }
-}, {
-  timestamps: true
-});
-
-// Şifre hash'leme middleware
-UserSchema.pre('save', async function(next) {
-  if (!this.isModified('password') || !this.password) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(this.password, salt);
-    this.password = hashedPassword;
-    next();
-  } catch (error) {
-    next(error as Error);
-  }
-});
-
-// Şifre karşılaştırma metodu
-UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  try {
-    if (!this.password) return false;
-    const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    return isMatch;
-  } catch (error) {
-    console.error('Password compare error:', error);
-    return false;
-  }
-};
-
-UserSchema.statics.findByEmail = function(email: string) {
-  return this.findOne({ email });
-};
-
-export const User = mongoose.model<IUserDocument, IUserModel>('User', UserSchema); 
+export const User = new UserModel(); 

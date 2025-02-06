@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
+import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
-import nodemailer from 'nodemailer';
 import { AuthService } from '../services/authService';
 import { DynamoDBService } from '../services/dynamoDBService';
 import { AuthRequest } from '../types/express';
+import { v4 as uuidv4 } from 'uuid';
 
 function createToken(userId: string): string {
   return jwt.sign(
@@ -35,12 +35,13 @@ export class AuthController {
       throw new AppError('Email is already registered', 400);
     }
 
-    const userId = `user_${Date.now()}`;
     const user = await User.create({
-      userId,
       email,
       name,
       role: 'user',
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
       preferences: {
         categories: [],
         notificationSettings: {
@@ -96,7 +97,11 @@ export class AuthController {
   });
 
   getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const user = await User.findByEmail(req.user?.email || '');
+    if (!req.user?.email) {
+      throw new AppError('User not found', 404);
+    }
+
+    const user = await User.findByEmail(req.user.email);
     if (!user) {
       throw new AppError('User not found', 404);
     }
@@ -116,35 +121,38 @@ export class AuthController {
   });
 
   updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user?.userId) {
+      throw new AppError('User not found', 404);
+    }
+
     const allowedUpdates = ['name', 'preferences'];
     const updates = Object.keys(req.body)
       .filter(key => allowedUpdates.includes(key))
       .reduce((obj, key) => {
         obj[key] = req.body[key];
         return obj;
-      }, {} as Partial<IUser>);
+      }, {} as Record<string, any>);
 
     if (Object.keys(updates).length === 0) {
       throw new AppError('No valid updates provided', 400);
     }
 
-    const user = await User.findByEmail(req.user?.email || '');
+    const user = await User.findById(req.user.userId);
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    Object.assign(user, updates);
-    await user.save();
+    const updatedUser = await User.update(user.userId, updates);
 
     res.status(200).json({
       status: 'success',
       data: {
         user: {
-          userId: user.userId,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          preferences: user.preferences
+          userId: updatedUser.userId,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          preferences: updatedUser.preferences
         }
       }
     });

@@ -1,154 +1,121 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-interface INews extends Document {
+const dynamoDB = new DynamoDB({
+  region: process.env.AWS_REGION
+});
+
+const docClient = DynamoDBDocument.from(dynamoDB);
+
+export interface INews {
+  newsId: string;
   title: string;
-  slug: string;
   content: string;
-  imageUrl?: string;
+  authorId: string;
   category: string;
-  author: mongoose.Types.ObjectId;
   status: 'draft' | 'published' | 'archived';
+  imageUrl?: string;
   tags: string[];
-  readTime?: number;
   views: {
     total: number;
     unique: number;
+    history: Array<{
+      userId: string;
+      timestamp: string;
+    }>;
     last24Hours: number;
-    history: {
-      userId: mongoose.Types.ObjectId;
-      timestamp: Date;
-    }[];
   };
   shareCount: number;
-  url?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;
-  favorites: mongoose.Types.ObjectId[];
+  likes: string[];
+  favorites: string[];
   favoriteCount: number;
-  likes: mongoose.Types.ObjectId[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
 }
 
-const NewsSchema = new Schema({
-  title: { type: String, required: true },
-  slug: { 
-    type: String, 
-    required: true,
-    unique: true,
-    lowercase: true
-  },
-  content: { type: String, required: true },
-  imageUrl: { type: String },
-  category: {
-    type: String,
-    required: [true, 'Kategori gereklidir'],
-    enum: ['app-development', 'artificial-intelligence', 'technology'],
-    set: (value: string) => value.toLowerCase().replace(/\s+/g, '-')
-  },
-  author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  status: {
-    type: String,
-    enum: ['draft', 'published', 'archived'],
-    default: 'published'
-  },
-  tags: [String],
-  readTime: { type: Number }, // Dakika cinsinden okuma süresi
-  views: {
-    total: { type: Number, default: 0 },
-    unique: { type: Number, default: 0 },
-    last24Hours: { type: Number, default: 0 },
-    history: [{
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      timestamp: { type: Date, default: Date.now }
-    }]
-  },
-  shareCount: { type: Number, default: 0 },
-  url: { type: String }, // Dış kaynak URL'si (varsa)
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date },
-  publishedAt: { type: Date },
-  favorites: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  favoriteCount: {
-    type: Number,
-    default: 0
-  },
-  likes: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }]
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
+export interface ViewHistory {
+  userId: string;
+  timestamp: string;
+}
 
-// Slug oluşturma middleware'i
-NewsSchema.pre('save', function(next) {
-  if (this.isModified('title')) {
-    this.slug = this.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  }
-  
-  // Okuma süresini hesapla (ortalama 200 kelime/dakika)
-  if (this.isModified('content')) {
-    const wordCount = this.content.split(/\s+/).length;
-    this.readTime = Math.ceil(wordCount / 200);
+export interface Views {
+  total: number;
+  unique: number;
+  history: ViewHistory[];
+  last24Hours: number;
+}
+
+export class NewsModel {
+  private tableName = 'News';
+
+  async create(news: INews): Promise<INews> {
+    await docClient.put({
+      TableName: this.tableName,
+      Item: news
+    });
+    return news;
   }
 
-  // Kategoriyi küçük harfe çevir ve boşlukları tire ile değiştir
-  if (this.isModified('category')) {
-    // Kategori zaten schema'da set edildiği için burada tekrar dönüştürmeye gerek yok
+  async findById(newsId: string): Promise<INews | null> {
+    const result = await docClient.get({
+      TableName: this.tableName,
+      Key: { newsId }
+    });
+    return result.Item as INews || null;
   }
 
-  next();
-});
+  async update(newsId: string, updateData: Partial<INews>): Promise<INews> {
+    const updateExpression = 'set ' + Object.keys(updateData).map(key => `#${key} = :${key}`).join(', ');
+    const expressionAttributeNames = Object.keys(updateData).reduce((acc, key) => {
+      acc[`#${key}`] = key;
+      return acc;
+    }, {} as { [key: string]: string });
+    const expressionAttributeValues = Object.entries(updateData).reduce((acc, [key, value]) => {
+      acc[`:${key}`] = value;
+      return acc;
+    }, {} as { [key: string]: any });
 
-// Pre-update middleware ekleyelim
-NewsSchema.pre('findOneAndUpdate', function(next) {
-  const update = this.getUpdate() as any;
-  if (update.category) {
-    update.category = update.category.toLowerCase().replace(/\s+/g, '-');
+    const result = await docClient.update({
+      TableName: this.tableName,
+      Key: { newsId },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW'
+    });
+
+    return result.Attributes as INews;
   }
-  next();
-});
 
-// URL oluşturma için virtual field
-NewsSchema.virtual('fullUrl').get(function() {
-  return `/news/${this.slug}`;
-});
-
-// Popülerlik skoru hesaplama için virtual field
-NewsSchema.virtual('popularityScore').get(function() {
-  const viewWeight = 1;
-  const shareWeight = 2;
-  
-  return (
-    (this.views?.total || 0) * viewWeight +
-    (this.shareCount || 0) * shareWeight
-  );
-});
-
-// Favori ekleme metodu
-NewsSchema.methods.addToFavorites = async function(userId: string) {
-  if (!this.favorites.includes(userId)) {
-    this.favorites.push(userId);
-    this.favoriteCount = this.favorites.length;
-    await this.save();
+  async scan(): Promise<INews[]> {
+    const result = await docClient.scan({
+      TableName: this.tableName
+    });
+    return result.Items as INews[] || [];
   }
-  return this;
-};
 
-// Favoriden çıkarma metodu
-NewsSchema.methods.removeFromFavorites = async function(userId: string) {
-  this.favorites = this.favorites.filter(id => !id.equals(userId));
-  this.favoriteCount = this.favorites.length;
-  await this.save();
-  return this;
-};
+  async query(indexName: string, value: string): Promise<INews[]> {
+    const result = await docClient.query({
+      TableName: this.tableName,
+      IndexName: `${indexName}-index`,
+      KeyConditionExpression: '#key = :value',
+      ExpressionAttributeNames: {
+        '#key': indexName
+      },
+      ExpressionAttributeValues: {
+        ':value': value
+      }
+    });
+    return result.Items as INews[] || [];
+  }
 
-export const News = mongoose.model<INews>('News', NewsSchema); 
+  async delete(newsId: string): Promise<void> {
+    await docClient.delete({
+      TableName: this.tableName,
+      Key: { newsId }
+    });
+  }
+}
+
+export const News = new NewsModel(); 

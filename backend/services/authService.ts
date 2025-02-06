@@ -1,29 +1,54 @@
-import { CognitoIdentityServiceProvider } from 'aws-sdk';
+import { 
+  CognitoIdentityProviderClient,
+  AdminCreateUserCommand,
+  AdminInitiateAuthCommand,
+  GetUserCommand,
+  AdminAddUserToGroupCommand,
+  AdminListGroupsForUserCommand,
+  AdminGetUserCommand,
+  AdminSetUserPasswordCommand,
+  AdminUpdateUserAttributesCommand,
+  AttributeType
+} from '@aws-sdk/client-cognito-identity-provider';
 
 export class AuthService {
-  private cognito: CognitoIdentityServiceProvider;
+  private cognito: CognitoIdentityProviderClient;
   private userPoolId: string;
   private clientId: string;
 
   constructor() {
-    this.cognito = new CognitoIdentityServiceProvider();
+    this.cognito = new CognitoIdentityProviderClient({
+      region: process.env.AWS_REGION
+    });
     this.userPoolId = process.env.COGNITO_USER_POOL_ID!;
     this.clientId = process.env.COGNITO_CLIENT_ID!;
   }
 
   async signUp(email: string, password: string, attributes: Record<string, string>) {
-    const params = {
+    const userAttributes: AttributeType[] = Object.entries(attributes).map(([Name, Value]) => ({
+      Name,
+      Value
+    }));
+
+    const createUserCommand = new AdminCreateUserCommand({
       UserPoolId: this.userPoolId,
       Username: email,
       TemporaryPassword: password,
-      UserAttributes: Object.entries(attributes).map(([Name, Value]) => ({
-        Name,
-        Value
-      }))
-    };
+      UserAttributes: userAttributes
+    });
 
     try {
-      await this.cognito.adminCreateUser(params).promise();
+      await this.cognito.send(createUserCommand);
+
+      // Set permanent password
+      const setPasswordCommand = new AdminSetUserPasswordCommand({
+        UserPoolId: this.userPoolId,
+        Username: email,
+        Password: password,
+        Permanent: true
+      });
+      await this.cognito.send(setPasswordCommand);
+
       return { success: true };
     } catch (error) {
       console.error('Error creating user:', error);
@@ -32,7 +57,7 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string) {
-    const params = {
+    const authCommand = new AdminInitiateAuthCommand({
       AuthFlow: 'ADMIN_NO_SRP_AUTH',
       UserPoolId: this.userPoolId,
       ClientId: this.clientId,
@@ -40,10 +65,10 @@ export class AuthService {
         USERNAME: email,
         PASSWORD: password
       }
-    };
+    });
 
     try {
-      const result = await this.cognito.adminInitiateAuth(params).promise();
+      const result = await this.cognito.send(authCommand);
       return result;
     } catch (error) {
       console.error('Error signing in:', error);
@@ -53,13 +78,14 @@ export class AuthService {
 
   async verifyToken(token: string) {
     try {
-      const params = {
+      const getUserCommand = new GetUserCommand({
         AccessToken: token
-      };
-      const userData = await this.cognito.getUser(params).promise();
+      });
+      const userData = await this.cognito.send(getUserCommand);
+      
       return {
         email: userData.Username,
-        sub: userData.UserAttributes.find(attr => attr.Name === 'sub')?.Value
+        sub: userData.UserAttributes?.find(attr => attr.Name === 'sub')?.Value
       };
     } catch (error) {
       console.error('Error verifying token:', error);
@@ -68,14 +94,14 @@ export class AuthService {
   }
 
   async addUserToGroup(username: string, groupName: string) {
-    const params = {
+    const addToGroupCommand = new AdminAddUserToGroupCommand({
       GroupName: groupName,
       UserPoolId: this.userPoolId,
       Username: username
-    };
+    });
 
     try {
-      await this.cognito.adminAddUserToGroup(params).promise();
+      await this.cognito.send(addToGroupCommand);
       return true;
     } catch (error) {
       console.error('Error adding user to group:', error);
@@ -86,17 +112,61 @@ export class AuthService {
   async getUserGroups(username?: string) {
     if (!username) return [];
 
-    const params = {
+    const listGroupsCommand = new AdminListGroupsForUserCommand({
       UserPoolId: this.userPoolId,
       Username: username
-    };
+    });
 
     try {
-      const result = await this.cognito.adminListGroupsForUser(params).promise();
-      return result.Groups?.map(group => group.GroupName) || [];
+      const result = await this.cognito.send(listGroupsCommand);
+      return result.Groups?.map(group => group.GroupName).filter(Boolean) || [];
     } catch (error) {
       console.error('Error getting user groups:', error);
       return [];
+    }
+  }
+
+  async updateUserAttributes(username: string, attributes: Record<string, string>) {
+    const userAttributes: AttributeType[] = Object.entries(attributes).map(([Name, Value]) => ({
+      Name,
+      Value
+    }));
+
+    const updateCommand = new AdminUpdateUserAttributesCommand({
+      UserPoolId: this.userPoolId,
+      Username: username,
+      UserAttributes: userAttributes
+    });
+
+    try {
+      await this.cognito.send(updateCommand);
+      return true;
+    } catch (error) {
+      console.error('Error updating user attributes:', error);
+      throw error;
+    }
+  }
+
+  async getUser(username: string) {
+    const getUserCommand = new AdminGetUserCommand({
+      UserPoolId: this.userPoolId,
+      Username: username
+    });
+
+    try {
+      const userData = await this.cognito.send(getUserCommand);
+      return {
+        username: userData.Username,
+        attributes: userData.UserAttributes?.reduce((acc, attr) => {
+          if (attr.Name && attr.Value) {
+            acc[attr.Name] = attr.Value;
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      };
+    } catch (error) {
+      console.error('Error getting user:', error);
+      throw error;
     }
   }
 } 

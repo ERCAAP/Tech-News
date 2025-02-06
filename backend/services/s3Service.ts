@@ -1,26 +1,34 @@
-import { S3 } from 'aws-sdk';
+import { 
+  S3Client, 
+  PutObjectCommand, 
+  DeleteObjectCommand,
+  GetObjectCommand
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class S3Service {
-  private s3: S3;
+  private s3: S3Client;
   private bucket: string;
 
   constructor() {
-    this.s3 = new S3();
+    this.s3 = new S3Client({
+      region: process.env.AWS_REGION
+    });
     this.bucket = process.env.S3_UPLOADS_BUCKET!;
   }
 
   async uploadFile(file: Buffer, key: string, contentType: string): Promise<string> {
-    const params = {
+    const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
       Body: file,
       ContentType: contentType,
       ACL: 'public-read'
-    };
+    });
 
     try {
-      const result = await this.s3.upload(params).promise();
-      return result.Location;
+      await this.s3.send(command);
+      return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
     } catch (error) {
       console.error('Error uploading file:', error);
       throw error;
@@ -28,13 +36,13 @@ export class S3Service {
   }
 
   async deleteFile(key: string): Promise<void> {
-    const params = {
+    const command = new DeleteObjectCommand({
       Bucket: this.bucket,
       Key: key
-    };
+    });
 
     try {
-      await this.s3.deleteObject(params).promise();
+      await this.s3.send(command);
     } catch (error) {
       console.error('Error deleting file:', error);
       throw error;
@@ -42,14 +50,13 @@ export class S3Service {
   }
 
   async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
-    const params = {
+    const command = new GetObjectCommand({
       Bucket: this.bucket,
-      Key: key,
-      Expires: expiresIn
-    };
+      Key: key
+    });
 
     try {
-      return await this.s3.getSignedUrlPromise('getObject', params);
+      return await getSignedUrl(this.s3, command, { expiresIn });
     } catch (error) {
       console.error('Error generating signed URL:', error);
       throw error;
