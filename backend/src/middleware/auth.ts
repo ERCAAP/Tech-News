@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
+import { AuthService } from '../src/services/authService';
 
 // Request tipini genişletelim
 interface AuthRequest extends Request {

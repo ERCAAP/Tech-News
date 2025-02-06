@@ -1,16 +1,20 @@
-import { DynamoDBService } from '../services/dynamoDBService';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
+
+const dynamoDB = new DynamoDB({
+  region: process.env.AWS_REGION
+});
+
+const docClient = DynamoDBDocument.from(dynamoDB);
 
 export interface IUser {
   userId: string;
   email: string;
   name: string;
+  password?: string;
   role: 'user' | 'admin';
-  isActive: boolean;
-  lastLogin?: string;
-  createdAt: string;
-  updatedAt: string;
   preferences?: {
     categories: string[];
     notificationSettings: {
@@ -19,32 +23,33 @@ export interface IUser {
     };
     theme: 'light' | 'dark' | 'system';
   };
-  subscription?: {
-    isSubscribed: boolean;
-    plan: 'free' | 'basic' | 'premium';
-    updatedAt: string;
-  };
+  readingHistory: Array<{
+    newsId: string;
+    readAt: string;
+    completedReading: boolean;
+  }>;
+  isSubscription: boolean;
+  subscriptionPlan?: 'monthly' | 'yearly' | null;
+  subscriptionEndDate?: string;
+  favoriteNews: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-class UserModel {
-  private dbService: DynamoDBService;
-  private tableName: string;
+export class UserModel {
+  private tableName = 'Users';
 
-  constructor() {
-    this.dbService = new DynamoDBService();
-    this.tableName = process.env.DYNAMODB_USERS_TABLE!;
-  }
-
-  async create(userData: Partial<IUser>): Promise<IUser> {
-    const now = new Date().toISOString();
+  async create(userData: Omit<IUser, 'userId' | 'createdAt' | 'updatedAt'>): Promise<IUser> {
+    const timestamp = new Date().toISOString();
     const user: IUser = {
+      ...userData,
       userId: uuidv4(),
-      email: userData.email!,
-      name: userData.name!,
+      createdAt: timestamp,
+      updatedAt: timestamp,
       role: userData.role || 'user',
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
       preferences: {
         categories: [],
         notificationSettings: {
@@ -55,56 +60,88 @@ class UserModel {
       }
     };
 
-    await this.dbService.create(this.tableName, user);
+    if (user.password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(user.password, salt);
+    }
+
+    await docClient.put({
+      TableName: this.tableName,
+      Item: user
+    });
+
     return user;
   }
 
   async findById(userId: string): Promise<IUser | null> {
-    const user = await this.dbService.get(this.tableName, { userId });
-    return user as IUser | null;
+    const result = await docClient.get({
+      TableName: this.tableName,
+      Key: { userId }
+    });
+    return result.Item as IUser || null;
   }
 
   async findByEmail(email: string): Promise<IUser | null> {
-    const params = {
+    const result = await docClient.query({
       TableName: this.tableName,
-      IndexName: 'EmailIndex',
-      KeyConditionExpression: 'email = :email',
+      IndexName: 'email-index',
+      KeyConditionExpression: '#email = :email',
+      ExpressionAttributeNames: {
+        '#email': 'email'
+      },
       ExpressionAttributeValues: {
-        ':email': { S: email } as AttributeValue
+        ':email': email.toLowerCase()
       }
-    };
-
-    const result = await this.dbService.query(params);
-    return result.items[0] as IUser | null;
+    });
+    return result.Items?.[0] as IUser || null;
   }
 
-  async findByIdAndUpdate(userId: string, updateData: Partial<IUser>): Promise<IUser | null> {
-    const updates = {
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
+  async update(userId: string, updateData: Partial<IUser>): Promise<IUser> {
+    const timestamp = new Date().toISOString();
+    const updates = { ...updateData, updatedAt: timestamp };
 
-    const user = await this.dbService.update(this.tableName, { userId }, updates);
-    return user as IUser | null;
+    if (updates.password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(updates.password, salt);
+    }
+
+    const updateExpression = 'set ' + Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
+    const expressionAttributeNames = Object.keys(updates).reduce((acc, key) => {
+      acc[`#${key}`] = key;
+      return acc;
+    }, {} as { [key: string]: string });
+    const expressionAttributeValues = Object.entries(updates).reduce((acc, [key, value]) => {
+      acc[`:${key}`] = value;
+      return acc;
+    }, {} as { [key: string]: any });
+
+    const result = await docClient.update({
+      TableName: this.tableName,
+      Key: { userId },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW'
+    });
+
+    return result.Attributes as IUser;
   }
 
-  async findByIdAndDelete(userId: string): Promise<boolean> {
-    return this.dbService.delete(this.tableName, { userId });
-  }
-
-  async updateLastLogin(userId: string): Promise<void> {
-    await this.dbService.update(this.tableName, { userId }, {
-      lastLogin: new Date().toISOString()
+  async delete(userId: string): Promise<void> {
+    await docClient.delete({
+      TableName: this.tableName,
+      Key: { userId }
     });
   }
 
-  async findAll(): Promise<IUser[]> {
-    const params = {
-      TableName: this.tableName
-    };
-
-    const result = await this.dbService.scan(params);
-    return result.items as IUser[];
+  async comparePassword(user: IUser, candidatePassword: string): Promise<boolean> {
+    try {
+      if (!user.password) return false;
+      return await bcrypt.compare(candidatePassword, user.password);
+    } catch (error) {
+      console.error('Password compare error:', error);
+      return false;
+    }
   }
 }
 

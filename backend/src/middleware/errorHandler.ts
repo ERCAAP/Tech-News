@@ -1,83 +1,44 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/AppError';
-import { log } from '../utils/logger';
+import { CloudWatch } from 'aws-sdk';
 
-export const errorHandler = (
-  err: Error | AppError,
+const cloudWatch = new CloudWatch({
+  region: process.env.AWS_REGION
+});
+
+export const errorHandler = async (
+  error: any,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // Log error
-  log.error('Error:', {
-    name: err.name,
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method
-  });
+  console.error('Error:', error);
 
-  // Default error
-  let error = {
-    status: 'error',
-    message: err.message || 'Something went wrong',
-    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
+  // Log error to CloudWatch
+  const params = {
+    MetricData: [
+      {
+        MetricName: 'ApplicationError',
+        Value: 1,
+        Unit: 'Count',
+        Dimensions: [
+          {
+            Name: 'ErrorType',
+            Value: error.name || 'UnknownError'
+          }
+        ]
+      }
+    ],
+    Namespace: 'TechNews/Errors'
   };
 
-  // Handle specific errors
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-      ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
-    });
+  try {
+    await cloudWatch.putMetricData(params).promise();
+  } catch (cwError) {
+    console.error('CloudWatch logging error:', cwError);
   }
 
-  // Handle AWS errors
-  if (err.name === 'ConditionalCheckFailedException') {
-    return res.status(409).json({
-      status: 'error',
-      message: 'Resource already exists or condition check failed'
-    });
-  }
-
-  if (err.name === 'ResourceNotFoundException') {
-    return res.status(404).json({
-      status: 'error',
-      message: 'Resource not found'
-    });
-  }
-
-  if (err.name === 'ValidationException') {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Invalid input data'
-    });
-  }
-
-  if (err.name === 'AccessDeniedException') {
-    return res.status(403).json({
-      status: 'error',
-      message: 'Access denied'
-    });
-  }
-
-  // Handle JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Invalid token'
-    });
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Token expired'
-    });
-  }
-
-  // Send error response
-  const statusCode = (err as any).statusCode || 500;
-  res.status(statusCode).json(error);
+  res.status(error.status || 500).json({
+    status: 'error',
+    message: error.message || 'Internal server error'
+  });
 }; 

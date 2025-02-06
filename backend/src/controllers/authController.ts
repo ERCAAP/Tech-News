@@ -5,46 +5,18 @@ import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
-import nodemailer from 'nodemailer';
 import { AuthService } from '../services/authService';
 import { DynamoDBService } from '../services/dynamoDBService';
 import { AuthRequest } from '../types/express';
+import { v4 as uuidv4 } from 'uuid';
 
-// JWT yapılandırması
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key';
-const JWT_EXPIRES_IN = '30d'; // 30 gün
-
-// JWT token oluşturma
-const createToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN
-  });
-};
-
-interface VerificationCode {
-  code: string;
-  email: string;
-  expiresAt: Date;
+function createToken(userId: string): string {
+  return jwt.sign(
+    { userId },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: '1d' }
+  );
 }
-
-// Geçici olarak verification kodlarını tutmak için
-const verificationCodes = new Map<string, VerificationCode>();
-
-// Email gönderme yapılandırması
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // SSL/TLS için
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD
-    },
-    tls: {
-      rejectUnauthorized: false // Geliştirme ortamında SSL sertifika hatalarını önler
-    }
-  });
-};
 
 export class AuthController {
   private authService: AuthService;
@@ -55,118 +27,153 @@ export class AuthController {
     this.dbService = new DynamoDBService();
   }
 
-  login = async (req: AuthRequest, res: Response) => {
-    try {
-      const { email, password } = req.body;
+  register = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { email, name } = req.body;
 
-      if (!email || !password) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Email ve şifre gereklidir'
-        });
-      }
-
-      const user = await User.findByEmail(email);
-      if (!user) {
-        return res.status(401).json({
-          status: 'error',
-          message: 'Geçersiz email veya şifre'
-        });
-      }
-
-      const token = createToken(user.userId);
-
-      res.status(200).json({
-        status: 'success',
-        data: { user },
-        token
-      });
-    } catch (error) {
-      console.error('Login Error:', error);
-      res.status(500).json({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Giriş işlemi sırasında bir hata oluştu'
-      });
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      throw new AppError('Email is already registered', 400);
     }
-  };
 
-  register = async (req: Request, res: Response) => {
+    const user = await User.create({
+      email,
+      name,
+      role: 'user',
+      readingHistory: [],
+      isSubscription: false,
+      favoriteNews: [],
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
+      }
+    });
+
+    const token = createToken(user.userId);
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      },
+      token
+    });
+  });
+
+  login = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new AppError('Email ve şifre gereklidir', 400);
+    }
+
+    const user = await User.findByEmail(email);
+    if (!user) {
+      throw new AppError('Geçersiz email veya şifre', 401);
+    }
+
+    const token = createToken(user.userId);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role
+        }
+      },
+      token
+    });
+  });
+
+  getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user?.email) {
+      throw new AppError('User not found', 404);
+    }
+
+    const user = await User.findByEmail(String(req.user.email));
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: user.userId,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          preferences: user.preferences
+        }
+      }
+    });
+  });
+
+  updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.user?.userId) {
+      throw new AppError('User not found', 404);
+    }
+
+    const allowedUpdates = ['name', 'preferences'];
+    const updates = Object.keys(req.body)
+      .filter(key => allowedUpdates.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = req.body[key];
+        return obj;
+      }, {} as Record<string, any>);
+
+    if (Object.keys(updates).length === 0) {
+      throw new AppError('No valid updates provided', 400);
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const updatedUser = await User.update(user.userId, updates);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          userId: updatedUser.userId,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          preferences: updatedUser.preferences
+        }
+      }
+    });
+  });
+
+  verifyToken = async (req: Request, res: Response) => {
     try {
-      const { email, name } = req.body;
-
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Email is already registered'
-        });
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
       }
 
-      const user = await User.create({
-        email,
-        name,
-        role: 'user'
-      });
-
-      const token = createToken(user.userId);
-
-      res.status(201).json({
-        status: 'success',
-        data: { user },
-        token
-      });
-    } catch (error) {
-      console.error('Register Error:', error);
-      res.status(500).json({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Registration failed'
-      });
-    }
-  };
-
-  getProfile = async (req: AuthRequest, res: Response) => {
-    try {
-      const { userId } = req.user!;
-      const user = await this.dbService.get(process.env.DYNAMODB_USERS_TABLE!, {
-        userId
-      });
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+      const isValid = await this.authService.verifyToken(token);
+      if (!isValid) {
+        return res.status(401).json({ error: 'Invalid token' });
       }
 
-      res.json(user);
+      res.json({ valid: true });
     } catch (error) {
-      console.error('Get profile error:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'An error occurred while getting profile'
-      });
-    }
-  };
-
-  updateProfile = async (req: AuthRequest, res: Response) => {
-    try {
-      const { userId } = req.user!;
-      const { name, preferences } = req.body;
-
-      const updates = {
-        name,
-        preferences,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedUser = await this.dbService.update(
-        process.env.DYNAMODB_USERS_TABLE!,
-        { userId },
-        updates
-      );
-
-      res.json(updatedUser);
-    } catch (error) {
-      console.error('Update profile error:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'An error occurred while updating profile'
-      });
+      console.error('Token verification error:', error);
+      res.status(401).json({ error: 'Token verification failed' });
     }
   };
 } 

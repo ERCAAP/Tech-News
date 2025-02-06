@@ -1,121 +1,74 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { protect, restrictTo } from '../middleware/authMiddleware';
 import { NewsController } from '../controllers/newsController';
-import { AppError } from '../utils/AppError';
+import { auth } from '../middleware/auth';
+import { convertToAuthRequest } from '../middleware/convertToAuthRequest';
 import { AuthRequest } from '../types/express';
-import multer from 'multer';
+import { isAdmin } from '../middleware/isAdmin';
 
 const router = express.Router();
 const newsController = new NewsController();
 
-// Debug için tüm requestleri logla
-router.use((req: Request, res: Response, next: NextFunction) => {
-  console.log('\n=== News Route Handler ===');
-  console.log('Path:', req.path);
-  console.log('Method:', req.method);
-  console.log('Body:', req.body);
-  console.log('User:', req.user);
-  console.log('========================\n');
-  next();
+// CRUD Operations
+router.get('/', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.getAllNews(req as AuthRequest, res, next);
 });
 
-// Public routes
-router.get('/', (req: Request, res: Response, next: NextFunction) => 
-  newsController.getAllNews(req as AuthRequest, res, next)
-);
-
-router.get('/:id', (req: Request, res: Response, next: NextFunction) => 
-  newsController.getNews(req as AuthRequest, res, next)
-);
+router.get('/:id', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.getNews(req as AuthRequest, res, next);
+});
 
 // Protected routes
-router.use(protect);
+router.use(auth);
+router.use(convertToAuthRequest);
 
-// CRUD Operations
-router.route('/')
-  .get((req: Request, res: Response, next: NextFunction) => 
-    newsController.getAllNews(req as AuthRequest, res, next)
-  )
-  .post((req: Request, res: Response, next: NextFunction) => 
-    newsController.createNews(req as AuthRequest, res, next)
-  );
+// Admin middleware
+const adminMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  isAdmin(req as AuthRequest, res, next);
+};
 
-router.route('/:id')
-  .get((req: Request, res: Response, next: NextFunction) => 
-    newsController.getNews(req as AuthRequest, res, next)
-  )
-  .put((req: Request, res: Response, next: NextFunction) => 
-    newsController.updateNews(req as AuthRequest, res, next)
-  )
-  .patch((req: Request, res: Response, next: NextFunction) => 
-    newsController.updateNews(req as AuthRequest, res, next)
-  )
-  .delete((req: Request, res: Response, next: NextFunction) => 
-    newsController.deleteNews(req as AuthRequest, res, next)
-  );
-
-// Diğer protected routes
-router.post('/:id/view', (req: Request, res: Response, next: NextFunction) => 
-  newsController.viewNews(req as AuthRequest, res, next)
-);
-
-router.post('/:id/favorite', (req: Request, res: Response, next: NextFunction) => 
-  newsController.toggleFavorite(req as AuthRequest, res, next)
-);
-
-router.get('/user/favorites', (req: Request, res: Response, next: NextFunction) => 
-  newsController.getFavoriteNews(req as AuthRequest, res, next)
-);
-
-// Admin only routes
-router.use(restrictTo('admin'));
-
-router.get('/favorites/count', (req: Request, res: Response, next: NextFunction) => 
-  newsController.getFavoriteCount(req as AuthRequest, res, next)
-);
-
-router.get('/stats', (req: Request, res: Response, next: NextFunction) => 
-  newsController.getNewsStats(req as AuthRequest, res, next)
-);
-
-// Upload endpoint'i ekle
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
+router.post('/', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.create(req as AuthRequest, res, next);
 });
 
-router.post('/upload', 
-  protect, 
-  restrictTo('admin'),
-  upload.single('image'),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      if (!req.file) {
-        throw new AppError('No file uploaded', 400);
-      }
-      
-      const imageUrl = `/uploads/${req.file.filename}`;
-      
-      res.status(200).json({
-        status: 'success',
-        imageUrl
-      });
-    } catch (error) {
-      if (error instanceof AppError) {
-        res.status(error.statusCode).json({
-          status: error.status,
-          message: error.message
-        });
-      } else {
-        res.status(500).json({
-          status: 'error',
-          message: 'An unexpected error occurred'
-        });
-      }
-    }
-  }
-);
+router.put('/:id', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.update(req as AuthRequest, res, next);
+});
+
+router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.deleteNews(req as AuthRequest, res, next);
+});
+
+// Additional routes
+router.get('/category/:category', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.getNewsByCategory(req as AuthRequest, res, next);
+});
+
+router.post('/:id/view', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.updateReadingProgress(req as AuthRequest, res, next);
+});
+
+router.get('/:id/similar', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.getSimilarNews(req as AuthRequest, res, next);
+});
+
+router.post('/:id/share', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.shareNews(req as AuthRequest, res, next);
+});
+
+// Favorites
+router.post('/:id/favorites', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.addToFavorites(req as AuthRequest, res, next);
+});
+
+router.delete('/:id/favorites', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.removeFromFavorites(req as AuthRequest, res, next);
+});
+
+router.get('/:id/favorites/status', (req: Request, res: Response, next: NextFunction) => {
+  return newsController.checkFavoriteStatus(req as AuthRequest, res, next);
+});
+
+// Admin routes
+router.use(adminMiddleware);
 
 export default router; 

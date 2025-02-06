@@ -1,5 +1,5 @@
-import { User } from '../models/User';
-import { News, INews } from '../models/News';
+import { User } from '../src/models/User';
+import { News, INews } from '../src/models/News';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 

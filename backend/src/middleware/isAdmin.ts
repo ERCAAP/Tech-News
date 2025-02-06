@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express';
-import { AppError } from '../utils/AppError';
+import { AppError } from '../src/utils/AppError';
 
 export function isAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user || req.user.role !== 'admin') {

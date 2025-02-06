@@ -1,30 +1,12 @@
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
-import { S3 } from '@aws-sdk/client-s3';
-import { CloudWatchLogs } from '@aws-sdk/client-cloudwatch-logs';
+import { config } from 'aws-sdk';
+import dotenv from 'dotenv';
 
-let dynamoDb: DynamoDBDocument;
-let s3: S3;
-let cloudWatch: CloudWatchLogs;
+dotenv.config();
 
-export function initializeAWS() {
-  const config = {
+export const initializeAWS = () => {
+  config.update({
     region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-    }
-  };
-
-  // Initialize DynamoDB
-  const dynamoClient = new DynamoDB(config);
-  dynamoDb = DynamoDBDocument.from(dynamoClient);
-
-  // Initialize S3
-  s3 = new S3(config);
-
-  // Initialize CloudWatch
-  cloudWatch = new CloudWatchLogs(config);
-}
-
-export { dynamoDb, s3, cloudWatch }; 
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  });
+}; 

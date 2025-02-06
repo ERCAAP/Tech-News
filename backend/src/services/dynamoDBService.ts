@@ -1,108 +1,104 @@
-import { 
-  DynamoDB,
-  QueryCommandInput,
-  ScanCommandInput,
-  BatchGetItemCommandInput,
-  BatchWriteItemCommandInput,
-  TransactGetItemsCommandInput,
-  TransactWriteItemsCommandInput
-} from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 
 export class DynamoDBService {
-  private client: DynamoDBDocument;
+  private docClient: DynamoDBDocument;
 
   constructor() {
-    const dynamoClient = new DynamoDB({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-      }
+    const dynamoDB = new DynamoDB({
+      region: process.env.AWS_REGION
     });
-    this.client = DynamoDBDocument.from(dynamoClient);
+    this.docClient = DynamoDBDocument.from(dynamoDB);
   }
 
-  async create(tableName: string, item: Record<string, any>): Promise<Record<string, any>> {
-    await this.client.put({
-      TableName: tableName,
-      Item: item
-    });
-    return item;
+  async create(tableName: string, item: Record<string, any>) {
+    try {
+      await this.docClient.put({
+        TableName: tableName,
+        Item: item
+      });
+      return item;
+    } catch (error) {
+      console.error(`Error creating item in ${tableName}:`, error);
+      throw error;
+    }
   }
 
-  async get(tableName: string, key: Record<string, any>): Promise<Record<string, any> | null> {
-    const result = await this.client.get({
-      TableName: tableName,
-      Key: key
-    });
-    return result.Item || null;
+  async get(tableName: string, key: Record<string, any>) {
+    try {
+      const result = await this.docClient.get({
+        TableName: tableName,
+        Key: key
+      });
+      return result.Item || null;
+    } catch (error) {
+      console.error(`Error getting item from ${tableName}:`, error);
+      throw error;
+    }
   }
 
-  async update(tableName: string, key: Record<string, any>, updates: Record<string, any>): Promise<Record<string, any> | null> {
-    const updateExpressions: string[] = [];
-    const expressionAttributeNames: Record<string, string> = {};
-    const expressionAttributeValues: Record<string, any> = {};
+  async update(tableName: string, key: Record<string, any>, updates: Record<string, any>) {
+    const updateExpression = 'set ' + Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
+    const expressionAttributeNames = Object.keys(updates).reduce((acc, key) => {
+      acc[`#${key}`] = key;
+      return acc;
+    }, {} as { [key: string]: string });
+    const expressionAttributeValues = Object.entries(updates).reduce((acc, [key, value]) => {
+      acc[`:${key}`] = value;
+      return acc;
+    }, {} as { [key: string]: any });
 
-    Object.entries(updates).forEach(([key, value], index) => {
-      const attributeName = `#attr${index}`;
-      const attributeValue = `:val${index}`;
-      updateExpressions.push(`${attributeName} = ${attributeValue}`);
-      expressionAttributeNames[attributeName] = key;
-      expressionAttributeValues[attributeValue] = value;
-    });
-
-    const result = await this.client.update({
-      TableName: tableName,
-      Key: key,
-      UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ReturnValues: 'ALL_NEW'
-    });
-
-    return result.Attributes || null;
+    try {
+      const result = await this.docClient.update({
+        TableName: tableName,
+        Key: key,
+        UpdateExpression: updateExpression,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+        ReturnValues: 'ALL_NEW'
+      });
+      return result.Attributes || null;
+    } catch (error) {
+      console.error(`Error updating item in ${tableName}:`, error);
+      throw error;
+    }
   }
 
-  async delete(tableName: string, key: Record<string, any>): Promise<boolean> {
-    await this.client.delete({
-      TableName: tableName,
-      Key: key
-    });
-    return true;
+  async delete(tableName: string, key: Record<string, any>) {
+    try {
+      await this.docClient.delete({
+        TableName: tableName,
+        Key: key
+      });
+      return true;
+    } catch (error) {
+      console.error(`Error deleting item from ${tableName}:`, error);
+      throw error;
+    }
   }
 
-  async query(params: QueryCommandInput): Promise<{ items: Record<string, any>[]; lastEvaluatedKey?: Record<string, any> }> {
-    const result = await this.client.query(params);
-    return {
-      items: (result.Items || []) as Record<string, any>[],
-      lastEvaluatedKey: result.LastEvaluatedKey as Record<string, any> | undefined
-    };
+  async query(params: QueryCommandInput) {
+    try {
+      const result = await this.docClient.query(params);
+      return {
+        items: result.Items || [],
+        lastEvaluatedKey: result.LastEvaluatedKey
+      };
+    } catch (error) {
+      console.error('Error querying items:', error);
+      throw error;
+    }
   }
 
-  async scan(params: ScanCommandInput): Promise<{ items: Record<string, any>[]; lastEvaluatedKey?: Record<string, any> }> {
-    const result = await this.client.scan(params);
-    return {
-      items: (result.Items || []) as Record<string, any>[],
-      lastEvaluatedKey: result.LastEvaluatedKey as Record<string, any> | undefined
-    };
-  }
-
-  async batchGet(params: BatchGetItemCommandInput): Promise<Record<string, any>[]> {
-    const result = await this.client.batchGet(params);
-    return Object.values(result.Responses || {}).flat() as Record<string, any>[];
-  }
-
-  async batchWrite(params: BatchWriteItemCommandInput): Promise<void> {
-    await this.client.batchWrite(params);
-  }
-
-  async transactWrite(params: TransactWriteItemsCommandInput): Promise<void> {
-    await this.client.transactWrite(params);
-  }
-
-  async transactGet(params: TransactGetItemsCommandInput): Promise<Record<string, any>[]> {
-    const result = await this.client.transactGet(params);
-    return (result.Responses?.map(response => response.Item) || []) as Record<string, any>[];
+  async scan(tableName: string) {
+    try {
+      const result = await this.docClient.scan({
+        TableName: tableName
+      });
+      return result.Items || [];
+    } catch (error) {
+      console.error(`Error scanning table ${tableName}:`, error);
+      throw error;
+    }
   }
 } 

@@ -1,5 +1,5 @@
-import { AuthService } from '../services/authService';
-import { DynamoDBService } from '../services/dynamoDBService';
+import { AuthService } from '../src/services/authService';
+import { DynamoDBService } from '../src/services/dynamoDBService';
 import dotenv from 'dotenv';
 
 dotenv.config();
