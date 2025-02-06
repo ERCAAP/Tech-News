@@ -21,36 +21,18 @@ const OnboardingImage1 = () => (
   </View>
 );
 
-const OnboardingImage2 = () => (
-  <View style={styles.illustrationContainer}>
-    <View style={styles.featureIconsContainer}>
-      <View style={[styles.featureIcon, { backgroundColor: COLORS.primary + '20' }]}>
-        <MaterialIcons name="translate" size={32} color={COLORS.primary} />
-      </View>
-      <View style={[styles.featureIcon, { backgroundColor: COLORS.success + '20' }]}>
-        <MaterialIcons name="language" size={32} color={COLORS.success} />
-      </View>
-      <View style={[styles.featureIcon, { backgroundColor: COLORS.warning + '20' }]}>
-        <MaterialIcons name="chat" size={32} color={COLORS.warning} />
-      </View>
-    </View>
-  </View>
-);
-
 const slides = [
   {
     id: '1',
-    title: 'Latest Tech News',
-    description: 'Stay updated with the latest technology news from around the world. Get instant notifications for breaking news.',
+    title: 'Welcome to Tech News',
+    description: 'Stay updated with the latest technology news from around the world. Get instant notifications and personalized content.',
     ImageComponent: OnboardingImage1,
-    features: ['Real-time updates', 'Push notifications', 'Breaking news alerts']
-  },
-  {
-    id: '2',
-    title: 'News Features',
-    description: 'Enjoy a seamless news reading experience with our powerful features. Save your favorites and customize your feed.',
-    ImageComponent: OnboardingImage2,
-    features: ['Customizable feed', 'Easy sharing']
+    features: [
+      'Real-time updates',
+      'Breaking news alerts',
+      'Personalized content',
+      'Easy sharing'
+    ]
   }
 ];
 
@@ -132,11 +114,9 @@ export default function OnboardingScreen() {
           style={styles.button} 
           onPress={handleNext}
         >
-          <Text style={styles.buttonText}>
-            {currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
-          </Text>
+          <Text style={styles.buttonText}>Get Started</Text>
           <MaterialIcons 
-            name={currentIndex === slides.length - 1 ? 'login' : 'arrow-forward'} 
+            name="login" 
             size={24} 
             color={COLORS.white} 
           />

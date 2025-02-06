@@ -194,10 +194,10 @@ export default function LoginScreen() {
       const result = await promptAsync();
       
       if (result?.type === 'success') {
-        // Authorization code'u alıyoruz
+        // Get authorization code
         const { code } = result.params;
         
-        // Backend'e code'u gönderip token alıyoruz
+        // Send code to backend to get token
         const tokenResponse = await fetch('YOUR_BACKEND_URL/auth/google', {
           method: 'POST',
           headers: {
@@ -215,11 +215,11 @@ export default function LoginScreen() {
 
         const tokens = await tokenResponse.json();
         
-        // Token'ı güvenli şekilde saklıyoruz
+        // Store token securely
         await SecureStore.setItemAsync('accessToken', tokens.accessToken);
         await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
 
-        // Kullanıcı bilgilerini alıyoruz
+        // Get user information
         const userInfoResponse = await fetch('https://www.googleapis.com/userinfo/v2/me', {
           headers: { 
             Authorization: `Bearer ${tokens.accessToken}`,
@@ -233,7 +233,7 @@ export default function LoginScreen() {
 
         const userInfo = await userInfoResponse.json();
         
-        // Kullanıcıyı kaydet/giriş yap
+        // Register/login user
         await dispatch(register({
           email: userInfo.email,
           firstName: userInfo.given_name,

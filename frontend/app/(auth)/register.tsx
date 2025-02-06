@@ -195,11 +195,11 @@ export default function RegisterScreen() {
           
           // Login sayfasına yönlendir
           Alert.alert(
-            'Kayıt Başarılı',
-            'Hesabınız başarıyla oluşturuldu. Şimdi giriş yapabilirsiniz.',
+            'Registration Successful',
+            'Your account has been created successfully. You can now login.',
             [
               {
-                text: 'Tamam',
+                text: 'OK',
                 onPress: () => {
                   router.replace('/(auth)/login');
                 }
