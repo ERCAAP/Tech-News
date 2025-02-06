@@ -5,7 +5,17 @@ import path from 'path';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Gerekli environment değişkenlerini kontrol et
-const requiredEnvVars = ['PORT', 'MONGODB_URI', 'JWT_SECRET', 'JWT_EXPIRES_IN'];
+const requiredEnvVars = [
+  'PORT',
+  'AWS_REGION',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'COGNITO_USER_POOL_ID',
+  'COGNITO_CLIENT_ID',
+  'S3_UPLOADS_BUCKET',
+  'DYNAMODB_NEWS_TABLE',
+  'DYNAMODB_USERS_TABLE'
+];
 
 requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {
@@ -15,7 +25,20 @@ requiredEnvVars.forEach((envVar) => {
 
 export default {
   port: process.env.PORT || 3000,
-  mongodbUri: process.env.MONGODB_URI,
-  jwtSecret: process.env.JWT_SECRET,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN
+  aws: {
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+  cognito: {
+    userPoolId: process.env.COGNITO_USER_POOL_ID,
+    clientId: process.env.COGNITO_CLIENT_ID,
+  },
+  s3: {
+    uploadsBucket: process.env.S3_UPLOADS_BUCKET,
+  },
+  dynamodb: {
+    newsTable: process.env.DYNAMODB_NEWS_TABLE,
+    usersTable: process.env.DYNAMODB_USERS_TABLE,
+  }
 }; 

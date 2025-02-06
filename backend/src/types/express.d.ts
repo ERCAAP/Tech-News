@@ -1,11 +1,15 @@
 import { Express } from 'express-serve-static-core';
 import { Request } from 'express';
-import { IUser } from '../models/User';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: IUser;
+      user?: {
+        email: string;
+        sub: string;
+        groups?: string[];
+        [key: string]: any;
+      };
       file?: Express.Multer.File;
       files?: Express.Multer.File[];
     }

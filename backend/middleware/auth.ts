@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { AuthService } from '../services/authService';
 
 // Request tipini genişletelim
 interface AuthRequest extends Request {
   user?: {
-    _id: string;
-    role: string;
+    email: string;
+    sub: string;
   };
 }
 
@@ -20,10 +19,23 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { _id: string };
-    req.user = { _id: decoded._id, role: 'user' };
+    const authService = new AuthService();
+    const isValid = await authService.verifyToken(token);
+    
+    if (!isValid) {
+      res.status(401).json({ message: 'Invalid token' });
+      return;
+    }
+
+    // Token geçerliyse kullanıcı bilgilerini request'e ekle
+    req.user = {
+      email: isValid.email,
+      sub: isValid.sub
+    };
+
     next();
   } catch (error) {
+    console.error('Authentication error:', error);
     res.status(401).json({ message: 'Authentication failed' });
   }
 };
@@ -31,15 +43,17 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
 // Admin kontrolü için middleware
 export const isAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const user = await User.findById(req.user?._id);
+    const authService = new AuthService();
+    const userGroups = await authService.getUserGroups(req.user?.sub);
     
-    if (!user || user.role !== 'admin') {
+    if (!userGroups.includes('admin')) {
       res.status(403).json({ message: 'Admin access required' });
       return;
     }
 
     next();
   } catch (error) {
+    console.error('Admin check error:', error);
     res.status(500).json({ message: 'Authorization failed' });
   }
 }; 

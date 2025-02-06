@@ -1,8 +1,9 @@
 import express from 'express';
-import { login, updateProfile } from '../controllers/authController';
-import { protect } from '../middleware/authMiddleware';
+import { AuthController } from '../controllers/authController';
+import { auth } from '../middleware/auth';
 
 const router = express.Router();
+const authController = new AuthController();
 
 // Test route
 router.get('/test', (req: express.Request, res: express.Response) => {
@@ -10,10 +11,12 @@ router.get('/test', (req: express.Request, res: express.Response) => {
 });
 
 // Public routes
-router.post('/login', login);
+router.post('/register', authController.register);
+router.post('/login', authController.login);
 
 // Protected routes
-router.use(protect);
-router.patch('/profile', updateProfile);
+router.use(auth);
+router.get('/profile', authController.getProfile);
+router.patch('/profile', authController.updateProfile);
 
 export default router; 

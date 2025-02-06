@@ -1,47 +1,53 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import path from 'path';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { cloudWatchLogger } from './utils/logger';
+import { errorHandler } from './utils/errorHandler';
 import authRoutes from './routes/authRoutes';
 import newsRoutes from './routes/newsRoutes';
+import userRoutes from './routes/userRoutes';
 
 const app = express();
 
-// Middleware
-app.use(morgan('dev'));
+// Security middleware
+app.use(helmet());
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Statik dosyalar için uploads klasörünü ayarla
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
 
-// Global request logger
-app.use((req, res, next) => {
-  console.log('\n=== Incoming Request ===');
-  console.log('Time:', new Date().toISOString());
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Body:', req.body);
-  console.log('========================\n');
-  next();
+// Request parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging
+app.use(morgan('dev'));
+app.use(cloudWatchLogger);
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
 });
 
-// Test route
-app.get('/api/v1/test', (req, res) => {
-  res.json({ message: 'API is working' });
-});
-
-// Routes
+// API routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/news', newsRoutes);
+app.use('/api/v1/users', userRoutes);
 
-// Error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Global Error:', err);
-  res.status(err.status || 500).json({
+// Error handling
+app.use(errorHandler);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
     status: 'error',
-    message: err.message || 'Internal server error'
+    message: 'Route not found'
   });
 });
 

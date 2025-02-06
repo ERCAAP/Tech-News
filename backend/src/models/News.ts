@@ -1,178 +1,105 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import { DynamoDBService } from '../services/dynamoDBService';
+import { v4 as uuidv4 } from 'uuid';
 
-export interface INews extends Document {
-  title: string;          // Haber başlığı
-  displayTitle: string;   // Görünen başlık
-  coverImage: string;      // Cover image
-  content: string;        // İçerik
-  summary: string;        // Özet
-  author: mongoose.Types.ObjectId;
+export interface INews {
+  newsId: string;
+  title: string;
+  content: string;
   category: string;
-  subCategory?: string;   // Alt kategori
-  tags: string[];
-  imageUrl?: string;      // Sadece tek bir image alanı
-  contentImages: string[]; 
-  videoUrl?: string;
+  authorId: string;
   status: 'draft' | 'published' | 'archived';
-  viewCount: number;      // Görüntülenme sayısı
-  likes: mongoose.Types.ObjectId[]; // Beğenenler
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt?: Date;     // Yayınlanma tarihi
-  isHighlighted: boolean; // Öne çıkan haber mi?
-  readTime: number;       // Okuma süresi (dakika)
-  views: number;
-  favorites: Types.ObjectId[];
+  imageUrl?: string;
+  tags: string[];
+  readTime?: number;
+  views: {
+    total: number;
+    unique: number;
+    last24Hours: number;
+  };
+  shareCount: number;
+  favorites: string[];
   favoriteCount: number;
-  // Model metodları
-  addToFavorites(userId: mongoose.Types.ObjectId): Promise<INews>;
-  removeFromFavorites(userId: mongoose.Types.ObjectId): Promise<INews>;
-  incrementViews(): Promise<INews>;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
 }
 
-const newsSchema = new Schema<INews>({
-  title: {
-    type: String,
-    required: [true, 'Haber başlığı gereklidir'],
-    trim: true
-  },
-  displayTitle: {
-    type: String,
-    default: function(this: INews) {
-      return this.title;
-    }
-  },
-  coverImage: {
-    type: String
-  },
-  content: {
-    type: String,
-    required: [true, 'Haber içeriği gereklidir']
-  },
-  summary: {
-    type: String,
-    required: [true, 'Haber özeti gereklidir'],
-    maxlength: [200, 'Özet en fazla 200 karakter olabilir']
-  },
-  author: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'Yazar bilgisi gereklidir']
-  },
-  category: {
-    type: String,
-    required: [true, 'Kategori gereklidir'],
-    enum: {
-      values: ['ai', 'app', 'technology'],
-      message: '{VALUE} geçerli bir kategori değildir'
-    },
-    lowercase: true,
-  },
-  subCategory: {
-    type: String,
-    trim: true
-  },
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  imageUrl: String,
-  contentImages: [String],
-  videoUrl: String,
-  status: {
-    type: String,
-    enum: ['draft', 'published', 'archived'],
-    default: 'draft'
-  },
-  viewCount: {
-    type: Number,
-    default: 0
-  },
-  likes: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  publishedAt: {
-    type: Date
-  },
-  isHighlighted: {
-    type: Boolean,
-    default: false
-  },
-  readTime: {
-    type: Number,
-    default: 0
-  },
-  views: {
-    type: Number,
-    default: 0
-  },
-  favorites: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  favoriteCount: {
-    type: Number,
-    default: 0
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
+class NewsModel {
+  private dbService: DynamoDBService;
+  private tableName: string;
 
-// Okuma süresini hesapla (ortalama 200 kelime/dakika)
-newsSchema.pre('save', function(next) {
-  const wordCount = this.content.split(/\s+/).length;
-  this.readTime = Math.ceil(wordCount / 200);
-  
-  if (this.status === 'published' && !this.publishedAt) {
-    this.publishedAt = new Date();
+  constructor() {
+    this.dbService = new DynamoDBService();
+    this.tableName = process.env.DYNAMODB_NEWS_TABLE!;
   }
-  
-  if (this.isModified()) {
-    this.updatedAt = new Date();
+
+  async create(newsData: Partial<INews>): Promise<INews> {
+    const now = new Date().toISOString();
+    const news: INews = {
+      newsId: uuidv4(),
+      title: newsData.title!,
+      content: newsData.content!,
+      category: newsData.category!,
+      authorId: newsData.authorId!,
+      status: newsData.status || 'draft',
+      imageUrl: newsData.imageUrl,
+      tags: newsData.tags || [],
+      readTime: this.calculateReadTime(newsData.content!),
+      views: {
+        total: 0,
+        unique: 0,
+        last24Hours: 0
+      },
+      shareCount: 0,
+      favorites: [],
+      favoriteCount: 0,
+      createdAt: now,
+      updatedAt: now,
+      publishedAt: newsData.status === 'published' ? now : undefined
+    };
+
+    await this.dbService.create(this.tableName, news);
+    return news;
   }
-  
-  if (this.isModified('favorites')) {
-    this.favoriteCount = this.favorites.length;
+
+  async findById(newsId: string): Promise<INews | null> {
+    const news = await this.dbService.get(this.tableName, { newsId });
+    return news as INews | null;
   }
-  
-  next();
-});
 
-// İndeksler
-newsSchema.index({ title: 'text', content: 'text', summary: 'text' });
-newsSchema.index({ category: 1, status: 1 });
-newsSchema.index({ author: 1 });
-newsSchema.index({ publishedAt: -1 });
-newsSchema.index({ viewCount: -1 });
+  async findByIdAndUpdate(newsId: string, updateData: Partial<INews>): Promise<INews | null> {
+    const updates = {
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
 
-// Görüntülenme sayısını artır
-newsSchema.methods.incrementViews = async function(this: INews): Promise<INews> {
-  this.views += 1;
-  await this.save();
-  return this;
-};
-
-// Favorilere ekle
-newsSchema.methods.addToFavorites = async function(this: INews, userId: mongoose.Types.ObjectId): Promise<INews> {
-  if (!this.favorites.includes(userId)) {
-    this.favorites.push(userId);
-    this.favoriteCount = this.favorites.length;
-    await this.save();
+    const news = await this.dbService.update(this.tableName, { newsId }, updates);
+    return news as INews | null;
   }
-  return this;
-};
 
-// Favorilerden çıkar
-newsSchema.methods.removeFromFavorites = async function(this: INews, userId: mongoose.Types.ObjectId): Promise<INews> {
-  this.favorites = this.favorites.filter(id => !id.equals(userId));
-  this.favoriteCount = this.favorites.length;
-  await this.save();
-  return this;
-};
+  async findByIdAndDelete(newsId: string): Promise<boolean> {
+    return this.dbService.delete(this.tableName, { newsId });
+  }
 
-export const News = mongoose.model<INews>('News', newsSchema); 
+  async findByCategory(category: string): Promise<INews[]> {
+    const params = {
+      TableName: this.tableName,
+      IndexName: 'CategoryIndex',
+      KeyConditionExpression: 'category = :category',
+      ExpressionAttributeValues: {
+        ':category': category
+      }
+    };
+
+    const result = await this.dbService.query(params);
+    return result.items as INews[];
+  }
+
+  private calculateReadTime(content: string): number {
+    const wordsPerMinute = 200;
+    const wordCount = content.split(/\s+/).length;
+    return Math.ceil(wordCount / wordsPerMinute);
+  }
+}
+
+export const News = new NewsModel(); 

@@ -1,142 +1,122 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User';
+import { AuthService } from '../services/authService';
+import { DynamoDBService } from '../services/dynamoDBService';
 
-export const login = async (req: Request, res: Response) => {
-  try {
-    console.log('Login Request Body:', req.body);
-    
-    const { email, password } = req.body;
-    
-    // Email ve password kontrolü
-    if (!email || !password) {
-      console.log('Missing credentials:', { email, password });
-      return res.status(400).json({
-        status: 'error',
-        message: 'Email ve şifre gereklidir'
-      });
-    }
+export class AuthController {
+  private authService: AuthService;
+  private dbService: DynamoDBService;
 
-    // Kullanıcıyı bul ve şifreyi de getir
-    const user = await User.findOne({ email }).select('+password');
-    console.log('Found user:', { 
-      found: !!user,
-      email: user?.email, 
-      hasPassword: !!user?.password,
-      passwordLength: user?.password?.length 
-    });
-
-    if (!user || !user.password) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Geçersiz email veya şifre'
-      });
-    }
-
-    // Şifre karşılaştırma
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log('Password validation:', { isValid: isPasswordValid });
-
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Geçersiz email veya şifre'
-      });
-    }
-
-    // JWT token oluştur
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '30d' }
-    );
-
-    // Password hariç kullanıcı bilgilerini döndür
-    const userResponse = {
-      _id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role
-    };
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user: userResponse
-      },
-      token
-    });
-
-  } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error.message || 'Giriş işlemi sırasında bir hata oluştu'
-    });
+  constructor() {
+    this.authService = new AuthService();
+    this.dbService = new DynamoDBService();
   }
-};
 
-export const updateProfile = async (req: Request, res: Response) => {
-  try {
-    const userId = req.user.id; // JWT'den gelen kullanıcı ID'si
-    const { firstName, lastName, email } = req.body;
+  register = async (req: Request, res: Response) => {
+    try {
+      const { email, password, name } = req.body;
 
-    // Mevcut kullanıcıyı bul
-    const currentUser = await User.findById(userId);
-    if (!currentUser) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Kullanıcı bulunamadı'
+      // Create user in Cognito
+      await this.authService.signUp(email, password, {
+        'custom:name': name,
+        email
       });
-    }
 
-    // Email değişiyorsa, duplicate kontrolü yap
-    if (email && email !== currentUser.email) {
-      const existingUser = await User.findOne({ email, _id: { $ne: userId } });
-      if (existingUser) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Bu email adresi başka bir kullanıcı tarafından kullanılıyor'
-        });
-      }
-    }
-
-    // Güncelleme objesini oluştur
-    const updateData: any = {};
-    if (firstName) updateData.firstName = firstName;
-    if (lastName) updateData.lastName = lastName;
-    if (email) updateData.email = email;
-
-    // Kullanıcıyı güncelle
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user: updatedUser
-      }
-    });
-
-  } catch (error: any) {
-    console.error('Update Profile Error:', error);
-    
-    // Duplicate key hatası için özel mesaj
-    if (error.code === 11000) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Bu email adresi başka bir kullanıcı tarafından kullanılıyor'
+      // Store additional user data in DynamoDB
+      await this.dbService.create(process.env.DYNAMODB_USERS_TABLE!, {
+        userId: email,
+        email,
+        name,
+        createdAt: new Date().toISOString(),
+        preferences: {
+          categories: [],
+          notificationSettings: {
+            newArticles: true,
+            newsletter: true
+          },
+          theme: 'system'
+        }
       });
-    }
 
-    res.status(500).json({
-      status: 'error',
-      message: error.message || 'Profil güncellenirken bir hata oluştu'
-    });
-  }
-}; 
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  login = async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+      const authResult = await this.authService.signIn(email, password);
+      
+      res.json({
+        token: authResult.AuthenticationResult?.AccessToken,
+        refreshToken: authResult.AuthenticationResult?.RefreshToken
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  };
+
+  getProfile = async (req: Request, res: Response) => {
+    try {
+      const { email } = req.user!;
+      const user = await this.dbService.get(process.env.DYNAMODB_USERS_TABLE!, {
+        userId: email
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('Get profile error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  updateProfile = async (req: Request, res: Response) => {
+    try {
+      const { email } = req.user!;
+      const { name, preferences } = req.body;
+
+      const updates = {
+        name,
+        preferences,
+        updatedAt: new Date().toISOString()
+      };
+
+      const updatedUser = await this.dbService.update(
+        process.env.DYNAMODB_USERS_TABLE!,
+        { userId: email },
+        updates
+      );
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  verifyToken = async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const isValid = await this.authService.verifyToken(token);
+      if (!isValid) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+
+      res.json({ valid: true });
+    } catch (error) {
+      console.error('Token verification error:', error);
+      res.status(401).json({ error: 'Token verification failed' });
+    }
+  };
+} 

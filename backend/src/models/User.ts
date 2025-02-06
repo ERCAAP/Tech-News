@@ -1,79 +1,91 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import { DynamoDBService } from '../services/dynamoDBService';
 
-export interface IUser extends Document {
+export interface IUser {
+  userId: string;
   email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   role: 'user' | 'admin';
-  favoriteNews: Array<mongoose.Types.ObjectId>;
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword(candidatePassword: string): Promise<boolean>;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  preferences?: {
+    categories: string[];
+    notificationSettings: {
+      newArticles: boolean;
+      newsletter: boolean;
+    };
+    theme: 'light' | 'dark' | 'system';
+  };
+  subscription?: {
+    isSubscribed: boolean;
+    plan: 'free' | 'basic' | 'premium';
+    updatedAt: string;
+  };
 }
 
-const userSchema = new Schema<IUser>({
-  firstName: {
-    type: String,
-    required: [true, 'Please provide your first name']
-  },
-  lastName: {
-    type: String,
-    required: [true, 'Please provide your last name']
-  },
-  email: {
-    type: String,
-    required: [true, 'Please provide your email'],
-    unique: true,
-    lowercase: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password'],
-    minlength: 6,
-    select: false  // Varsayılan olarak password'ü getirme
-  },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  favoriteNews: [{
-    type: Schema.Types.ObjectId,
-    ref: 'News',
-    default: []
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+class UserModel {
+  private dbService: DynamoDBService;
+  private tableName: string;
+
+  constructor() {
+    this.dbService = new DynamoDBService();
+    this.tableName = process.env.DYNAMODB_USERS_TABLE!;
   }
-}, {
-  timestamps: true
-});
 
-// Şifre hash'leme
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-  
-  this.password = await bcrypt.hash(this.password!, 12);
-  next();
-});
+  async findById(userId: string): Promise<IUser | null> {
+    return this.dbService.get(this.tableName, { userId });
+  }
 
-// Şifre karşılaştırma metodu
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password!);
-};
+  async findByEmail(email: string): Promise<IUser | null> {
+    const params = {
+      TableName: this.tableName,
+      IndexName: 'EmailIndex',
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: {
+        ':email': email
+      }
+    };
 
-// Favori haberleri getirmek için virtual populate ekleyelim
-userSchema.virtual('favorites', {
-  ref: 'News',
-  localField: 'favoriteNews',
-  foreignField: '_id'
-});
+    const result = await this.dbService.query(params);
+    return result.items[0] || null;
+  }
 
-export const User = mongoose.model<IUser>('User', userSchema); 
+  async create(userData: Partial<IUser>): Promise<IUser> {
+    const now = new Date().toISOString();
+    const user: IUser = {
+      userId: userData.userId!,
+      email: userData.email!,
+      name: userData.name!,
+      role: userData.role || 'user',
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+      preferences: {
+        categories: [],
+        notificationSettings: {
+          newArticles: true,
+          newsletter: true
+        },
+        theme: 'system'
+      }
+    };
+
+    await this.dbService.create(this.tableName, user);
+    return user;
+  }
+
+  async findByIdAndUpdate(userId: string, updateData: Partial<IUser>): Promise<IUser | null> {
+    const updates = {
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
+
+    return this.dbService.update(this.tableName, { userId }, updates);
+  }
+
+  async findByIdAndDelete(userId: string): Promise<boolean> {
+    return this.dbService.delete(this.tableName, { userId });
+  }
+}
+
+export const User = new UserModel(); 

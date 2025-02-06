@@ -1,24 +1,11 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { S3Service } from '../services/s3Service';
 import { Request, Response, NextFunction } from 'express';
 
-// Uploads klasörünü oluştur
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const s3Service = new S3Service();
 
-// Storage configuration
-const storage = multer.diskStorage({
-  destination: function (req: Request, file: Express.Multer.File, cb) {
-    cb(null, uploadsDir);
-  },
-  filename: function (req: Request, file: Express.Multer.File, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Use memory storage for temporary file handling
+const storage = multer.memoryStorage();
 
 // File filter
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -38,6 +25,18 @@ export const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
+
+// Upload to S3
+export const uploadToS3 = async (file: Express.Multer.File, folder: string = 'uploads'): Promise<string> => {
+  try {
+    const key = `${folder}/${Date.now()}-${file.originalname}`;
+    const url = await s3Service.uploadFile(file.buffer, key, file.mimetype);
+    return url;
+  } catch (error) {
+    console.error('S3 upload error:', error);
+    throw new Error('Failed to upload file to S3');
+  }
+};
 
 // Log uploaded files
 export const logUploadedFiles = (req: Request, res: Response, next: Function) => {
