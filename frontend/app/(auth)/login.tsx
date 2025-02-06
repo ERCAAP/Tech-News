@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, Animated, TouchableOpacity, Image, Platform, Text } from 'react-native';
 import { useAppDispatch } from '@/redux/hooks';
 import { login, register } from '@/redux/slices/authSlice';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
+
 import { Link, router } from 'expo-router';
 import { COLORS, FONTS, shadowStyle } from '@/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,9 @@ import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { BaseRegisterData, SocialRegisterData } from '../../src/types/auth';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
+
 
 // Initialize WebBrowser for Google Auth
 WebBrowser.maybeCompleteAuthSession();
@@ -126,8 +128,15 @@ export default function LoginScreen() {
         await AsyncStorage.removeItem('userPassword');
       }
       
-      await dispatch(login(formData)).unwrap();
-      router.replace('/(tabs)');
+      const result = await dispatch(login(formData)).unwrap();
+      // Store subscription status
+      await AsyncStorage.setItem('isSubscription', result.user.isSubscription.toString());
+      
+      if (!result.user.isSubscription) {
+        router.replace('/(auth)/paywall');
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       Alert.alert(
         'Login Error',
@@ -324,7 +333,6 @@ export default function LoginScreen() {
               title={isLoading ? "Logging in..." : "Login"}
               onPress={handleLogin}
               disabled={isLoading}
-              style={styles.button}
               isLoading={isLoading}
             />
 

@@ -1,28 +1,33 @@
-import { Router } from 'express';
-import { protect, restrictTo } from '../middleware/auth';
+import express from 'express';
+import { protect, restrictTo } from '../middleware/authMiddleware';
 import {
   getAllUsers,
   getUser,
   updateUser,
   deleteUser,
   updateMe,
-  deleteMe
+  deleteMe,
+  updateSubscription
 } from '../controllers/userController';
 
-const router = Router();
+const router = express.Router();
 
-// Protected routes
+// Protect all routes after this middleware
 router.use(protect);
 
-// Normal user routes
+// User routes
 router.patch('/update-me', updateMe);
 router.delete('/delete-me', deleteMe);
+router.post('/update-subscription', updateSubscription);
 
-// Admin only routes
+// Admin routes
 router.use(restrictTo('admin'));
-router.get('/', getAllUsers);
-router.get('/:id', getUser);
-router.patch('/:id', updateUser);
-router.delete('/:id', deleteUser);
+router.route('/')
+  .get(getAllUsers);
+
+router.route('/:id')
+  .get(getUser)
+  .patch(updateUser)
+  .delete(deleteUser);
 
 export default router; 

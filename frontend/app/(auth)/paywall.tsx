@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Dimensions, TouchableOpacity, Platform, Animated } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, TouchableOpacity, Platform, Animated, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,24 +7,30 @@ import { COLORS, FONTS } from '@/theme';
 import { Button } from '@/components/common/Button';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppDispatch } from '@/redux/hooks';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@/config';
 
 const { width } = Dimensions.get('window');
 
 const subscriptionPlans = [
   {
     id: '1',
-    duration: '6 months',
+    duration: '1 Year',
     price: '$119.99',
-    perMonth: '$19.99',
-    label: 'half-yearly'
+    perMonth: '$9.99',
+    label: 'yearly',
+    type: 'yearly',
+    isBestValue: true
   },
   {
     id: '2',
-    duration: '3 months',
-    price: '$89.99',
-    perMonth: '$29.99',
-    label: 'quarterly',
-    isBestValue: true
+    duration: '1 Month',
+    price: '$14.99',
+    perMonth: '$14.99',
+    label: 'monthly',
+    type: 'monthly'
   }
 ];
 
@@ -33,26 +39,13 @@ const features = [
     icon: 'article',
     title: 'Unlimited Articles',
     description: 'Access all premium articles and exclusive content'
-  },
-  {
-    icon: 'notifications-off',
-    title: 'Ad-Free Experience',
-    description: 'Enjoy reading without any advertisements'
-  },
-  {
-    icon: 'bookmark',
-    title: 'Save for Later',
-    description: 'Bookmark articles to read offline'
-  },
-  {
-    icon: 'downloading',
-    title: 'Audio Articles',
-    description: 'Listen to articles with text-to-speech'
   }
 ];
 
 const PaywallScreen = () => {
+  const dispatch = useAppDispatch();
   const [selectedPlan, setSelectedPlan] = useState(subscriptionPlans[1].id);
+  const [isLoading, setIsLoading] = useState(false);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
@@ -63,9 +56,52 @@ const PaywallScreen = () => {
     }).start();
   }, []);
 
-  const handleContinue = () => {
-    // Handle subscription logic here
-    router.replace('/(tabs)');
+  const handleContinue = async () => {
+    try {
+      setIsLoading(true);
+      
+      const plan = subscriptionPlans.find(p => p.id === selectedPlan);
+      if (!plan) return;
+
+      const endDate = new Date();
+      if (plan.type === 'yearly') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else {
+        endDate.setMonth(endDate.getMonth() + 1);
+      }
+
+      const response = await axios.post(`${API_URL}/users/update-subscription`, {
+        isSubscription: true,
+        subscriptionPlan: plan.type,
+        subscriptionEndDate: endDate.toISOString()
+      });
+
+      if (response.data.success) {
+        await AsyncStorage.setItem('isSubscription', 'true');
+        await AsyncStorage.setItem('subscriptionPlan', plan.type);
+        await AsyncStorage.setItem('subscriptionEndDate', endDate.toISOString());
+        
+        Alert.alert(
+          'Success',
+          'Your subscription has been activated successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)')
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', 'Failed to update subscription');
+      }
+    } catch (error) {
+      Alert.alert(
+        'Subscription Error',
+        'An error occurred during the process. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,9 +126,9 @@ const PaywallScreen = () => {
         >
           <View style={styles.header}>
             <MaterialIcons name="newspaper" size={48} color={COLORS.white} />
-            <Text style={styles.title}>Premium News Access</Text>
+            <Text style={styles.title}>Premium Access</Text>
             <Text style={styles.subtitle}>
-              Get unlimited access to premium content and exclusive features
+              Get unlimited access to premium content
             </Text>
           </View>
 
@@ -134,17 +170,37 @@ const PaywallScreen = () => {
           </View>
 
           <Button
-            title="Continue"
+            title={isLoading ? "Processing..." : "Continue"}
             onPress={handleContinue}
             style={styles.button}
+            disabled={isLoading}
+            isLoading={isLoading}
           />
 
-          <TouchableOpacity 
-            style={styles.restoreButton}
-            onPress={() => {/* Handle restore purchases */}}
-          >
-            <Text style={styles.restoreText}>Restore Purchase</Text>
-          </TouchableOpacity>
+          <View style={styles.footerButtons}>
+            <View style={styles.footerButtonRow}>
+              <TouchableOpacity 
+                style={styles.footerButton}
+                onPress={() => {/* Handle restore purchases */}}
+              >
+                <Text style={styles.footerButtonText}>Restore</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.footerButton}
+                onPress={() => router.push('/privacy')}
+              >
+                <Text style={styles.footerButtonText}>Privacy</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.footerButton}
+                onPress={() => router.push('/terms')}
+              >
+                <Text style={styles.footerButtonText}>Terms</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </Animated.View>
       </LinearGradient>
     </SafeAreaView>
@@ -278,15 +334,27 @@ const styles = StyleSheet.create({
     height: 56,
     marginBottom: 16,
   },
-  restoreButton: {
+  footerButtons: {
+    marginTop: 20,
     alignItems: 'center',
-    padding: 12,
   },
-  restoreText: {
+  footerButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  footerButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+  },
+  footerButtonText: {
+    color: COLORS.white,
     fontSize: 14,
     fontFamily: FONTS.medium,
-    color: COLORS.white,
-    textDecorationLine: 'underline',
   },
 });
 

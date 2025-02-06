@@ -6,6 +6,7 @@ import { API_URL } from '@/utils/api';
 import { api } from '@/services/api';
 import * as Notifications from 'expo-notifications';
 import OneSignal from 'react-native-onesignal';
+import { NewsItem } from '@/types';
 
 const initialState: NewsState = {
   news: [],
@@ -17,25 +18,9 @@ const initialState: NewsState = {
 
 export const fetchNews = createAsyncThunk(
   'news/fetchNews',
-  async (_, { dispatch }) => {
-    try {
-      const response = await axios.get('/news');
-      
-      // Yeni haber varsa bildirim gönder
-      if (response.data.data.news.length > 0) {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'New Articles Available',
-            body: 'Check out the latest tech news!',
-          },
-          trigger: null,
-        });
-      }
-      
-      return response.data.data.news;
-    } catch (error) {
-      throw error;
-    }
+  async () => {
+    const response = await api.get('/news');
+    return response.data.data.news;
   }
 );
 
@@ -249,14 +234,16 @@ const newsSlice = createSlice({
     builder
       .addCase(fetchNews.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(fetchNews.fulfilled, (state, action) => {
         state.isLoading = false;
         state.news = action.payload;
+        state.error = null;
       })
       .addCase(fetchNews.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || null;
+        state.error = action.error.message || 'An error occurred';
       })
       .addCase(viewNews.fulfilled, (state, action) => {
         const updatedNews = state.news.map(item => 

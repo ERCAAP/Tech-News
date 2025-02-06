@@ -20,6 +20,10 @@ interface IUser extends Document {
   password: string;
   firstName: string;
   lastName: string;
+  isSubscription: boolean;
+  subscriptionPlan?: 'monthly' | 'yearly' | null;
+  subscriptionEndDate?: Date;
+  favoriteNews: mongoose.Types.ObjectId[];
 }
 
 const UserSchema = new Schema({
@@ -51,6 +55,23 @@ const UserSchema = new Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  isSubscription: {
+    type: Boolean,
+    default: false
+  },
+  subscriptionPlan: {
+    type: String,
+    enum: ['monthly', 'yearly', null],
+    default: null
+  },
+  subscriptionEndDate: {
+    type: Date,
+    default: null
+  },
+  favoriteNews: [{
+    type: Schema.Types.ObjectId,
+    ref: 'News'
+  }],
   readingHistory: [{
     news: { type: Schema.Types.ObjectId, ref: 'News' },
     readAt: { type: Date, default: Date.now },

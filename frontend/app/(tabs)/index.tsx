@@ -58,6 +58,8 @@ export default function HomeScreen() {
     setIsLoading(true);
     try {
       await dispatch(fetchNews()).unwrap();
+    } catch (error) {
+      console.error('Error loading news:', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,15 +69,20 @@ export default function HomeScreen() {
     loadNews();
   }, [loadNews]);
 
-  // Group news by category
+  // Kategorilere göre haberleri grupla
   const newsByCategory = useMemo(() => {
+    if (!Array.isArray(news)) {
+      console.log('News is not an array:', news);
+      return {};
+    }
+
     return CATEGORIES.reduce((acc, category) => {
-      acc[category.id] = news
-        .filter((item) => {
-          const newsCategory = item.category?.toLowerCase().trim();
-          return newsCategory === category.id;
-        })
-        .slice(0, 3);
+      const categoryNews = news.filter((item) => {
+        if (!item || !item.category) return false;
+        return item.category.toLowerCase().trim() === category.id.toLowerCase().trim();
+      }).slice(0, 3);
+
+      acc[category.id] = categoryNews;
       return acc;
     }, {} as Record<string, NewsItem[]>);
   }, [news]);
@@ -87,9 +94,23 @@ export default function HomeScreen() {
     });
   };
 
-  if (isLoading && news.length === 0) {
+  // Loading durumunu kontrol et
+  if (isLoading) {
     return <Loading />;
   }
+
+  // NewsCard component'i
+  const renderNewsCard = (item: NewsItem, categoryId: string) => {
+    if (!item) return null;
+    
+    return (
+      <NewsCard 
+        key={`${categoryId}-${item._id}`} 
+        news={item} 
+        style={{ marginRight: SPACING }}
+      />
+    );
+  };
 
   return (
     <ScrollView 
@@ -97,7 +118,6 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContent}
     >
-      {/* Categories with News */}
       {CATEGORIES.map((category) => (
         <View key={category.id} style={styles.categorySection}>
           <View style={styles.categoryHeader}>
@@ -123,10 +143,8 @@ export default function HomeScreen() {
             contentContainerStyle={styles.categoryContent}
             style={styles.categoryScroll}
           >
-            {newsByCategory[category.id]?.length > 0 ? (
-              newsByCategory[category.id].map((item) => (
-                <NewsCard key={item._id} news={item} />
-              ))
+            {Array.isArray(newsByCategory[category.id]) && newsByCategory[category.id].length > 0 ? (
+              newsByCategory[category.id].map((item) => renderNewsCard(item, category.id))
             ) : (
               <View style={styles.emptyTextContainer}>
                 <Text style={styles.emptyText}>No news in this category</Text>
@@ -208,6 +226,7 @@ const styles = StyleSheet.create({
   categoryContent: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    gap: SPACING, // Kartlar arası boşluk
   },
   emptyTextContainer: {
     width: CATEGORY_CARD_WIDTH,

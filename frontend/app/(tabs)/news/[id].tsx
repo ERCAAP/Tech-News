@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput, Share } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, Modal, TextInput, Share, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { COLORS, FONTS } from '@/theme';
@@ -20,6 +20,9 @@ import * as MailComposer from 'expo-mail-composer';
 import * as Localization from 'expo-localization';
 import { OPENAI_API_KEY } from '../../../constants/config';
 import axiosInstance from '@/api/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const categoryMapping: { [key: string]: string } = {
   'App Development': 'app-development',
@@ -149,6 +152,8 @@ export default function NewsDetailScreen() {
   const [showOriginal, setShowOriginal] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(0);
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [showFullContent, setShowFullContent] = useState(false);
 
   const categories = [
     { label: 'Select a category', value: '' },
@@ -301,7 +306,37 @@ export default function NewsDetailScreen() {
       contentToRender = parsed.content;
     }
 
-    return contentToRender.split('\n').map((part, index) => {
+    // If user is admin or subscribed, show full content
+    if (isAdmin || isSubscribed) {
+      return (
+        <View style={styles.fullContent}>
+          {renderContentPart(contentToRender)}
+        </View>
+      );
+    }
+
+    // For non-subscribed regular users, show preview and subscription prompt
+    const contentArray = contentToRender.split('\n');
+    const previewContent = contentArray.slice(0, 2).join('\n'); // Show first 2 paragraphs
+
+    return (
+      <View style={{ position: 'relative' }}>
+        <View style={styles.previewContent}>
+          {renderContentPart(previewContent)}
+          <LinearGradient
+            colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
+            style={styles.fadeOut}
+          />
+        </View>
+        <View style={styles.subscriptionPromptContainer}>
+          <SubscriptionPrompt />
+        </View>
+      </View>
+    );
+  };
+
+  const renderContentPart = (content: string) => {
+    return content.split('\n').map((part, index) => {
       const imageMatch = part.match(/\[IMAGE:(.*?)\]/);
       if (imageMatch) {
         const imagePath = imageMatch[1];
@@ -469,24 +504,23 @@ export default function NewsDetailScreen() {
 
   const handleDelete = () => {
     Alert.alert(
-      "Haberi Sil",
-      "Bu haberi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "Delete News",
+      "Are you sure you want to delete this news? This action cannot be undone.",
       [
         {
-          text: "İptal",
+          text: "Cancel",
           style: "cancel"
         },
         {
-          text: "Sil",
+          text: "Delete",
           style: "destructive",
           onPress: async () => {
             try {
               await dispatch(deleteNews(id));
-              // Ana sayfaya dönmeden önce haberleri yenile
-              await dispatch(fetchNews()); // fetchNews action'ını import etmeyi unutmayın
-              router.replace('/(tabs)'); // replace kullanarak geri dönüşü engelliyoruz
+              await dispatch(fetchNews());
+              router.replace('/(tabs)');
             } catch (error) {
-              Alert.alert("Hata", "Haber silinirken bir hata oluştu");
+              Alert.alert("Error", "Failed to delete news");
             }
           }
         }
@@ -496,8 +530,9 @@ export default function NewsDetailScreen() {
 
   const handleContactUs = async () => {
     try {
-      // Önce mailto URL'sini deneyelim çünkü bu daha güvenilir çalışır
-      const mailtoUrl = `mailto:support@yourapp.com?subject=${encodeURIComponent(`Feedback about news: ${newsItem?.title || ''}`)}&body=${encodeURIComponent(`News ID: ${id}\n\nPlease write your message here...`)}`;
+      const subject = encodeURIComponent(`Feedback about news: ${newsItem?.title || ''}`);
+      const body = encodeURIComponent(`News ID: ${id}\n\nI would like to get more information about this news.`);
+      const mailtoUrl = `mailto:Hello@richmondplus.com?subject=${subject}&body=${body}`;
       
       const canOpenMailto = await Linking.canOpenURL(mailtoUrl);
       if (canOpenMailto) {
@@ -505,23 +540,18 @@ export default function NewsDetailScreen() {
         return;
       }
 
-      // Mailto çalışmazsa MailComposer'ı deneyelim
+      // Fallback to MailComposer
       const isMailComposerAvailable = await MailComposer.isAvailableAsync();
       if (isMailComposerAvailable) {
-        const result = await MailComposer.composeAsync({
-          recipients: ['support@yourapp.com'],
+        await MailComposer.composeAsync({
+          recipients: ['Hello@richmondplus.com'],
           subject: `Feedback about news: ${newsItem?.title || ''}`,
-          body: `News ID: ${id}\n\nPlease write your message here...`,
+          body: `News ID: ${id}\n\nI would like to get more information about this news.`,
           isHtml: false,
         });
-
-        if (result.status === 'sent') {
-          Alert.alert("Success", "Email sent successfully");
-        }
         return;
       }
 
-      // Hiçbir yöntem çalışmazsa
       Alert.alert(
         "Error",
         "No email app is available on your device. Please install an email app and try again.",
@@ -563,40 +593,34 @@ export default function NewsDetailScreen() {
     }
   };
 
-  // Favori durumunu kontrol et
+  // Add this useEffect to check subscription status
   useEffect(() => {
-    const checkFavoriteStatus = async () => {
-      try {
-        const response = await axiosInstance.get<FavoriteResponse>(`/news/${id}/favorite`);
-        if (response.data.status === 'success') {
-          setIsFavorited(response.data.data.isFavorited);
-          setFavoriteCount(response.data.data.favoriteCount);
-        }
-      } catch (error) {
-        console.error('Check favorite status error:', error);
-      }
+    const checkSubscription = async () => {
+      const subscriptionStatus = await AsyncStorage.getItem('isSubscription');
+      setIsSubscribed(subscriptionStatus === 'true');
+      setShowFullContent(subscriptionStatus === 'true');
     };
+    checkSubscription();
+  }, []);
 
-    if (id && !isAdmin) {
-      checkFavoriteStatus();
-    }
-  }, [id, isAdmin]);
-
-  // Favori ekleme/çıkarma işlemi
-  const handleFavoritePress = async () => {
-    try {
-      const method = isFavorited ? 'delete' : 'post';
-      const response = await axiosInstance[method]<FavoriteResponse>(`/news/${id}/favorite`);
-      
-      if (response.data.status === 'success') {
-        setIsFavorited(response.data.data.isFavorited);
-        setFavoriteCount(response.data.data.favoriteCount);
-      }
-    } catch (error) {
-      console.error('Favorite toggle error:', error);
-      Alert.alert('Error', 'Failed to update favorite status');
-    }
-  };
+  // Update SubscriptionPrompt component
+  const SubscriptionPrompt = () => (
+    <View style={styles.subscriptionPrompt}>
+      <View style={styles.lockIconContainer}>
+        <MaterialIcons name="lock" size={48} color={COLORS.white} />
+      </View>
+      <Text style={styles.subscriptionTitle}>Premium Content</Text>
+      <Text style={styles.subscriptionText}>
+        Subscribe to access full articles and exclusive features
+      </Text>
+      <TouchableOpacity
+        style={styles.subscribeButton}
+        onPress={() => router.push('/(auth)/paywall')}
+      >
+        <Text style={styles.subscribeButtonText}>Subscribe Now</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   if (!newsItem) {
     return <Loading />;
@@ -663,7 +687,7 @@ export default function NewsDetailScreen() {
                     onPress={handleShare}
                   >
                     <MaterialIcons name="share" size={20} color={COLORS.white} />
-                    <Text style={styles.actionButtonText}>Paylaş</Text>
+                    <Text style={styles.actionButtonText}>Share</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -671,7 +695,7 @@ export default function NewsDetailScreen() {
                     onPress={handleContactUs}
                   >
                     <MaterialIcons name="mail" size={20} color={COLORS.white} />
-                    <Text style={styles.actionButtonText}>İletişim</Text>
+                    <Text style={styles.actionButtonText}>Contact</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -720,22 +744,6 @@ export default function NewsDetailScreen() {
             <Text style={styles.date}>
               {new Date(newsItem.createdAt).toLocaleDateString()}
             </Text>
-            
-            {!isAdmin && (
-              <TouchableOpacity
-                style={styles.favoriteButton}
-                onPress={handleFavoritePress}
-              >
-                <MaterialIcons
-                  name={isFavorited ? "favorite" : "favorite-border"}
-                  size={24}
-                  color={isFavorited ? COLORS.error : COLORS.gray}
-                />
-                {favoriteCount > 0 && (
-                  <Text style={styles.favoriteCount}>{favoriteCount}</Text>
-                )}
-              </TouchableOpacity>
-            )}
           </View>
 
           {renderContent(newsItem.content)}
@@ -1255,16 +1263,75 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     color: COLORS.white,
   },
-  favoriteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 'auto',
-    padding: 8,
+  previewContent: {
+    position: 'relative',
+    marginBottom: 20,
   },
-  favoriteCount: {
-    marginLeft: 4,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
+  fadeOut: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 150,
+  },
+  subscriptionPromptContainer: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 20,
+  },
+  subscriptionPrompt: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  lockIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  subscriptionTitle: {
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    color: COLORS.dark,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  subscriptionText: {
+    fontSize: 16,
+    fontFamily: FONTS.regular,
     color: COLORS.gray,
-  }
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  subscribeButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 30,
+    width: '100%',
+    elevation: 4,
+    shadowColor: COLORS.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  subscribeButtonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    textAlign: 'center',
+  },
+  fullContent: {
+    marginTop: 20,
+  },
 }); 

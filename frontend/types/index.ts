@@ -45,6 +45,7 @@ export interface User {
   lastName: string;
   email: string;
   role: 'user' | 'admin';
+  isSubscription: boolean;
 }
 
 export function isUserAdmin(user: User | null): boolean {

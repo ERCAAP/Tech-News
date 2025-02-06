@@ -94,4 +94,33 @@ export const deleteMe = asyncHandler(async (req: Request, res: Response) => {
     status: 'success',
     data: null
   });
+});
+
+// Abonelik durumunu güncelle
+export const updateSubscription = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user?.id) {
+    throw new AppError('User not found', 404);
+  }
+
+  const { isSubscription, subscriptionPlan } = req.body;
+
+  const user = await User.findByIdAndUpdate(
+    req.user.id,
+    { 
+      isSubscription,
+      subscriptionPlan,
+      subscriptionUpdatedAt: new Date()
+    },
+    { new: true, runValidators: true }
+  ).select('-password');
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: { user },
+    success: true
+  });
 }); 
