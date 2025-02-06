@@ -1,30 +1,27 @@
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { COLORS } from '@/theme';
+import { StatusBar } from 'react-native';
 
 export default function AuthLayout() {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+
+  useEffect(() => {
+    StatusBar.setBarStyle(colorScheme === 'dark' ? 'light-content' : 'dark-content');
+  }, [colorScheme]);
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: {
-          backgroundColor: isDark ? COLORS.darkBackground : COLORS.background,
-        },
+        statusBarColor: COLORS.background,
       }}
     >
-      <Stack.Screen name="onboarding" />
       <Stack.Screen name="login" />
-      <Stack.Screen 
-        name="register"
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-        }}
-      />
+      <Stack.Screen name="register" />
+      <Stack.Screen name="forgot-password" />
+      <Stack.Screen name="paywall" />
     </Stack>
   );
 } 

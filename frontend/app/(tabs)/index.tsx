@@ -1,5 +1,13 @@
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+} from 'react-native';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchNews } from '@/redux/slices/newsSlice';
 import { COLORS, FONTS } from '@/theme';
@@ -25,20 +33,20 @@ const CATEGORIES: Category[] = [
     id: 'ai', 
     title: 'Artificial Intelligence', 
     icon: 'psychology',
-    description: 'Latest AI news and updates'
+    description: 'Latest AI news and updates',
   },
   { 
     id: 'app', 
     title: 'Applications', 
     icon: 'apps',
-    description: 'App development news'
+    description: 'App development news',
   },
   { 
     id: 'technology', 
     title: 'Technology', 
     icon: 'devices',
-    description: 'General technology news'
-  }
+    description: 'General technology news',
+  },
 ];
 
 export default function HomeScreen() {
@@ -62,18 +70,20 @@ export default function HomeScreen() {
   // Group news by category
   const newsByCategory = useMemo(() => {
     return CATEGORIES.reduce((acc, category) => {
-      acc[category.id] = news.filter(item => {
-        const newsCategory = item.category?.toLowerCase().trim();
-        return newsCategory === category.id;
-      }).slice(0, 3);
+      acc[category.id] = news
+        .filter((item) => {
+          const newsCategory = item.category?.toLowerCase().trim();
+          return newsCategory === category.id;
+        })
+        .slice(0, 3);
       return acc;
     }, {} as Record<string, NewsItem[]>);
   }, [news]);
 
   const handleViewAllCategory = (categoryId: string) => {
     router.push({
-      pathname: "/category/[id]",
-      params: { id: categoryId }
+      pathname: '/category/[id]',
+      params: { id: categoryId },
     });
   };
 
@@ -88,11 +98,15 @@ export default function HomeScreen() {
       contentContainerStyle={styles.scrollContent}
     >
       {/* Categories with News */}
-      {CATEGORIES.map(category => (
+      {CATEGORIES.map((category) => (
         <View key={category.id} style={styles.categorySection}>
           <View style={styles.categoryHeader}>
             <View style={styles.categoryTitleContainer}>
-              <MaterialIcons name={category.icon} size={24} color={COLORS.primary} />
+              <MaterialIcons
+                name={category.icon}
+                size={24}
+                color={COLORS.primary}
+              />
               <Text style={styles.categoryTitle}>{category.title}</Text>
             </View>
             <TouchableOpacity 
@@ -111,12 +125,12 @@ export default function HomeScreen() {
           >
             {newsByCategory[category.id]?.length > 0 ? (
               newsByCategory[category.id].map((item) => (
-                <View key={item._id} style={styles.categoryNewsCard}>
-                  <NewsCard news={item} />
-                </View>
+                <NewsCard key={item._id} news={item} />
               ))
             ) : (
-              <Text style={styles.emptyText}>No news in this category</Text>
+              <View style={styles.emptyTextContainer}>
+                <Text style={styles.emptyText}>No news in this category</Text>
+              </View>
             )}
           </ScrollView>
         </View>
@@ -195,11 +209,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  categoryNewsCard: {
+  emptyTextContainer: {
     width: CATEGORY_CARD_WIDTH,
-    marginRight: 16,
-    backgroundColor: 'transparent',
-    marginVertical: 4,
+    marginRight: SPACING,
   },
   emptyText: {
     width: CATEGORY_CARD_WIDTH,

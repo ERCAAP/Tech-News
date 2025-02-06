@@ -130,6 +130,9 @@ export default function ProfileScreen() {
       case 'privacy':
         router.push('/privacy');
         break;
+      case 'subscriptions':
+        router.push('/(auth)/paywall');
+        break;
       default:
         Alert.alert('Coming Soon', 'This feature will be available soon!');
     }
