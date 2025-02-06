@@ -46,20 +46,21 @@ interface TranslationCache {
   };
 }
 
-// Add these near the top of the file, outside the component
 const translationCache: TranslationCache = {};
 
-// Add this helper function
 async function translateText(text: string, targetLanguage: string): Promise<string> {
   try {
-    if (!OPENAI_API_KEY || !text.trim()) {
+    if (!OPENAI_API_KEY || !text?.trim()) {
       return text;
     }
 
-    // Cache kontrolü
+    // Check cache first
     if (translationCache[targetLanguage]?.[text]) {
       return translationCache[targetLanguage][text];
     }
+
+    // Add delay between API calls to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -69,25 +70,35 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages: [{
-          role: "system",
-          content: `Translate the text to ${targetLanguage}. If you encounter any untranslatable terms, use the closest equivalent or keep them as is.`
-        }, {
-          role: "user",
-          content: text
-        }],
+        messages: [
+          {
+            role: "system",
+            content: `You are a professional translator. Translate the following text to ${targetLanguage}. Keep any technical terms, names, and URLs unchanged. Maintain the original formatting and punctuation.`
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ],
         temperature: 0.3,
+        max_tokens: 1000,
       }),
     });
 
     if (!response.ok) {
+      console.error('Translation API error:', response.status);
       return text;
     }
 
     const data = await response.json();
-    const translatedText = data.choices?.[0]?.message?.content?.trim() || text;
+    const translatedText = data.choices?.[0]?.message?.content?.trim();
 
-    // Cache sonucu
+    if (!translatedText) {
+      console.error('No translation received from API');
+      return text;
+    }
+
+    // Cache the result
     if (!translationCache[targetLanguage]) {
       translationCache[targetLanguage] = {};
     }
@@ -95,7 +106,8 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
 
     return translatedText;
   } catch (error) {
-    return text; // Hata durumunda orijinal metni sessizce döndür
+    console.error('Translation error:', error);
+    return text;
   }
 }
 
@@ -266,31 +278,51 @@ export default function NewsDetailScreen() {
 
     setIsTranslating(true);
     try {
+      // First translate the title
       const translatedTitle = await translateText(newsItem.title, deviceLanguage);
+      
+      // Split content and translate each part
       const contentParts = newsItem.content.split('\n');
-      const translatedParts = await Promise.all(
-        contentParts.map(async (part) => {
-          const urlPattern = /^https?:\/\/[^\s]+$/;
-          const imagePattern = /\[IMAGE:(.*?)\]/;
-          
-          if (urlPattern.test(part.trim()) || imagePattern.test(part)) {
-            return part;
+      const translatedParts = [];
+      
+      // Translate content parts sequentially to avoid rate limiting
+      for (const part of contentParts) {
+        const urlPattern = /^https?:\/\/[^\s]+$/;
+        const imagePattern = /\[IMAGE:(.*?)\]/;
+        
+        // Don't translate URLs and image tags
+        if (urlPattern.test(part.trim()) || imagePattern.test(part)) {
+          translatedParts.push(part);
+          continue;
+        }
+        
+        // Only translate non-empty text
+        if (part.trim()) {
+          try {
+            const translated = await translateText(part, deviceLanguage);
+            translatedParts.push(translated);
+          } catch (error) {
+            console.error('Part translation error:', error);
+            translatedParts.push(part); // Keep original if translation fails
           }
-          
-          if (part.trim()) {
-            return await translateText(part, deviceLanguage);
-          }
-          
-          return part;
-        })
-      );
+        } else {
+          translatedParts.push(part); // Keep empty lines as is
+        }
+      }
 
-      setTranslatedContent(JSON.stringify({
+      const translatedContent = {
         title: translatedTitle,
         content: translatedParts.join('\n')
-      }));
+      };
+
+      setTranslatedContent(JSON.stringify(translatedContent));
       setShowOriginal(false);
     } catch (error) {
+      console.error('Translation error:', error);
+      Alert.alert(
+        'Translation Error',
+        'Failed to translate the content. Please try again later.'
+      );
       setShowOriginal(true);
     } finally {
       setIsTranslating(false);
@@ -716,9 +748,9 @@ export default function NewsDetailScreen() {
                   color={COLORS.white} 
                 />
                 <Text style={styles.translationButtonText}>
-                  {isTranslating ? 'Çeviriliyor...' : 
-                   translatedContent ? (showOriginal ? 'Çeviri' : 'Orijinal') : 
-                   'Çevir'}
+                  {isTranslating ? 'Translating...' : 
+                   translatedContent ? (showOriginal ? 'Translate' : 'Original') : 
+                   'Translate'}
                 </Text>
               </TouchableOpacity>
             </View>

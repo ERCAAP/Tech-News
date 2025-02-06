@@ -12,17 +12,17 @@ import { MaterialIcons } from '@expo/vector-icons';
 // Kategori seçeneklerini tanımla
 const CATEGORIES = [
   { 
+    value: 'app', 
+    label: 'App Development',
+    description: 'Mobile and web application news'
+  },
+  { 
     value: 'ai', 
     label: 'Artificial Intelligence',
     description: 'News about AI and machine learning'
   },
   { 
-    value: 'app', 
-    label: 'Applications',
-    description: 'Mobile and web application news'
-  },
-  { 
-    value: 'technology', 
+    value: 'tech', 
     label: 'Technology',
     description: 'General technology news'
   }
@@ -96,10 +96,13 @@ export default function CreateNewsScreen() {
         return;
       }
 
+      // Debug için kategori değerini kontrol et
+      console.log('Selected category:', category);
+
       const formData = new FormData();
       formData.append('title', title);
       formData.append('displayTitle', displayTitle || title);
-      formData.append('category', category.toLowerCase().trim());
+      formData.append('category', category);
       formData.append('content', processContent(content));
       
       // Cover image varsa ekle
@@ -112,8 +115,6 @@ export default function CreateNewsScreen() {
         } as any);
       }
 
-      console.log('Sending request with token:', token);
-
       const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/news`, {
         method: 'POST',
         headers: {
@@ -125,8 +126,10 @@ export default function CreateNewsScreen() {
       });
 
       const data = await response.json();
+      console.log('Server response:', data); // Debug için server yanıtını logla
       
       if (!response.ok) {
+        console.error('Server error:', data);
         throw new Error(data.message || 'Failed to create news');
       }
 
