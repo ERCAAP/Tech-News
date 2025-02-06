@@ -42,6 +42,19 @@ const features = [
   }
 ];
 
+// Update the response interface to match backend
+interface SubscriptionResponse {
+  status: string;
+  data: {
+    user: {
+      isSubscription: boolean;
+      subscriptionPlan: string;
+      subscriptionEndDate: string | null;
+    };
+  };
+  success: boolean;
+}
+
 const PaywallScreen = () => {
   const dispatch = useAppDispatch();
   const [selectedPlan, setSelectedPlan] = useState(subscriptionPlans[1].id);
@@ -70,34 +83,25 @@ const PaywallScreen = () => {
         endDate.setMonth(endDate.getMonth() + 1);
       }
 
-      const response = await axios.post(`${API_URL}/users/update-subscription`, {
-        isSubscription: true,
-        subscriptionPlan: plan.type,
-        subscriptionEndDate: endDate.toISOString()
-      });
-
-      if (response.data.success) {
-        await AsyncStorage.setItem('isSubscription', 'true');
-        await AsyncStorage.setItem('subscriptionPlan', plan.type);
-        await AsyncStorage.setItem('subscriptionEndDate', endDate.toISOString());
-        
-        Alert.alert(
-          'Success',
-          'Your subscription has been activated successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/(tabs)')
-            }
-          ]
-        );
-      } else {
-        Alert.alert('Error', 'Failed to update subscription');
-      }
+      // Just update local storage
+      await AsyncStorage.setItem('isSubscription', 'true');
+      await AsyncStorage.setItem('subscriptionPlan', plan.type);
+      await AsyncStorage.setItem('subscriptionEndDate', endDate.toISOString());
+      
+      Alert.alert(
+        'Success',
+        'Your subscription has been activated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)')
+          }
+        ]
+      );
     } catch (error) {
       Alert.alert(
-        'Subscription Error',
-        'An error occurred during the process. Please try again.'
+        'Error',
+        'An error occurred. Please try again.'
       );
     } finally {
       setIsLoading(false);
