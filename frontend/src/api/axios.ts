@@ -1,62 +1,71 @@
-import axios from 'axios';
-import type { AxiosRequestConfig } from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Get the appropriate base URL based on platform
+// Get the appropriate base URL based on environment and platform
 const getBaseUrl = () => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:3000/api/v1'; // Android Emulator
-  } else if (Platform.OS === 'ios') {
-    return 'http://127.0.0.1:3000/api/v1'; // iOS Simulator
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:3000/api/v1'; // Android Emulator
+    } else if (Platform.OS === 'ios') {
+      return 'http://127.0.0.1:3000/api/v1'; // iOS Simulator
+    }
+    return 'http://localhost:3000/api/v1'; // Web Development
   }
-  return process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1'; // Web & fallback
+  
+  // Production API Gateway URL
+  return process.env.EXPO_PUBLIC_API_URL || 'https://xxxxxxxxxx.execute-api.eu-central-1.amazonaws.com/prod/api/v1';
 };
 
+// Create axios instance with base configuration
 const api = axios.create({
   baseURL: getBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'x-api-key': process.env.EXPO_PUBLIC_API_KEY // API Gateway API Key
   },
-  validateStatus: (status) => status >= 200 && status < 300,
+  validateStatus: (status: number) => status >= 200 && status < 300,
 });
 
 // Request interceptor
 api.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
     try {
       const token = await AsyncStorage.getItem('token');
       
-      const newConfig = { ...config };
-      
-      // Initialize headers if they don't exist
-      if (!newConfig.headers) {
-        newConfig.headers = {};
+      if (!config.headers) {
+        config.headers = {};
       }
 
       if (token) {
-        newConfig.headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
       }
 
       // Handle FormData requests
-      if (newConfig.data instanceof FormData) {
-        newConfig.headers['Content-Type'] = 'multipart/form-data';
+      if (config.data instanceof FormData) {
+        config.headers['Content-Type'] = 'multipart/form-data';
+      }
+
+      // Add AWS specific headers if needed
+      if (!__DEV__) {
+        config.headers['x-amz-date'] = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+        config.headers['x-amz-security-token'] = process.env.EXPO_PUBLIC_AWS_SESSION_TOKEN;
       }
 
       // Log request details in development
       if (__DEV__) {
         console.log('API Request:', {
-          method: newConfig.method,
-          url: newConfig.url,
-          data: newConfig.data,
-          headers: newConfig.headers,
-          baseURL: newConfig.baseURL
+          method: config.method,
+          url: config.url,
+          data: config.data,
+          headers: config.headers,
+          baseURL: config.baseURL
         });
       }
 
-      return newConfig;
+      return config;
     } catch (error) {
       console.error('Request interceptor error:', error);
       return Promise.reject(error);
@@ -92,12 +101,19 @@ api.interceptors.response.use(
       });
     }
 
-    // Type assertion for error to include response property
-    const axiosError = error as { response?: { status: number } };
+    // Handle AWS specific errors
+    const axiosError = error as { response?: { status: number; data?: any } };
     if (axiosError.response?.status === 401) {
       await AsyncStorage.removeItem('token');
-      // You can add navigation logic here if needed
+      // Handle unauthorized access
+    } else if (axiosError.response?.status === 403) {
+      // Handle forbidden access
+      console.error('Access forbidden:', axiosError.response.data);
+    } else if (axiosError.response?.status === 429) {
+      // Handle API Gateway throttling
+      console.error('API rate limit exceeded');
     }
+
     return Promise.reject(error);
   }
 );
