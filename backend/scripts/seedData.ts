@@ -13,7 +13,11 @@ async function seedData() {
       name: 'Admin User',
       role: 'admin',
       readingHistory: [],
-      isSubscription: false,
+      subscription: {
+        isSubscribed: false,
+        plan: null,
+        updatedAt: new Date().toISOString()
+      },
       favoriteNews: [],
       preferences: {
         categories: [],
@@ -33,7 +37,11 @@ async function seedData() {
       name: 'Regular User',
       role: 'user',
       readingHistory: [],
-      isSubscription: false,
+      subscription: {
+        isSubscribed: false,
+        plan: null,
+        updatedAt: new Date().toISOString()
+      },
       favoriteNews: [],
       preferences: {
         categories: [],

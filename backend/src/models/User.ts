@@ -15,6 +15,7 @@ export interface IUser {
   name: string;
   password?: string;
   role: 'user' | 'admin';
+  isActive?: boolean;
   preferences?: {
     categories: string[];
     notificationSettings: {
@@ -28,9 +29,11 @@ export interface IUser {
     readAt: string;
     completedReading: boolean;
   }>;
-  isSubscription: boolean;
-  subscriptionPlan?: 'monthly' | 'yearly' | null;
-  subscriptionEndDate?: string;
+  subscription?: {
+    isSubscribed: boolean;
+    plan: 'monthly' | 'yearly' | null;
+    updatedAt: string;
+  };
   favoriteNews: string[];
   createdAt: string;
   updatedAt: string;
@@ -96,14 +99,16 @@ export class UserModel {
     return result.Items?.[0] as IUser || null;
   }
 
+  async scan(): Promise<IUser[]> {
+    const result = await docClient.scan({
+      TableName: this.tableName
+    });
+    return result.Items as IUser[] || [];
+  }
+
   async update(userId: string, updateData: Partial<IUser>): Promise<IUser> {
     const timestamp = new Date().toISOString();
     const updates = { ...updateData, updatedAt: timestamp };
-
-    if (updates.password) {
-      const salt = await bcrypt.genSalt(10);
-      updates.password = await bcrypt.hash(updates.password, salt);
-    }
 
     const updateExpression = 'set ' + Object.keys(updates).map(key => `#${key} = :${key}`).join(', ');
     const expressionAttributeNames = Object.keys(updates).reduce((acc, key) => {

@@ -27,7 +27,7 @@ export class AuthController {
     this.dbService = new DynamoDBService();
   }
 
-  register = asyncHandler(async (req: AuthRequest, res: Response) => {
+  register = asyncHandler<AuthRequest>(async (req, res) => {
     const { email, name } = req.body;
 
     const existingUser = await User.findByEmail(email);
@@ -40,7 +40,11 @@ export class AuthController {
       name,
       role: 'user',
       readingHistory: [],
-      isSubscription: false,
+      subscription: {
+        isSubscribed: false,
+        plan: null,
+        updatedAt: new Date().toISOString()
+      },
       favoriteNews: [],
       preferences: {
         categories: [],
@@ -68,7 +72,7 @@ export class AuthController {
     });
   });
 
-  login = asyncHandler(async (req: AuthRequest, res: Response) => {
+  login = asyncHandler<AuthRequest>(async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -96,7 +100,7 @@ export class AuthController {
     });
   });
 
-  getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  getProfile = asyncHandler<AuthRequest>(async (req, res) => {
     if (!req.user?.email) {
       throw new AppError('User not found', 404);
     }
@@ -120,7 +124,7 @@ export class AuthController {
     });
   });
 
-  updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  updateProfile = asyncHandler<AuthRequest>(async (req, res) => {
     if (!req.user?.userId) {
       throw new AppError('User not found', 404);
     }

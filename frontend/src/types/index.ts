@@ -1,4 +1,5 @@
 export interface User {
+  isSubscription: boolean;
   _id: string;
   email: string;
   firstName: string;

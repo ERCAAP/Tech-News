@@ -6,12 +6,11 @@ import { DynamoDBService } from '../services/dynamoDBService';
 import { S3Service } from '../services/s3Service';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthRequest } from '../types/express';
-import { AppError } from '../src/utils/AppError';
-import { asyncHandler } from '../src/utils/asyncHandler';
-import { logger } from '../src/utils/logger';
+import { AppError } from '../utils/AppError';
+import { asyncHandler } from '../utils/asyncHandler';
+import { logger } from '../utils/logger';
 import { CloudWatch } from '@aws-sdk/client-cloudwatch';
-import { uploadFile } from '../src/utils/upload';
-import { uploadImage, validateImageFile } from '../src/utils/imageUpload';
+import { uploadImage, validateImageFile } from '../utils/imageUpload';
 
 const cloudWatch = new CloudWatch({
   region: process.env.AWS_REGION
@@ -309,7 +308,7 @@ export class NewsController {
     this.s3Service = new S3Service();
   }
 
-  getAllNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  getAllNews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const news = await News.scan();
     res.status(200).json({
       status: 'success',
@@ -329,7 +328,7 @@ export class NewsController {
     });
   });
 
-  getNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  getNews = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const news = await News.findById(req.params.id);
     if (!news) {
       return next(new AppError('News not found', 404));
@@ -363,13 +362,14 @@ export class NewsController {
 
       const result = await this.dbService.query(params);
       res.json(result);
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       console.error('List news error:', error);
       res.status(500).json({ error: error.message });
     }
   };
 
-  deleteNews = async (req: Request, res: Response, next: NextFunction) => {
+  deleteNews = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { newsId } = req.params;
       
@@ -389,11 +389,12 @@ export class NewsController {
 
       await this.dbService.delete(process.env.DYNAMODB_NEWS_TABLE!, { newsId });
       res.json({ message: 'News deleted successfully' });
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       console.error('Delete news error:', error);
       res.status(500).json({ error: error.message });
     }
-  };
+  });
 
   // Benzer haberleri getir
   getSimilarNews = asyncHandler(async (req: Request, res: Response) => {
@@ -551,7 +552,7 @@ export class NewsController {
   });
 
   // Create news
-  create = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  create = asyncHandler<AuthRequest>(async (req, res) => {
     if (!req.user?.userId) {
       return next(new AppError('Unauthorized', 401));
     }
@@ -597,7 +598,7 @@ export class NewsController {
   });
 
   // Update news
-  update = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  update = asyncHandler<AuthRequest>(async (req, res) => {
     if (!req.user?.userId) {
       return next(new AppError('Unauthorized', 401));
     }
@@ -674,3 +675,7 @@ export class NewsController {
     });
   });
 } 
+
+function next(arg0: AppError): any {
+  throw new Error('Function not implemented.');
+}

@@ -6,7 +6,7 @@ import { AuthRequest } from '../types/express';
 
 // Get all users
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-  const users = await User.findAll();
+  const users = await User.scan();
 
   res.status(200).json({
     status: 'success',
@@ -30,13 +30,13 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Update user
-export const updateUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('Unauthorized', 401);
   }
 
   const userId = req.user.userId;
-  const updatedUser = await User.findByIdAndUpdate(userId, req.body);
+  const updatedUser = await User.update(userId, req.body);
 
   if (!updatedUser) {
     throw new AppError('User not found', 404);
@@ -49,16 +49,12 @@ export const updateUser = asyncHandler(async (req: AuthRequest, res: Response) =
 });
 
 // Delete user
-export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('Unauthorized', 401);
   }
 
-  const deleted = await User.findByIdAndDelete(req.user.userId);
-
-  if (!deleted) {
-    throw new AppError('User not found', 404);
-  }
+  await User.delete(req.user.userId);
 
   res.status(204).json({
     status: 'success',
@@ -67,7 +63,7 @@ export const deleteUser = asyncHandler(async (req: AuthRequest, res: Response) =
 });
 
 // Get current user
-export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('Unauthorized', 401);
   }
@@ -85,12 +81,12 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
 });
 
 // Update user active status
-export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('Unauthorized', 401);
   }
 
-  const updatedUser = await User.findByIdAndUpdate(req.user.userId, {
+  const updatedUser = await User.update(req.user.userId, {
     isActive: req.body.isActive
   });
 
@@ -105,7 +101,7 @@ export const updateUserStatus = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 // Update user profile
-export const updateMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const updateMe = asyncHandler(async (req: Request, res: Response) => {
   if (req.body.password) {
     throw new AppError('This route is not for password updates. Please use /update-password', 400);
   }
@@ -113,7 +109,7 @@ export const updateMe = asyncHandler(async (req: AuthRequest, res: Response) => 
     throw new AppError('User not found', 404);
   }
 
-  const user = await User.findByIdAndUpdate(req.user.userId, req.body);
+  const user = await User.update(req.user.userId, req.body);
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -126,12 +122,12 @@ export const updateMe = asyncHandler(async (req: AuthRequest, res: Response) => 
 });
 
 // Delete own account
-export const deleteMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const deleteMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('User not found', 404);
   }
 
-  await User.findByIdAndUpdate(req.user.userId, { isActive: false });
+  await User.update(req.user.userId, { isActive: false });
 
   res.status(204).json({
     status: 'success',
@@ -140,14 +136,14 @@ export const deleteMe = asyncHandler(async (req: AuthRequest, res: Response) => 
 });
 
 // Update subscription
-export const updateSubscription = asyncHandler(async (req: AuthRequest, res: Response) => {
+export const updateSubscription = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError('User not found', 404);
   }
 
   const { isSubscribed, plan } = req.body;
 
-  const user = await User.findByIdAndUpdate(req.user.userId, { 
+  const user = await User.update(req.user.userId, { 
     subscription: {
       isSubscribed,
       plan,
