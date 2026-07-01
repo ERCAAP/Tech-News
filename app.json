@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-mail-composer",
+        {
+          "name": "expo-mail-composer",
+          "systemPermissions": {
+            "ios": {
+              "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos to attach them to emails."
+            },
+            "android": {
+              "permissions": [
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.WRITE_EXTERNAL_STORAGE",
+                "android.permission.READ_MEDIA_IMAGES",
+                "android.permission.READ_MEDIA_VIDEO"
+              ]
+            }
+          }
+        }
+      ]
+    ],
+    "android": {
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "yourapp.com",
+              "pathPrefix": "/news"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "ios": {
+      "associatedDomains": ["applinks:yourapp.com"]
+    },
+    "scheme": "yourapp"
+  }
+} 

@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "general": "Bir hata oluştu",
+    "network": "Bağlantı hatası",
+    "required": "Bu alan zorunludur"
+  },
+  "buttons": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle"
+  }
+} 

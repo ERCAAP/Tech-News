@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Login",
+    "loading": "Logging in...",
+    "register_link": "Don't have an account? Register",
+    "errors": {
+      "invalid_credentials": "Invalid email or password"
+    }
+  },
+  "register": {
+    "title": "Register",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Register",
+    "loading": "Registering...",
+    "login_link": "Already have an account? Login"
+  }
+} 

@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "general": "An error occurred",
+    "network": "Network error",
+    "required": "This field is required"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+} 
